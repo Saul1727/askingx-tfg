@@ -30,6 +30,31 @@ const createAdmin = async (userData) => {
   return newUser;
 };
 
+const createAskAuthor = async (userData) => {
+    const existingUser = await prisma.user.findUnique({
+        where: { email: userData.email }
+    });
+
+    if (existingUser) {
+        const error = new Error('El correo electrónico ya está registrado.');
+        error.statusCode = 409; // Conflict
+        throw error;
+    }
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+    const newUser = await prisma.user.create({
+        data: {
+            fullName: userData.fullName,
+            email: userData.email,
+            passwordHash: hashedPassword,
+            role: 'AUTHOR',
+        },
+    });
+
+    return newUser;
+};
+
 module.exports = {
   createAdmin,
+    createAskAuthor,
 };

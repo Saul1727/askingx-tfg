@@ -2,6 +2,7 @@
 const express = require('express');
 const errorHandler = require('./middlewares/errorHandler');
 const userRoutes = require('./routes/userRoutes');
+const askerRoutes = require('./routes/askerRoutes');
 
 const app = express();
 
@@ -15,6 +16,8 @@ app.get('/api/health', (req, res) => {
 
 // Rutas de usuarios
 app.use('/api/users', userRoutes);
+// Rutas de solicitantes (Askers)
+app.use('/api/askers', askerRoutes);
 
 // Middleware global de errores (DEBE ir al final de todo)
 app.use(errorHandler);

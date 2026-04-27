@@ -14,3 +14,8 @@ Se utiliza **Prisma ORM (v5)** contra una base de datos PostgreSQL.
 ## 3. Seguridad y Validación
 - **Cifrado de Contraseñas:** Se ha integrado `bcrypt` con un "salt round" de 10. *Justificación:* Almacenar contraseñas en texto plano vulnera las normativas básicas de seguridad y el RGPD. 10 rondas ofrecen un buen equilibrio entre seguridad criptográfica y rendimiento del servidor.
 - **Validación de Entradas:** Se utiliza `Zod` a nivel de controlador. *Justificación:* Permite definir esquemas estrictos (ej. tamaño mínimo de contraseña, formato de email), rechazando peticiones malformadas antes de que alcancen la lógica de negocio o saturen la base de datos.
+
+## 4. Prevención de Inyección SQL y Saneamiento de Datos
+Para proteger la integridad de la base de datos, se aplica una estrategia de defensa en profundidad (Defense in Depth) en dos capas:
+1. **Validación de Entrada (Zod):** Actúa como primera barrera en la capa de controladores, garantizando que los datos cumplen con la tipificación y el formato esperado (ej. validación estricta de emails) y rechazando peticiones malformadas (HTTP 400 Bad Request) antes de ejecutar lógica de negocio.
+2. **Consultas Parametrizadas (Prisma ORM):** El mapeador objeto-relacional (Prisma) gestiona toda la comunicación con PostgreSQL utilizando sentencias preparadas (Prepared Statements) bajo el capó. Esto asegura que los datos introducidos por el usuario nunca se concatenan directamente en la consulta SQL, previniendo por diseño los ataques de Inyección SQL (SQLi).
