@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "test": "echo \"Error: no test specified\" && exit 1",
+  "dev": "nodemon server.js"
   },
   "repository": {
     "type": "git",
@@ -17,5 +18,17 @@
   "bugs": {
     "url": "https://github.com/Saul1727/askingx-tfg/issues"
   },
-  "homepage": "https://github.com/Saul1727/askingx-tfg#readme"
+  "homepage": "https://github.com/Saul1727/askingx-tfg#readme",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "nodemon": "^3.1.14",
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "zod": "^4.3.6"
+  }
 }

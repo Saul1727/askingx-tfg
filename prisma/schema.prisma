@@ -1,0 +1,165 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+} 
+
+// ==========================================
+// ENUMS (Definidos estrictamente por el modelo AskingX)
+// ==========================================
+
+enum RoleType {
+  ADMIN
+  AUTHOR
+  CONNECTOR
+  GIVER
+}
+
+enum LangType {
+  ES
+  CAT
+  EN
+}
+
+enum AskStatus {
+  CREATED
+  OPEN
+  MATCHED
+  FULFILLED
+  CANCELLED
+  EXPIRED
+}
+
+enum AskType {
+  THINGS
+  TIME
+  EXPERTISE
+  SERVICES
+}
+
+// ==========================================
+// MODELOS DE DATOS (Basado en tool.pdf y UML)
+// ==========================================
+
+// Entidad abstracta User de la que derivan los roles
+model User {
+  id                String    @id @default(uuid())
+  fullName          String
+  email             String    @unique
+  passwordHash      String
+  role              RoleType
+  preferredLanguage LangType  @default(ES)
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Notas de disponibilidad (Específico del rol GIVER)
+  availabilityNotes String?
+
+  // --- Relaciones según los Workflows del PDF ---
+  askersRegistered  Asker[]   @relation("AuthorToAsker")
+  asksCreated       Ask[]     @relation("AuthorToAsk")
+  asksConnected     Ask[]     @relation("ConnectorToAsk")
+  asksAssigned      Ask[]     @relation("GiverToAsk")
+  domainsManaged    Domain[]  @relation("AdminToDomain")
+}
+
+// Solicitante (No interactúa, es gestionado por AskAuthor)
+model Asker {
+  id               String   @id @default(uuid())
+  organizationName String?
+  contactPerson    String
+  phone            String?
+  email            String?
+  address          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relaciones
+  askAuthorId      String
+  askAuthor        User     @relation("AuthorToAsker", fields: [askAuthorId], references: [id])
+  
+  asks             Ask[]    @relation("AskerToAsk") // 1 Asker puede tener múltiples peticiones a lo largo del tiempo
+}
+
+// Dominios temáticos para clasificar las peticiones
+model Domain {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  isActive    Boolean @default(true)
+
+  // Relaciones
+  adminId     String?
+  admin       User?   @relation("AdminToDomain", fields: [adminId], references: [id])
+  
+  asks        Ask[]   @relation("AskToDomain") // Relación N a N
+}
+
+// Entidad Central: La Petición (Ask)
+model Ask {
+  id                 String    @id @default(uuid())
+  title              String
+  description        String
+  status             AskStatus @default(CREATED)
+  type               AskType
+  dueDate            DateTime?
+  cancellationReason String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // -- Especialización (Herencia de Tabla Única) --
+  quantityRequested  Int?      // Para tipo THINGS
+  estimatedHours     Int?      // Para tipo TIME
+  requiredSkill      String?   // Para tipo EXPERTISE
+  serviceLocation    String?   // Para tipo SERVICES
+
+  // -- Relaciones --
+  askerId            String
+  asker              Asker     @relation("AskerToAsk", fields: [askerId], references: [id])
+
+  askAuthorId        String
+  askAuthor          User      @relation("AuthorToAsk", fields: [askAuthorId], references: [id])
+
+  connectorId        String?
+  connector          User?     @relation("ConnectorToAsk", fields: [connectorId], references: [id])
+
+  givers             User[]    @relation("GiverToAsk") // Múltiples Givers por petición
+  domains            Domain[]  @relation("AskToDomain") // Múltiples dominios
+
+  // RELACIÓN 0 a N: Al crearse está vacío, permite múltiples entregas progresivas
+  fulfillments       Fulfillment[] 
+
+  story              Story?
+}
+
+// Entregas / Cumplimiento (Fulfillment)
+model Fulfillment {
+  id                String   @id @default(uuid())
+  deliveryDate      DateTime @default(now())
+  quantityDelivered Int?     
+  expertNotes       String?
+  createdAt         DateTime @default(now())
+
+  // Relaciones
+  askId             String
+  ask               Ask      @relation(fields: [askId], references: [id])
+}
+
+// Historias de Impacto (Story)
+model Story {
+  id               String   @id @default(uuid())
+  generatedContent String
+  isPublished      Boolean  @default(false)
+  generatedAt      DateTime @default(now())
+
+  // Relaciones
+  askId            String   @unique
+  ask              Ask      @relation(fields: [askId], references: [id])
+}
