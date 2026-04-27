@@ -68,6 +68,7 @@ model User {
   asksConnected     Ask[]     @relation("ConnectorToAsk")
   asksAssigned      Ask[]     @relation("GiverToAsk")
   domainsManaged    Domain[]  @relation("AdminToDomain")
+  fulfillments      Fulfillment[] @relation("FulfillmentToGiver")
 }
 
 // Solicitante (No interactúa, es gestionado por AskAuthor)
@@ -150,6 +151,10 @@ model Fulfillment {
   // Relaciones
   askId             String
   ask               Ask      @relation(fields: [askId], references: [id])
+  
+  // NUEVO: Trazabilidad atómica del donante
+  giverId           String
+  giver             User     @relation("FulfillmentToGiver", fields: [giverId], references: [id])
 }
 
 // Historias de Impacto (Story)

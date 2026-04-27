@@ -32,7 +32,7 @@ Aunque un `Asker` (Solicitante) no deja de ser una persona registrada en la plat
 ## 7. Modelado de Datos vs Reglas de Negocio (Validaciones Cruzadas)
 Según el modelo conceptual de AskingX, un Solicitante puede ser tanto un individuo vulnerable como una organización. Esto obliga a nivel de base de datos (Prisma) a que campos como `organizationName`, `phone` o `address` sean nulos (opcionales). Sin embargo, para evitar registrar entidades "huérfanas" o ilocalizables, se ha delegado la responsabilidad de la integridad de contacto a la capa del Controlador mediante Zod (función `.refine()`). La regla de negocio exige que la petición HTTP contenga, obligatoriamente, al menos un método de contacto válido, combinando la flexibilidad de la base de datos con la rigidez requerida por el trabajo de campo de la ONG.
 
-## 11. Implementación de la Entidad Central: El Ask
+## 8. Implementación de la Entidad Central: El Ask
 El `Ask` representa una petición formalizada. Debido a su naturaleza crítica, se han tomado las siguientes decisiones de diseño:
 
 ### A. Validación de Propiedad y Permisos (Ownership)
@@ -45,3 +45,8 @@ Aunque existen 4 tipos de peticiones (`THINGS`, `TIME`, `EXPERTISE`, `SERVICES`)
 
 ### C. Ciclo de Vida del Ask
 Todas las peticiones nacen con el estado `CREATED` por defecto. Esta decisión de diseño asegura que ninguna petición sea visible para los donantes (`Givers`) hasta que un perfil superior (`Connector` o `Admin`) valide la petición y cambie su estado a `OPEN`.
+
+## 9. Trazabilidad Atómica en las Entregas (Fulfillments)
+Durante el desarrollo del dominio de operaciones, se detectó una limitación en el modelo conceptual inicial: vincular los donantes (`Givers`) únicamente a la Petición (`Ask`) impedía auditar las aportaciones individuales en peticiones de entregas múltiples. 
+**Decisión:** Se refactorizó el esquema relacional añadiendo una clave foránea explícita (`giverId`) en la entidad `Fulfillment`. 
+**Justificación:** Esta normalización de base de datos aplica el principio de Trazabilidad Atómica. Permite a la plataforma funcionar como un registro transaccional auditable, vital para la transparencia exigida en el Tercer Sector y para la posterior generación precisa de Historias de Impacto (`Stories`).

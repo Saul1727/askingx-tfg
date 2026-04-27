@@ -20,3 +20,5 @@
   2. Existencia y rol del Autor (`User` con rol `AUTHOR`).
   3. Verificación de propiedad (Un `AskAuthor` solo puede crear peticiones para sus propios `Askers`).
 - **Técnico:** Soporte para el patrón de especialización de campos (`quantityRequested`, `estimatedHours`, etc.) mediante una estructura de tabla única en PostgreSQL manejada por Prisma.
+
+- **Base de Datos:** Refactorizado el `schema.prisma` añadiendo la relación `giverId` a `Fulfillment` para garantizar la trazabilidad atómica de las donaciones. Sincronizado con PostgreSQL.
