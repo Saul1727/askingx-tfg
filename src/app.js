@@ -1,6 +1,7 @@
 // src/app.js
 const express = require('express');
 const errorHandler = require('./middlewares/errorHandler');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -8,12 +9,12 @@ const app = express();
 app.use(express.json());
 
 // Ruta de comprobación de salud (Healthcheck)
-app.app.get('/api/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Servidor AskingX funcionando' });
 });
 
-// Aquí irán nuestras rutas en el futuro
-// app.use('/api/users', userRoutes);
+// Rutas de usuarios
+app.use('/api/users', userRoutes);
 
 // Middleware global de errores (DEBE ir al final de todo)
 app.use(errorHandler);
