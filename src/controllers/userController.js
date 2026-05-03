@@ -52,7 +52,38 @@ const createAskAuthorController = async (req, res, next) => {
     }
 };
 
+const registerUserSchema = z.object({
+  fullName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  email: z.string().email("Formato de email inválido"),
+  passwordHash: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"), // Aquí recibimos la "contraseña" desde Postman
+  role: z.enum(['ADMIN', 'AUTHOR', 'CONNECTOR', 'GIVER'], {
+    errorMap: () => ({ message: "Rol inválido. Debe ser ADMIN, AUTHOR, CONNECTOR o GIVER" })
+  }),
+  preferredLanguage: z.enum(['ES', 'CAT', 'EN']).optional(),
+  availabilityNotes: z.string().optional()
+});
+
+// Controlador para registro generico de usuarios
+const registerUserController = async (req, res, next) => {
+  try {
+    const validatedData = registerUserSchema.parse(req.body);
+    const user = await userService.createUser(validatedData);
+
+    // Ocultamos la contraseña en la respuesta
+    const { passwordHash, ...userWithoutPassword } = user;
+
+    res.status(201).json({
+      success: true,
+      message: `Usuario con rol ${user.role} registrado con éxito`,
+      data: userWithoutPassword
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createAdminController,
   createAskAuthorController,
+  registerUserController,
 };

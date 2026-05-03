@@ -39,6 +39,26 @@ const createAskController = async (req, res, next) => {
     }
 };
 
+const getAllAsksController = async (req, res, next) => {
+    try {
+        //Extraemos filtros de query params (si los hay)
+        const filters = {
+            status: req.query.status, // Ejemplo de filtro por estado
+        };
+
+        const asks = await askService.getAllAsks(filters);
+
+        res.status(200).json({
+            success: true,
+            message: 'Peticiones recuperadas con éxito',
+            data: asks
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createAskController,
+    getAllAsksController
 };

@@ -26,6 +26,23 @@ const createAsker = async (askerData) => {
     return newAsker;
 };
 
+const getAskersByAuthor = async (authorId) => {
+    const askers = await prisma.asker.findMany({
+        where: {  
+            askAuthorId: authorId 
+        },
+        include: {
+            asks: true // Incluimos las Asks asociadas a cada Asker
+        },
+        orderBy: { 
+            createdAt: 'desc' 
+        }
+    });
+
+    return askers;
+};
+
 module.exports = {
     createAsker,
+    getAskersByAuthor
 };

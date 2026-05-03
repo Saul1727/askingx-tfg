@@ -31,6 +31,27 @@ const createAskerController = async (req, res, next) => {
     }
 };
 
+const getAskersByAuthorController = async (req, res, next) => {
+    try {
+        // Pasamos el ID del autor desde los parámetros de la ruta
+        const authorId = req.params.id; // Obtenemos el ID del autor de los parámetros de la ruta
+
+        // Validamos que el ID del autor es un UUID válido
+        z.string().uuid().parse(authorId);
+
+        const askers = await askerService.getAskersByAuthor(authorId);
+
+        res.status(200).json({
+            success: true,
+            message: 'Solicitantes (Askers) recuperados con éxito',
+            data: askers
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createAskerController,
+    getAskersByAuthorController
 };

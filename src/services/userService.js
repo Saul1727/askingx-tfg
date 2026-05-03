@@ -54,7 +54,35 @@ const createAskAuthor = async (userData) => {
     return newUser;
 };
 
+const createUser = async (userData) => {
+  // 1. Verificamos si el email ya existe en la BBDD
+  const existingUser = await prisma.user.findUnique({
+    where: { email: userData.email }
+  });
+
+  if (existingUser) {
+    const error = new Error('El email ya está registrado en el sistema.');
+    error.statusCode = 409; // Conflicto
+    throw error;
+  }
+
+  // 2. Creamos el usuario en Prisma
+  const newUser = await prisma.user.create({
+    data: {
+      fullName: userData.fullName,
+      email: userData.email,
+      passwordHash: userData.passwordHash, // En un sistema real, aquí encriptaríamos con bcrypt
+      role: userData.role,
+      preferredLanguage: userData.preferredLanguage || 'ES', // Español por defecto si no lo manda
+      availabilityNotes: userData.availabilityNotes
+    }
+  });
+
+  return newUser;
+};
+
 module.exports = {
   createAdmin,
-    createAskAuthor,
+  createAskAuthor,
+  createUser
 };

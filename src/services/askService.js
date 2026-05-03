@@ -45,4 +45,24 @@ const createAsk = async (askData) => {
     return newAsk;
 };
 
-module.exports = { createAsk, };
+const getAllAsks = async (filters = {}) => {
+    //Construimos el objeto de consulta para Prisma
+    const query = {
+        include: {
+        asker: true, // Incluimos datos del Asker
+        domains: true, // Incluimos los dominios asociados
+        fulfillments: true
+    },
+    orderBy: { createdAt: 'desc' } // Ordenamos por fecha de creación (más recientes primero)
+};
+
+//Si hay estado aplicamos el filtro
+if (filters.status) {
+    query.where = { status: filters.status };
+}
+
+const asks = await prisma.ask.findMany(query);
+return asks;
+};
+
+module.exports = { createAsk, getAllAsks };
