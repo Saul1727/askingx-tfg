@@ -37,7 +37,7 @@ const getAskersByAuthorController = async (req, res, next) => {
         const authorId = req.params.id; // Obtenemos el ID del autor de los parámetros de la ruta
 
         // Validamos que el ID del autor es un UUID válido
-        z.string().uuid().parse(authorId);
+        z.string().uuid("El ID del autor debe ser un UUID válido").parse(authorId);
 
         const askers = await askerService.getAskersByAuthor(authorId);
 

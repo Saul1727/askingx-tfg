@@ -5,7 +5,7 @@ const userRoutes = require('./routes/userRoutes');
 const askerRoutes = require('./routes/askerRoutes');
 const askRoutes = require('./routes/askRoutes');
 const fulfillmentRoutes = require('./routes/fulfillmentRoutes');
-
+const domainRoutes = require('./routes/domainRoutes');
 
 const app = express();
 
@@ -25,6 +25,8 @@ app.use('/api/askers', askerRoutes);
 app.use('/api/asks', askRoutes);
 // Rutas de entregas (Fulfillments)
 app.use('/api/fulfillments', fulfillmentRoutes);
+// Rutas de dominios temáticos
+app.use('/api/domains', domainRoutes);
 
 // Middleware global de errores (DEBE ir al final de todo)
 app.use(errorHandler);

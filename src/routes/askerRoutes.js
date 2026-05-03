@@ -3,10 +3,10 @@ const { createAskerController, getAskersByAuthorController  } = require('../cont
 
 const router = express.Router();
 
-// POST /api/askers
+// POST /api/askers -> Para registrar un nuevo vulnerable
 router.post('/', createAskerController);
 
-// GET /api/askers/:id
+// GET /api/askers/author/:id -> Para leer los vulnerables de un autor específico
 router.get('/author/:id', getAskersByAuthorController);
 
 

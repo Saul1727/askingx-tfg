@@ -32,7 +32,13 @@ const getAskersByAuthor = async (authorId) => {
             askAuthorId: authorId 
         },
         include: {
-            asks: true // Incluimos las Asks asociadas a cada Asker
+            asks: {
+                select: {
+                    id: true,
+                    title: true,
+                    status: true
+                }
+            }
         },
         orderBy: { 
             createdAt: 'desc' 
