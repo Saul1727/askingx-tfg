@@ -65,4 +65,25 @@ const asks = await prisma.ask.findMany(query);
 return asks;
 };
 
-module.exports = { createAsk, getAllAsks };
+const updateAskStatus = async (askId, newStatus) => {
+    // Verificamos que la Ask existe
+    const existingAsk = await prisma.ask.findUnique({
+        where: { id: askId }
+    });
+
+    if (!existingAsk) {
+        const error = new Error('La Ask especificada no existe');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Actualizamos el estado de la Ask
+    const updatedAsk = await prisma.ask.update({
+        where: { id: askId },
+        data: { status: newStatus }
+    });
+
+    return updatedAsk;
+};
+
+module.exports = { createAsk, getAllAsks, updateAskStatus };

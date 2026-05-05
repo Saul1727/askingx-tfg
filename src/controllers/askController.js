@@ -3,12 +3,12 @@ const askService = require('../services/askService');
 
 //Esquema de validacion para la Peticion (Ask)
 const createAskSchema = z.object({
-    title: z.string().min(5, "El título debe tener al menos 5 caracteres"),
+  title: z.string().min(5, "El título debe tener al menos 5 caracteres"),
   description: z.string().min(15, "La descripción debe ser más detallada (mínimo 15 caracteres)"),
+
   // Enum estricto basado en Prisma y el modelo AskingX
-  type: z.enum(['THINGS', 'TIME', 'EXPERTISE', 'SERVICES'], {
-    errorMap: () => ({ message: "El tipo debe ser THINGS, TIME, EXPERTISE o SERVICES" })
-  }),
+  type: z.enum(['THINGS', 'TIME', 'EXPERTISE', 'SERVICES'], {errorMap: () => ({ message: "El tipo debe ser THINGS, TIME, EXPERTISE o SERVICES" })}),
+
   dueDate: z.string().datetime({ message: "La fecha límite debe estar en formato ISO 8601 (ej. 2026-12-31T23:59:59Z)" }).optional(),
   
   // Relaciones
@@ -20,6 +20,13 @@ const createAskSchema = z.object({
   estimatedHours: z.number().int().positive("Las horas estimadas deben ser positivas").optional(),
   requiredSkill: z.string().optional(),
   serviceLocation: z.string().optional()
+});
+
+//Esquema de validación para actualizar una Petición (Ask)
+const updateAskStatusSchema = z.object({
+    status: z.enum(['CREATED', 'OPEN', 'MATCHED', 'FULFILLED', 'CANCELED', 'EXPIRED'],
+         {errorMap: () => ({ message: "El estado proporcionado no es válido para el sistema." })
+    })
 });
 
 const createAskController = async (req, res, next) => {
@@ -58,7 +65,31 @@ const getAllAsksController = async (req, res, next) => {
     }
 };
 
+// Controlador para modificar el estado de una Petición (PATCH)
+const updateAskStatusController = async (req, res, next) => {
+    try {
+        const askId = req.params.id;
+
+        // Validamos que en la URL venga un UUID correcto
+        z.string().uuid("El ID de la petición debe ser un UUID válido").parse(askId);
+
+        // Validamos que el JSON del body sea correcto (ej: { "status": "OPEN" })
+        const validatedData = updateAskStatusSchema.parse(req.body);
+
+        const updatedAsk = await askService.updateAskStatus(askId, validatedData.status);
+
+        res.status(200).json({
+            success: true,
+            message: `Estado de la petición actualizado con éxito a ${validatedData.status}`,
+            data: updatedAsk
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createAskController,
-    getAllAsksController
+    getAllAsksController,
+    updateAskStatusController
 };

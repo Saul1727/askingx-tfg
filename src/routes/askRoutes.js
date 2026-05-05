@@ -1,5 +1,5 @@
 const express = require('express');
-const { createAskController, getAllAsksController } = require('../controllers/askController');
+const { createAskController, getAllAsksController, updateAskStatusController } = require('../controllers/askController');
 
 const router = express.Router();
 
@@ -7,5 +7,8 @@ const router = express.Router();
 router.post('/', createAskController);
 // GET /api/asks
 router.get('/', getAllAsksController);
+
+// PATCH /api/asks/:id/status
+router.patch('/:id/status', updateAskStatusController);
 
 module.exports = router;
