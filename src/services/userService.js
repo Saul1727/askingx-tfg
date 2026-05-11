@@ -45,7 +45,7 @@ const createAskAuthor = async (userData) => {
         error.statusCode = 409; // Conflict
         throw error;
     }
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    const hashedPassword = await hashPassword(userData.password);
 
     const newUser = await prisma.user.create({
         data: {
@@ -71,12 +71,14 @@ const createUser = async (userData) => {
     throw error;
   }
 
+  const hashedPassword = await hashPassword(userData.password);
+
   // 2. Creamos el usuario en Prisma
   const newUser = await prisma.user.create({
     data: {
       fullName: userData.fullName,
       email: userData.email,
-      passwordHash: userData.passwordHash, // En un sistema real, aquí encriptaríamos con bcrypt
+      passwordHash: hashedPassword, 
       role: userData.role,
       preferredLanguage: userData.preferredLanguage || 'ES', // Español por defecto si no lo manda
       availabilityNotes: userData.availabilityNotes
@@ -86,8 +88,40 @@ const createUser = async (userData) => {
   return newUser;
 };
 
+const loginUser = async (credentials) => {
+
+  const user = await prisma.user.findUnique({
+    where: { email: credentials.email }
+  });
+
+  // Si no existe, devolvemos 401 Unauthorized (sin dar detalles por seguridad)
+  if (!user) {
+    const error = new Error('Credenciales inválidas.');
+    error.statusCode = 401;
+    throw error;
+  }
+  // Comparamos la contraseña hasheada con la que el usuario ingresó
+  const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
+
+  if (!isPasswordValid) {
+    const error = new Error('Credenciales inválidas.');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const token = jwt.sign(
+    { userId: user.id, role: user.role },
+    process.env.JWT_SECRET, // Lo guardamos en el .env
+    { expiresIn: '24h' } // Caduca en 24h
+  );
+
+  return { user, token };
+};
+
 module.exports = {
   createAdmin,
   createAskAuthor,
+  loginUser,
   createUser
 };
+  

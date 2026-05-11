@@ -55,7 +55,7 @@ const createAskAuthorController = async (req, res, next) => {
 const registerUserSchema = z.object({
   fullName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   email: z.string().email("Formato de email inválido"),
-  passwordHash: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"), // Aquí recibimos la "contraseña" desde Postman
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"), 
   role: z.enum(['ADMIN', 'AUTHOR', 'CONNECTOR', 'GIVER'], {
     errorMap: () => ({ message: "Rol inválido. Debe ser ADMIN, AUTHOR, CONNECTOR o GIVER" })
   }),
@@ -82,8 +82,38 @@ const registerUserController = async (req, res, next) => {
   }
 };
 
+const loginUserSchema = z.object({
+  email: z.string().email("Formato de email inválido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres")
+});
+
+const loginUserController = async (req, res, next) => {
+  try {
+    // Validamos los datos de entrada (email y password)
+    const validatedData = loginUserSchema.parse(req.body);
+
+    // Llamamos al servicio de login
+    const { user, token } = await userService.loginUser(validatedData);
+
+    // Sacamos passwordHash para no devolverlo en la respuesta
+    const { passwordHash, ...userWithoutPassword } = user;
+
+    res.status(200).json({
+      success: true,
+      message: 'Login exitoso',
+      data: {
+        user: userWithoutPassword,
+        token: token // Devolvemos el token JWT al cliente
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createAdminController,
   createAskAuthorController,
   registerUserController,
+  loginUserController
 };

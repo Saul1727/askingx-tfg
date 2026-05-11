@@ -1,5 +1,5 @@
 const express = require('express');
-const { createAdminController, createAskAuthorController, registerUserController } = require('../controllers/userController');
+const { createAdminController, createAskAuthorController, registerUserController, loginUserController } = require('../controllers/userController');
 const { register } = require('node:module');
 
 const router = express.Router();
@@ -12,5 +12,8 @@ router.post('/author', createAskAuthorController);
 
 // POST /api/users/register
 router.post('/register', registerUserController);
+
+// POST /api/users/login
+router.post('/login', loginUserController);
 
 module.exports = router;
