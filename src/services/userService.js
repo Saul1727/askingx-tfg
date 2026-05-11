@@ -1,5 +1,10 @@
 const prisma = require('../config/prisma');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const hashPassword = async (password) => {
+  return await bcrypt.hash(password, 10);
+};
 
 const createAdmin = async (userData) => {
   // 1. Verificamos si el email ya existe para evitar errores no controlados de Prisma
@@ -9,12 +14,12 @@ const createAdmin = async (userData) => {
 
   if (existingUser) {
     const error = new Error('El correo electrónico ya está registrado.');
-    error.statusCode = 409; // Conflict
+    error.statusCode = 409; 
     throw error;
   }
 
   // 2. Hasheamos la contraseña antes de crear el usuario
-  const hashedPassword = await bcrypt.hash(userData.password, 10);
+  const hashedPassword = await hashPassword(userData.password);
 
 
   // 3. Creamos el usuario forzando el rol ADMIN y guardando el hash
