@@ -69,24 +69,27 @@ model User {
   asksAssigned      Ask[]     @relation("GiverToAsk")
   domainsManaged    Domain[]  @relation("AdminToDomain")
   fulfillments      Fulfillment[] @relation("FulfillmentToGiver")
+
+  // Especialidades de los expertos (Connector y Giver) 
+  specialties       Domain[]  @relation("UserSpecialties")
 }
 
 // Solicitante (No interactúa, es gestionado por AskAuthor)
 model Asker {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   organizationName String?
   contactPerson    String
   phone            String?
   email            String?
   address          String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   // Relaciones
   askAuthorId      String
-  askAuthor        User     @relation("AuthorToAsker", fields: [askAuthorId], references: [id])
+  askAuthor        User      @relation("AuthorToAsker", fields: [askAuthorId], references: [id])
   
-  asks             Ask[]    @relation("AskerToAsk") // 1 Asker puede tener múltiples peticiones a lo largo del tiempo
+  asks             Ask[]     @relation("AskerToAsk") // 1 Asker puede tener múltiples peticiones a lo largo del tiempo
 }
 
 // Dominios temáticos para clasificar las peticiones
@@ -100,7 +103,11 @@ model Domain {
   adminId     String?
   admin       User?   @relation("AdminToDomain", fields: [adminId], references: [id])
   
-  asks        Ask[]   @relation("AskToDomain") // Relación N a N
+  // Relación 1 a N. Una petición solo pertenece a un dominio.
+  asks        Ask[]   @relation("AskToDomain") 
+
+  // Expertos (Connectors y Givers) asignados a este dominio
+  specialists User[]  @relation("UserSpecialties")
 }
 
 // Entidad Central: La Petición (Ask)
@@ -132,7 +139,10 @@ model Ask {
   connector          User?     @relation("ConnectorToAsk", fields: [connectorId], references: [id])
 
   givers             User[]    @relation("GiverToAsk") // Múltiples Givers por petición
-  domains            Domain[]  @relation("AskToDomain") // Múltiples dominios
+  
+  // Referencia a un único Dominio
+  domainId           String
+  domain             Domain    @relation("AskToDomain", fields: [domainId], references: [id])
 
   // RELACIÓN 0 a N: Al crearse está vacío, permite múltiples entregas progresivas
   fulfillments       Fulfillment[] 
@@ -152,7 +162,7 @@ model Fulfillment {
   askId             String
   ask               Ask      @relation(fields: [askId], references: [id])
   
-  // NUEVO: Trazabilidad atómica del donante
+  // Trazabilidad atómica del donante
   giverId           String
   giver             User     @relation("FulfillmentToGiver", fields: [giverId], references: [id])
 }

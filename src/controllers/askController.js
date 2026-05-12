@@ -5,16 +5,12 @@ const askService = require('../services/askService');
 const createAskSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres"),
   description: z.string().min(15, "La descripción debe ser más detallada (mínimo 15 caracteres)"),
-
-  // Enum estricto basado en Prisma y el modelo AskingX
   type: z.enum(['THINGS', 'TIME', 'EXPERTISE', 'SERVICES'], {errorMap: () => ({ message: "El tipo debe ser THINGS, TIME, EXPERTISE o SERVICES" })}),
-
   dueDate: z.string().datetime({ message: "La fecha límite debe estar en formato ISO 8601 (ej. 2026-12-31T23:59:59Z)" }).optional(),
-  
-  // Relaciones
   askerId: z.string().uuid("El ID del solicitante debe ser un UUID válido"),
   askAuthorId: z.string().uuid("El ID del autor debe ser un UUID válido"),
-  
+  domainId: z.string().uuid("ID de dominio no válido"),
+
   // Campos especializados (Todos opcionales porque dependen del 'type')
   quantityRequested: z.number().int().positive("La cantidad debe ser un número entero positivo").optional(),
   estimatedHours: z.number().int().positive("Las horas estimadas deben ser positivas").optional(),
@@ -49,10 +45,12 @@ const createAskController = async (req, res, next) => {
 const getAllAsksController = async (req, res, next) => {
     try {
         //Extraemos filtros de query params (si los hay)
-        const filters = req.query; // Capturamos filtros de la URL
-        const user = req.user; // Capturamos el usuario autenticado 
+        const filters = {
+            status: req.query.status,
+        };
 
-        const asks = await askService.getAllAsks(user, filters);
+
+        const asks = await askService.getAllAsks(req.user, filters);
 
         res.status(200).json({
             success: true,
@@ -67,15 +65,15 @@ const getAllAsksController = async (req, res, next) => {
 // Controlador para modificar el estado de una Petición (PATCH)
 const updateAskStatusController = async (req, res, next) => {
     try {
-        const askId = req.params.id;
-
+        const { id } = req.params;
+        
         // Validamos que en la URL venga un UUID correcto
-        z.string().uuid("El ID de la petición debe ser un UUID válido").parse(askId);
+        z.string().uuid("El ID de la petición debe ser un UUID válido").parse(id);
 
         // Validamos que el JSON del body sea correcto (ej: { "status": "OPEN" })
         const validatedData = updateAskStatusSchema.parse(req.body);
 
-        const updatedAsk = await askService.updateAskStatus(askId, validatedData.status);
+        const updatedAsk = await askService.updateAskStatus(id, validatedData.status, req.user);
 
         res.status(200).json({
             success: true,

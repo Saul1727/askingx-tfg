@@ -33,6 +33,7 @@ const createAsk = async (askData) => {
             dueDate: askData.dueDate ? new Date(askData.dueDate) : null,
             askerId: askData.askerId,
             askAuthorId: askData.askAuthorId,
+            domainId: askData.domainId,
 
             //Campos especializados (Single Table Inheritance)
             quantityRequested: askData.quantityRequested,
@@ -50,10 +51,9 @@ const getAllAsks = async (user, filters = {}) => {
     const query = {
         include: {
             asker: true, // Incluimos datos del Asker
-            domains: true, // Incluimos los dominios asociados
+            domain: true, // Incluimos los dominio asociado
             fulfillments: true // Para que el front veas las donaciones
     },
-    orderBy: { createdAt: 'desc' }, // Ordenamos por fecha de creación (más recientes primero)
     where: {}
 };
 
@@ -71,10 +71,15 @@ if (user.role === 'ADMIN') {
 
 // CONNECTOR (solo sus doominos)
 else if (user.role === 'CONNECTOR') {
-   query.where.OR = [
-        { status: 'OPEN'},
-        { connectorId: user.userId }
-   ];
+   const specialtyIds = user.specialties?.map(d => d.id) || [];
+
+        query.where.OR = [
+            { 
+                status: 'OPEN',
+                domainId: { in: specialtyIds } // Solo ve lo de su especialidad
+            }, 
+            { connectorId: user.userId }
+        ];
 }
 
 // AUTHOR (solo sus Asks)
