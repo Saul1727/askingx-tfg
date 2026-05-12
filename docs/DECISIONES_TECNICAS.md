@@ -1,92 +1,108 @@
-# Registro de Decisiones Arquitectónicas (ADR)
+Registro de Decisiones Arquitectónicas (ADR) - Proyecto AskingX
 
-## 1. Patrón de Arquitectura Backend
+1. Patrón de Arquitectura Backend
+   Se ha implementado una Arquitectura en Capas (Layered Architecture) para garantizar el desacoplamiento de responsabilidades:
 
-Se ha optado por implementar una **Arquitectura estricta en Capas (Layered Architecture)** en Node.js con Express, dividiendo el flujo en:
+Rutas (Routes): Definición de endpoints y seguridad perimetral (Middlewares).
 
-- **Rutas (Routes):** Definen los endpoints y mapean los controladores.
-- **Controladores (Controllers):** Gestionan las peticiones HTTP, extraen el payload y delegan la ejecución. No contienen lógica de negocio.
-- **Servicios (Services):** Contienen el "core" de la lógica de negocio y se comunican con la base de datos a través del ORM.
-  _Justificación:_ Facilita la escalabilidad del TFG, el mantenimiento y la futura implementación de pruebas unitarias al desacoplar responsabilidades.
+Controladores (Controllers): Gestión de la comunicación HTTP y validación de esquemas de entrada.
 
-## 2. ORM y Base de datos
+Servicios (Services): Orquestación de la lógica de negocio y reglas de dominio.
 
-Se utiliza **Prisma ORM (v5)** contra una base de datos PostgreSQL.
-_Justificación:_ Prisma proporciona un tipado estricto que reduce errores en tiempo de ejecución y una sintaxis declarativa (schema) muy alineada con los diagramas UML diseñados (como la herencia de tabla única para los distintos tipos de `Ask`).
+Persistencia (Prisma/PostgreSQL): Gestión de datos y relaciones.
 
-## 3. Seguridad y Validación
+2. Modelado de Datos y Fidelidad al UML
+   Tras revisar el diseño original, se han tomado decisiones críticas para alinear la base de datos con el diagrama de clases:
 
-- **Cifrado de Contraseñas:** Se ha integrado `bcrypt` con un "salt round" de 10. _Justificación:_ Almacenar contraseñas en texto plano vulnera las normativas básicas de seguridad y el RGPD. 10 rondas ofrecen un buen equilibrio entre seguridad criptográfica y rendimiento del servidor.
-- **Validación de Entradas:** Se utiliza `Zod` a nivel de controlador. _Justificación:_ Permite definir esquemas estrictos (ej. tamaño mínimo de contraseña, formato de email), rechazando peticiones malformadas antes de que alcancen la lógica de negocio o saturen la base de datos.
+Relación Ask-Domain (1:N): Cada petición (Ask) se vincula a un único dominio de conocimiento. Esto simplifica la categorización y garantiza que la búsqueda sea precisa.
 
-## 4. Prevención de Inyección SQL y Saneamiento de Datos
+Especialidades (N:N): Los usuarios con roles de experto (CONNECTOR y GIVER) poseen una relación de "muchos a muchos" con la entidad Domain. Esto modela la realidad donde un experto puede dominar múltiples áreas (ej. Alimentación y Logística).
 
-Para proteger la integridad de la base de datos, se aplica una estrategia de defensa en profundidad (Defense in Depth) en dos capas:
+3. Seguridad y Control de Acceso Basado en Roles (RBAC)
+   La API utiliza JSON Web Tokens (JWT) para una autenticación stateless. El control de acceso se divide en dos niveles:
 
-1. **Validación de Entrada (Zod):** Actúa como primera barrera en la capa de controladores, garantizando que los datos cumplen con la tipificación y el formato esperado (ej. validación estricta de emails) y rechazando peticiones malformadas (HTTP 400 Bad Request) antes de ejecutar lógica de negocio.
-2. **Consultas Parametrizadas (Prisma ORM):** El mapeador objeto-relacional (Prisma) gestiona toda la comunicación con PostgreSQL utilizando sentencias preparadas (Prepared Statements) bajo el capó. Esto asegura que los datos introducidos por el usuario nunca se concatenan directamente en la consulta SQL, previniendo por diseño los ataques de Inyección SQL (SQLi).
+Middleware de Rol: Restringe el acceso a rutas según el tipo de usuario (ej. solo AUTHOR crea Asks).
 
-## 5. Manejo Robusto de Errores en Tiempo de Ejecución (Runtime)
+Validación de Propiedad (Ownership): En la capa de servicio, se verifica que un AUTHOR solo pueda modificar el estado de las peticiones que él mismo ha creado, evitando manipulaciones cruzadas entre organizaciones.
 
-En arquitecturas basadas en Javascript/Node.js, es una mala práctica (anti-patrón) depender de cadenas de texto (ej. `err.name === 'ZodError'`) para la identificación y manejo de excepciones, ya que es propenso a fallos si la estructura del error cambia. Para solucionar un bug crítico (HTTP 500) al procesar validaciones cruzadas, se implementó el uso del operador `instanceof` (`err instanceof ZodError`) en el middleware global.
+4. El Connector como Subject Matter Expert (SME)
+   Alineado con el modelo AskingX, el CONNECTOR no es un administrador global, sino un experto técnico.
 
-_Justificación Técnica:_ Esto garantiza una comprobación estricta a nivel de prototipo de clase. Permite la extracción segura de la propiedad nativa `.issues` de Zod, garantizando que el frontend o cliente API siempre reciba un formato JSON predecible con código HTTP 400, protegiendo la estabilidad del hilo principal del servidor de Express.
+Visibilidad Segmentada: Un CONNECTOR solo visualiza en su panel las peticiones que pertenecen a sus dominios de especialidad.
 
-## 6. Separación de Dominios (Principio de Responsabilidad Única - SRP)
+Expert Notes: Se ha reservado el campo expertNotes en la entidad Fulfillment para que el conector aporte su criterio técnico al validar el "match" entre oferta y demanda.
 
-Aunque un `Asker` (Solicitante) no deja de ser una persona registrada en la plataforma, no tiene capacidad de login ni rol de usuario. Por tanto, en la capa lógica de la API (Controllers y Services), se ha separado completamente su gestión del `userService`, creando un `askerService` propio. Esta decisión respeta el Principio de Responsabilidad Única (SRP), evitando controladores monolíticos y preparando el código para escalar (Domain-Driven Design básico).
+5. Automatización del Ciclo de Vida (Trigger Lógico)
+   Para reducir la carga administrativa y cumplir con la visión de automatización de John, se ha implementado un "trigger" en la capa de servicio:
 
-## 7. Modelado de Datos vs Reglas de Negocio (Validaciones Cruzadas)
+Estado MATCHED: En el momento en que un CONNECTOR o AUTHOR registra una entrega (Fulfillment), el sistema cambia automáticamente el estado del Ask de OPEN a MATCHED.
 
-Según el modelo conceptual de AskingX, un Solicitante puede ser tanto un individuo vulnerable como una organización. Esto obliga a nivel de base de datos (Prisma) a que campos como `organizationName`, `phone` o `address` sean nulos (opcionales). Sin embargo, para evitar registrar entidades "huérfanas" o ilocalizables, se ha delegado la responsabilidad de la integridad de contacto a la capa del Controlador mediante Zod (función `.refine()`). La regla de negocio exige que la petición HTTP contenga, obligatoriamente, al menos un método de contacto válido, combinando la flexibilidad de la base de datos con la rigidez requerida por el trabajo de campo de la ONG.
+Justificación: Esto notifica instantáneamente al trabajador social de que la conexión se ha realizado, permitiéndole pasar a la fase de monitorización.
 
-## 8. Implementación de la Entidad Central: El Ask
+6. Patrón "Human-in-the-Loop" y Verificación Física
+   A pesar de la automatización del "match", el cierre definitivo del caso (FULFILLED) sigue siendo manual.
 
-El `Ask` representa una petición formalizada. Debido a su naturaleza crítica, se han tomado las siguientes decisiones de diseño:
+Decisión: Solo el AUTHOR (o el ADMIN) puede realizar el PATCH final al estado FULFILLED.
 
-### A. Validación de Propiedad y Permisos (Ownership)
+Justificación: Dado que la ayuda es física (bienes o servicios reales), el sistema no puede dar por finalizado un caso hasta que el trabajador social verifique la recepción y calidad de la ayuda. Esto garantiza la veracidad de los datos antes de generar la Story de impacto.
 
-A diferencia de un sistema convencional donde cualquier usuario con rol de "escritura" puede crear registros, en AskingX se ha implementado una restricción lógica en la capa de Servicio: un `AskAuthor` solo puede registrar peticiones para aquellos `Askers` (vulnerables) que él mismo ha dado de alta.
-_Justificación:_ Esto garantiza la trazabilidad y la responsabilidad directa del trabajador social sobre el caso, evitando manipulaciones cruzadas de datos entre distintos conectores u organizaciones.
+7. Privacidad y Visibilidad de Datos
+   Se ha implementado una lógica de filtrado dinámico en getAllAsks para proteger la privacidad de los solicitantes vulnerables:
 
-### B. Especialización de Tipos (Single-Table Inheritance)
+ADMIN/CONNECTOR: Acceso a búsqueda global (dentro de su especialidad) para gestionar conexiones.
 
-Aunque existen 4 tipos de peticiones (`THINGS`, `TIME`, `EXPERTISE`, `SERVICES`), se ha optado por un modelo de persistencia de tabla única.
-_Justificación:_ Facilita las consultas globales (ej: "ver todas las peticiones abiertas") y simplifica la relación con futuras entidades como `Fulfillment` o `Story`, manteniendo la flexibilidad mediante campos opcionales que Zod valida dinámicamente según el `Enum` del tipo seleccionado.
+AUTHOR: Vista exclusiva de los casos gestionados por su propia organización.
 
-### C. Ciclo de Vida del Ask
+GIVER: Acceso limitado únicamente a su historial personal de donaciones realizadas. No tiene acceso a la "bolsa" de peticiones abiertas, ya que es considerado un agente externo a la gestión logística de la plataforma.
 
-Todas las peticiones nacen con el estado `CREATED` por defecto. Esta decisión de diseño asegura que ninguna petición sea visible para los donantes (`Givers`) hasta que un perfil superior (`Connector` o `Admin`) valide la petición y cambie su estado a `OPEN`.
+8. Validación Estricta con Zod
+   Se utiliza Zod para garantizar que ninguna petición malformada alcance la base de datos:
 
-## 9. Trazabilidad Atómica en las Entregas (Fulfillments)
+Single-Table Inheritance (STI): Zod valida campos específicos según el tipo de Ask (ej. quantityRequested para bienes físicos, estimatedHours para tiempo voluntario).
 
-Durante el desarrollo del dominio de operaciones, se detectó una limitación en el modelo conceptual inicial: vincular los donantes (`Givers`) únicamente a la Petición (`Ask`) impedía auditar las aportaciones individuales en peticiones de entregas múltiples.
-**Decisión:** Se refactorizó el esquema relacional añadiendo una clave foránea explícita (`giverId`) en la entidad `Fulfillment`.
-**Justificación:** Esta normalización de base de datos aplica el principio de Trazabilidad Atómica. Permite a la plataforma funcionar como un registro transaccional auditable, vital para la transparencia exigida en el Tercer Sector y para la posterior generación precisa de Historias de Impacto (`Stories`).
+Normalización de Estados: Se han corregido inconsistencias tipográficas (ej. CANCELLED con doble 'L') para garantizar la integridad referencial con los Enums de PostgreSQL.
 
-### D. Transición de Estados y Patrón "Human-in-the-Loop"
+9. Manejo de Errores y Estabilidad del Servidor
+   Se ha refactorizado el middleware de errores global:
 
-Para la gestión del ciclo de vida de una petición (transiciones entre `CREATED`, `OPEN`, `MATCHED` y `FULFILLED`), se ha habilitado un endpoint específico mediante el método HTTP `PATCH`.
+Detección de Instancias: Uso de instanceof para capturar errores específicos de Zod o JWT.
 
-**Decisión:** La transición al estado final `FULFILLED` (Completado) no se realiza de forma automática cuando el donante (`Giver`) registra una entrega (`Fulfillment`), sino que requiere una confirmación manual por parte del `AskAuthor` (Trabajador Social).
-**Justificación:** Se ha implementado un patrón arquitectónico de moderación humana (_Human-in-the-Loop_). Dado que la plataforma opera en el mundo real (entregas físicas de bienes o tiempo), el sistema no puede confiar ciegamente en el _input_ del donante. El `AskAuthor`, como propietario del caso, debe verificar físicamente que la entrega cumple con los requisitos antes de cerrar la petición, garantizando así la calidad y veracidad de los datos.
+Bug Fix: Se corrigió una referencia errónea a variables de error en el authMiddleware que provocaba caídas del hilo principal ante tokens inválidos, garantizando ahora un tiempo de actividad (uptime) robusto.
 
-## 10. Estrategia de Despliegue y Autenticación (Próximos Pasos)
+10. Normalización de Trazabilidad en Fulfillments
+    Se ha normalizado la entidad Fulfillment para incluir el giverId de forma atómica.
 
-- **Despliegue Independiente (Standalone):** Se ha decidido que la arquitectura opere de forma independiente a los sistemas heredados de la ONG, facilitando su despliegue en plataformas _cloud_ (PaaS) y limitando el alcance del proyecto a una prueba de concepto integral.
-- **Autenticación (Diseño):** El manejo de sesiones se diseñará sin estado (_stateless_) utilizando JSON Web Tokens (JWT) inyectados en la cabecera HTTP (`Authorization: Bearer`), delegando el almacenamiento seguro al cliente (Frontend) y facilitando el control de acceso basado en roles (RBAC) en el Backend.
+# Registro de Decisiones Arquitectónicas (ADR) - Proyecto AskingX
 
-## 11. Seguridad: Autenticación Stateless y Control de Acceso (RBAC)
+## 1. Fidelidad al Modelo de Datos (UML)
 
-El sistema de seguridad de la API se ha diseñado utilizando **JSON Web Tokens (JWT)** bajo un enfoque _stateless_ (sin estado), eliminando la necesidad de almacenar sesiones en el servidor y mejorando la escalabilidad.
-Para proteger los endpoints, se ha implementado el patrón **Chain of Responsibility** mediante dos middlewares de Express:
+Se ha realizado una reingeniería del esquema de datos para reflejar con exactitud el diagrama de clases:
 
-1. `authMiddleware`: Verifica la firma criptográfica del token y la caducidad, inyectando la identidad del usuario en la petición (`req.user`).
-2. `roleMiddleware`: Implementa un **Control de Acceso Basado en Roles (RBAC)** dinámico, evaluando si el rol inyectado posee los privilegios necesarios para la ruta.
+- **Categorización Unívoca:** Se ha modificado la relación Ask-Domain a **1:N**. Cada petición (`Ask`) tiene un único `domainId`, eliminando la ambigüedad en la clasificación de necesidades.
+- **Expertos de Dominio:** La relación entre usuarios y ámbitos de conocimiento se ha implementado mediante la propiedad `specialties` (N:N). Esto permite que tanto `CONNECTORS` como `GIVERS` definan sus áreas de pericia sin afectar a la entidad base `User`.
 
-## 12. Dualidad del Donante y Flexibilidad Operativa (Fulfillments)
+## 2. Automatización y Ciclo de Vida (Reglas de John)
 
-El análisis de los casos de uso reveló una dicotomía en el comportamiento de los donantes (Givers). Mientras que los donantes individuales (activos) interactúan directamente con la plataforma, los donantes institucionales o empresas (pasivos) operan de forma offline.
-**Decisión:** Para resolver esto sin romper la trazabilidad atómica, el endpoint de registro de entregas (`POST /api/fulfillments`) se ha flexibilizado en el `roleMiddleware`. Permite la autogestión por parte del `GIVER`, pero también autoriza a `CONNECTORS` y `AUTHORS` a registrar la transacción en la API en nombre de un tercero, adaptando el software a las fricciones del mundo real.
+Para cumplir con los requisitos de eficiencia del sistema, se han programado transiciones de estado automáticas:
 
-Nota para la memoria: API en Diseño, OpenAPI en Apéndice
+- **Trigger de Match:** Al registrar un `Fulfillment` (entrega), el servicio dispara un cambio de estado automático a `MATCHED`.
+- **Verificación Humana (HITL):** El estado final `FULFILLED` queda reservado exclusivamente para una acción manual del `AUTHOR`. Esta decisión garantiza que el sistema solo contabilice éxitos tras una verificación física real, protegiendo la veracidad de las **Stories** de impacto.
+
+## 3. Seguridad Avanzada y Privacidad
+
+- **Anti-Spoofing:** El backend ignora el ID de autor enviado por el cliente y utiliza el ID extraído del Token JWT para asignar la propiedad del `Ask`.
+- **Privacidad por Rol:** Se ha implementado un filtrado de visibilidad en la base de datos (Query-level filtering). Un `GIVER` nunca visualiza peticiones abiertas ajenas, y un `AUTHOR` está limitado estrictamente a los datos de su organización.
+
+## 4. Arquitectura y Manejo de Errores
+
+- **Capa de Servicios:** Toda la lógica de roles y filtrado se ha movido de los controladores a los servicios para facilitar el testing.
+- **Robustez del Servidor:** Se ha blindado el middleware de errores para capturar fallos de validación (Zod) y de autenticación (JWT) de forma segura, evitando caídas inesperadas del proceso de Node.js.
+
+Justificación: Esto permite auditar exactamente qué donante aportó qué cantidad en peticiones que requieren múltiples entregas (ej. una petición de 50 sillas cubierta por 3 donantes distintos).
+
+Nota sobre la Memoria y Apéndices
+Capítulo de Diseño: Se detallarán los diagramas de secuencia de las automatizaciones (Fulfillment -> MATCHED).
+
+Capítulo de Implementación: Se explicará el uso de Prisma como puente entre el UML y la base de datos.
+
+Apéndice: Se adjuntará la especificación completa OpenAPI / Swagger para la documentación técnica de los endpoints.

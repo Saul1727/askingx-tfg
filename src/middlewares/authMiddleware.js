@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const { tr } = require('zod/locales');
 
 const authMiddleware = (req, res, next) => {
     try {
