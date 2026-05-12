@@ -27,9 +27,9 @@ const authMiddleware = (req, res, next) => {
         };
         next();
     } catch (error) {
-        const error = new Error(err.name === 'TokenExpiredError' ? 'Token expirado.' : 'Token inválido.');
-        error.statusCode = 401;
-        next(error);
+        const customError = new Error(err.name === 'TokenExpiredError' ? 'Token expirado.' : 'Token inválido.');
+        customError.statusCode = 401;
+        next(customError);
     }
 };
 

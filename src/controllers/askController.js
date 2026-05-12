@@ -24,7 +24,7 @@ const createAskSchema = z.object({
 
 //Esquema de validación para actualizar una Petición (Ask)
 const updateAskStatusSchema = z.object({
-    status: z.enum(['CREATED', 'OPEN', 'MATCHED', 'FULFILLED', 'CANCELED', 'EXPIRED'],
+    status: z.enum(['CREATED', 'OPEN', 'MATCHED', 'FULFILLED', 'CANCELLED', 'EXPIRED'],
          {errorMap: () => ({ message: "El estado proporcionado no es válido para el sistema." })
     })
 });
@@ -49,11 +49,10 @@ const createAskController = async (req, res, next) => {
 const getAllAsksController = async (req, res, next) => {
     try {
         //Extraemos filtros de query params (si los hay)
-        const filters = {
-            status: req.query.status, // Ejemplo de filtro por estado
-        };
+        const filters = req.query; // Capturamos filtros de la URL
+        const user = req.user; // Capturamos el usuario autenticado 
 
-        const asks = await askService.getAllAsks(filters);
+        const asks = await askService.getAllAsks(user, filters);
 
         res.status(200).json({
             success: true,

@@ -29,7 +29,7 @@ const createAsk = async (askData) => {
             title: askData.title,
             description: askData.description,
             type: askData.type,
-            status: 'CREATED',
+            status: 'OPEN',
             dueDate: askData.dueDate ? new Date(askData.dueDate) : null,
             askerId: askData.askerId,
             askAuthorId: askData.askAuthorId,
@@ -45,22 +45,51 @@ const createAsk = async (askData) => {
     return newAsk;
 };
 
-const getAllAsks = async (filters = {}) => {
+const getAllAsks = async (user, filters = {}) => {
     //Construimos el objeto de consulta para Prisma
     const query = {
         include: {
-        asker: true, // Incluimos datos del Asker
-        domains: true, // Incluimos los dominios asociados
-        fulfillments: true
+            asker: true, // Incluimos datos del Asker
+            domains: true, // Incluimos los dominios asociados
+            fulfillments: true // Para que el front veas las donaciones
     },
-    orderBy: { createdAt: 'desc' } // Ordenamos por fecha de creación (más recientes primero)
+    orderBy: { createdAt: 'desc' }, // Ordenamos por fecha de creación (más recientes primero)
+    where: {}
 };
 
 //Si hay estado aplicamos el filtro
 if (filters.status) {
-    query.where = { status: filters.status };
+    query.where.status = filters.status ;
 }
 
+// VISIBILIDAD por roles
+
+// ADMIN
+if (user.role === 'ADMIN') {
+    // Los ADMIN pueden ver todas las Asks, no aplicamos restricciones adicionales
+}
+
+// CONNECTOR (solo sus doominos)
+else if (user.role === 'CONNECTOR') {
+   query.where.OR = [
+        { status: 'OPEN'},
+        { connectorId: user.userId }
+   ];
+}
+
+// AUTHOR (solo sus Asks)
+else if (user.role === 'AUTHOR') {
+    query.where.askAuthorId = user.userId;
+}
+
+// GIVER (solo su historial FULFILLMENT)
+else if (user.role === 'GIVER') {
+    query.where.fulfillments = {
+        some: { giverId: user.userId }
+    };
+}
+
+// Consulta con reglas aplicadas
 const asks = await prisma.ask.findMany(query);
 return asks;
 };

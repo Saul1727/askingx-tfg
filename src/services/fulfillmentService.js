@@ -34,6 +34,13 @@ const createFulfillment = async (data) => {
     }
   });
 
+  // Cuando existe un Fulfillment, la peticion pasa a MATCHED
+  // Avisando al AskAuthor de que la monitorice
+  await prisma.ask.update({
+    where: { id: data.askId },
+    data: { status: 'MATCHED' }
+  });
+
   return newFulfillment;
 };
 

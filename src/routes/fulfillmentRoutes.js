@@ -8,7 +8,8 @@ const router = express.Router();
 // Token requerido
 router.use(authMiddleware);
 
-// POST /api/fulfillments - GIVER, CONNECTOR Y AUTHOR pueden crear un fulfillment
-router.post('/', roleMiddleware(['GIVER', 'CONNECTOR', 'AUTHOR']), createFulfillmentController);
+// POST /api/fulfillments. 
+// Solo el CONNECTOR (que hace el match) o el AUTHOR (que gestiona el caso).
+router.post('/', roleMiddleware(['ADMIN', 'CONNECTOR', 'AUTHOR']), createFulfillmentController);
 
 module.exports = router;
