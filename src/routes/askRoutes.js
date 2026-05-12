@@ -1,14 +1,20 @@
 const express = require('express');
 const { createAskController, getAllAsksController, updateAskStatusController } = require('../controllers/askController');
+const authMiddleware = require('../middleware/authMiddleware');
+const roleMiddleware = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
-// POST /api/asks
-router.post('/', createAskController);
+// Todas las rutas de este archivo requieren Token
+router.use(authMiddleware);
+
 // GET /api/asks
 router.get('/', getAllAsksController);
 
-// PATCH /api/asks/:id/status
-router.patch('/:id/status', updateAskStatusController);
+// POST /api/asks Solo un AUTHOR puede crear un Ask
+router.post('/', roleMiddleware(['AUTHOR']), createAskController);
+
+// PATCH /api/asks/:id/status - Transicion de estados (Human-in-the-loop)
+router.patch('/:id/status', roleMiddleware(['AUTHOR', 'ADMIN','CONNECTOR']), updateAskStatusController);
 
 module.exports = router;
