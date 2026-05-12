@@ -72,12 +72,13 @@ if (user.role === 'ADMIN') {
 // CONNECTOR (solo sus doominos)
 else if (user.role === 'CONNECTOR') {
 
-    const connectorInfo = await prisma.connector.findUnique({
+    const connectorInfo = await prisma.user.findUnique({
         where: { id: user.userId },
         include: { specialties: true } 
     });
 
-   const specialtyIds = connectorInfo.specialties?.map(d => d.id) || [];
+    // ?, para evitar fallos sino lo encuentra
+   const specialtyIds = connectorInfo?.specialties?.map(d => d.id) || [];
 
         query.where.OR = [
             { 
