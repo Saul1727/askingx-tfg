@@ -75,3 +75,18 @@ Para la gestión del ciclo de vida de una petición (transiciones entre `CREATED
 
 - **Despliegue Independiente (Standalone):** Se ha decidido que la arquitectura opere de forma independiente a los sistemas heredados de la ONG, facilitando su despliegue en plataformas _cloud_ (PaaS) y limitando el alcance del proyecto a una prueba de concepto integral.
 - **Autenticación (Diseño):** El manejo de sesiones se diseñará sin estado (_stateless_) utilizando JSON Web Tokens (JWT) inyectados en la cabecera HTTP (`Authorization: Bearer`), delegando el almacenamiento seguro al cliente (Frontend) y facilitando el control de acceso basado en roles (RBAC) en el Backend.
+
+## 11. Seguridad: Autenticación Stateless y Control de Acceso (RBAC)
+
+El sistema de seguridad de la API se ha diseñado utilizando **JSON Web Tokens (JWT)** bajo un enfoque _stateless_ (sin estado), eliminando la necesidad de almacenar sesiones en el servidor y mejorando la escalabilidad.
+Para proteger los endpoints, se ha implementado el patrón **Chain of Responsibility** mediante dos middlewares de Express:
+
+1. `authMiddleware`: Verifica la firma criptográfica del token y la caducidad, inyectando la identidad del usuario en la petición (`req.user`).
+2. `roleMiddleware`: Implementa un **Control de Acceso Basado en Roles (RBAC)** dinámico, evaluando si el rol inyectado posee los privilegios necesarios para la ruta.
+
+## 12. Dualidad del Donante y Flexibilidad Operativa (Fulfillments)
+
+El análisis de los casos de uso reveló una dicotomía en el comportamiento de los donantes (Givers). Mientras que los donantes individuales (activos) interactúan directamente con la plataforma, los donantes institucionales o empresas (pasivos) operan de forma offline.
+**Decisión:** Para resolver esto sin romper la trazabilidad atómica, el endpoint de registro de entregas (`POST /api/fulfillments`) se ha flexibilizado en el `roleMiddleware`. Permite la autogestión por parte del `GIVER`, pero también autoriza a `CONNECTORS` y `AUTHORS` a registrar la transacción en la API en nombre de un tercero, adaptando el software a las fricciones del mundo real.
+
+Nota para la memoria: API en Diseño, OpenAPI en Apéndice

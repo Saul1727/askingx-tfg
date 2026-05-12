@@ -56,3 +56,12 @@
 - **Técnico:** Soporte para el patrón de especialización de campos (`quantityRequested`, `estimatedHours`, etc.) mediante una estructura de tabla única en PostgreSQL manejada por Prisma.
 
 - **Base de Datos:** Refactorizado el `schema.prisma` añadiendo la relación `giverId` a `Fulfillment` para garantizar la trazabilidad atómica de las donaciones. Sincronizado con PostgreSQL.
+
+## [Sprint 3] - Seguridad, JWT y RBAC (12/05/2026)
+
+- **Característica (Seguridad):** Implementado el endpoint de autenticación `POST /api/users/login` que genera Tokens JWT firmados con el ID y Rol del usuario.
+- **Característica (Seguridad):** Creado el `authMiddleware` para interceptar y validar tokens en rutas protegidas, rechazando peticiones no autenticadas (HTTP 401).
+- **Característica (Seguridad):** Creado el `roleMiddleware` para establecer un Control de Acceso Basado en Roles (RBAC), devolviendo HTTP 403 ante intentos de acceso no autorizados.
+- **Arquitectura:** Aplicados los middlewares de seguridad a todos los dominios (`askRoutes`, `askerRoutes`, `fulfillmentRoutes`).
+- **Lógica de Negocio:** Ampliados los permisos del endpoint `POST /api/fulfillments` para que los `Connectors` y `AskAuthors` puedan registrar donaciones en nombre de `Givers` pasivos (institucionales), eliminando un cuello de botella crítico detectado en el análisis de requisitos.
+- **Seguridad:** Refactorizado el servicio `userService.js` para asegurar que el cifrado de la contraseña se realice siempre obligatoriamente en la última capa del backend, desconfiando del payload del cliente.
