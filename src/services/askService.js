@@ -38,7 +38,7 @@ const createAsk = async (askData) => {
             //Campos especializados (Single Table Inheritance)
             quantityRequested: askData.quantityRequested,
             estimatedHours: askData.estimatedHours,
-            requiredSkills: askData.requiredSkills,
+            requiredSkill: askData.requiredSkill,
             serviceLocation: askData.serviceLocation,
         }
     });
@@ -71,7 +71,13 @@ if (user.role === 'ADMIN') {
 
 // CONNECTOR (solo sus doominos)
 else if (user.role === 'CONNECTOR') {
-   const specialtyIds = user.specialties?.map(d => d.id) || [];
+
+    const connectorInfo = await prisma.connector.findUnique({
+        where: { id: user.userId },
+        include: { specialties: true } 
+    });
+
+   const specialtyIds = connectorInfo.specialties?.map(d => d.id) || [];
 
         query.where.OR = [
             { 
@@ -99,7 +105,7 @@ const asks = await prisma.ask.findMany(query);
 return asks;
 };
 
-const updateAskStatus = async (askId, newStatus) => {
+const updateAskStatus = async (askId, newStatus, user) => {
     // Verificamos que la Ask existe
     const existingAsk = await prisma.ask.findUnique({
         where: { id: askId }
@@ -108,6 +114,13 @@ const updateAskStatus = async (askId, newStatus) => {
     if (!existingAsk) {
         const error = new Error('La Ask especificada no existe');
         error.statusCode = 404;
+        throw error;
+    }
+
+    // Un AUTHOR solo puede actualizar el estado de sus propias Asks
+    if (user.role === 'AUTHOR' && existingAsk.askAuthorId !== user.userId) {
+        const error = new Error('No tienes permisos para actualizar el estado de esta petición');
+        error.statusCode = 403;
         throw error;
     }
 
