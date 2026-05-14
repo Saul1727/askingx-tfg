@@ -27,7 +27,11 @@ const updateAskStatusSchema = z.object({
 
 const createAskController = async (req, res, next) => {
     try {
-        // 1. Validación estricta del body
+        // INYECCIÓN DE SEGURIDAD ANTI-SUPLANTACIÓN
+        // Forzamos que el autor de la petición sea SÍ O SÍ el ID extraído del Token JWT verificado.
+        req.body.askAuthorId = req.user.userId;
+
+        // 1. Validación estricta del body (ahora ya lleva el ID seguro)
         const validatedData = createAskSchema.parse(req.body);
         const ask = await askService.createAsk(validatedData);
 
