@@ -80,3 +80,41 @@
 - **Añadido:** Inicialización de Express, Prisma y PostgreSQL.
 - **Seguridad:** Cifrado de contraseñas con Bcrypt y validación con Zod.
 - **Arquitectura:** Separación de dominios `Asker`, `User` y `Ask` (SRP).
+
+[Sprint 4] - Integridad UML, Lógica de Negocio y Blindaje (14/05/2026)
+Fidelidad al Modelo de Datos (UML)
+Validación de Multiplicidad (1..\*): Implementada una regla estricta en el registro de usuarios mediante zod.superRefine. Ahora es imposible crear un CONNECTOR o un GIVER sin asignarle al menos un dominio, alineando el código con las restricciones del diagrama de clases.
+
+Relaciones N:N: Activada la gestión de specialties en la capa de servicios para que los expertos puedan estar vinculados a múltiples ámbitos de conocimiento de forma atómica.
+
+Lógica de Negocio Avanzada
+Característica (Match Relacional): Creado el endpoint PATCH /api/asks/:id/match. A diferencia de un cambio de estado simple, esta función vincula formalmente al CONNECTOR logueado y al GIVER seleccionado con la petición, garantizando la trazabilidad total del "emparejamiento".
+
+Control de Sobredonación: Refactorizado el servicio de Fulfillment para incluir lógica de agregación. El sistema ahora suma todas las entregas previas y bloquea cualquier intento de donación que supere la cantidad solicitada originalmente (quantityRequested), devolviendo un Error 400 informativo.
+
+Seguridad y Privacidad
+Privacidad Segmentada: Refactorizada la visibilidad en getAllAsks. Los Connectors ahora solo pueden visualizar peticiones de sus dominios asignados, pero tienen acceso a los datos de contacto (phone, address) para facilitar la coordinación logística.
+
+RBAC (Fulfillment): Restringido el registro de entregas. Se ha eliminado el permiso al rol GIVER para crear fulfillments, delegando esta responsabilidad a los roles de gestión (CONNECTOR y AUTHOR) para asegurar una auditoría veraz de las donaciones.
+
+Corrección de Errores (Bugfixes)
+Flujo de Estados: Corregido el error de automatización que cerraba las peticiones a FULFILLED prematuramente. Se ha restaurado el patrón Human-in-the-Loop, dejando el cierre final como una acción manual exclusiva del AskAuthor.
+
+Integridad de Datos: Reparada la inconsistencia en el nombre del estado CANCELLED (de una 'L' a dos 'LL') para coincidir con el Enum de la base de datos.
+
+Middleware: Solucionado un fallo crítico en el middleware de errores que provocaba la caída del proceso de Node.js ante errores de validación de Zod.
+
+[Sprint 3] - Seguridad, JWT y RBAC (12/05/2026)
+Añadido: Implementación de autenticación con JWT y middlewares de protección de rutas.
+
+Seguridad: Cifrado de contraseñas con Bcrypt y validación de esquemas de entrada.
+
+[Sprint 2] - Ciclo de Vida del Ask (05/05/2026)
+Añadido: Endpoints de actualización de estado y lógica inicial de transición.
+
+Diseño: Adopción del patrón de verificación manual por parte del trabajador social.
+
+[Sprint 1] - Configuración Base (27/04/2026)
+Añadido: Inicialización de Express, Prisma ORM y PostgreSQL.
+
+Arquitectura: Separación de dominios Asker, User y Ask bajo el principio de responsabilidad única.

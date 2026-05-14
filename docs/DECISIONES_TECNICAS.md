@@ -72,6 +72,24 @@ Bug Fix: Se corrigió una referencia errónea a variables de error en el authMid
 10. Normalización de Trazabilidad en Fulfillments
     Se ha normalizado la entidad Fulfillment para incluir el giverId de forma atómica.
 
+11. Validación de Multiplicidad UML (1..\*) en el Registro
+
+Decisión: Se ha implementado una validación estricta en el registro de usuarios (User) mediante zod.superRefine.
+
+Justificación: Para cumplir fielmente con el diagrama de clases (UML), los roles CONNECTOR y GIVER no pueden existir sin al menos un dominio asignado. El backend ahora bloquea (400 Bad Request) cualquier intento de crear estos perfiles con el array de specialties vacío.
+
+12. Lógica de Negocio: Match vs Status Update
+
+Decisión: Se ha creado el endpoint específico PATCH /api/asks/:id/match separado de la actualización de estado genérica.
+
+Justificación: Un "Match" no es solo un cambio de estado; es una operación relacional. Esta función vincula atómicamente al CONNECTOR (gestor) y al GIVER (donante) con la petición, garantizando la trazabilidad exigida en el modelo AskingX.
+
+13. Protección contra Sobredonación (Agregación en Caliente)
+
+Decisión: La creación de un Fulfillment ahora incluye una etapa de agregación (\_sum) en la base de datos.
+
+Justificación: Para peticiones de tipo THINGS, el sistema suma todas las entregas previas y las compara con el quantityRequested. Si una nueva entrega supera lo que falta para completar la petición, el sistema la rechaza. Esto garantiza la integridad de los recursos y evita errores logísticos.
+
 # Registro de Decisiones Arquitectónicas (ADR) - Proyecto AskingX
 
 ## 1. Fidelidad al Modelo de Datos (UML)
