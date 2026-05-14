@@ -60,7 +60,20 @@ const registerUserSchema = z.object({
     errorMap: () => ({ message: "Rol inválido. Debe ser ADMIN, AUTHOR, CONNECTOR o GIVER" })
   }),
   preferredLanguage: z.enum(['ES', 'CAT', 'EN']).optional(),
-  availabilityNotes: z.string().optional()
+  availabilityNotes: z.string().optional(),
+  // Añadimos el array de dominios
+  domainIds: z.array(z.string().uuid("Debe ser un ID válido")).optional()
+}).superRefine((data, ctx) => {
+  // Aplicamos la regla estricta de tu diagrama UML
+  if (data.role === 'CONNECTOR' || data.role === 'GIVER') {
+    if (!data.domainIds || data.domainIds.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Los roles CONNECTOR y GIVER deben estar asociados al menos a un Dominio.",
+        path: ["domainIds"]
+      });
+    }
+  }
 });
 
 // Controlador para registro generico de usuarios

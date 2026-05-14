@@ -16,6 +16,8 @@ const createAskerSchema = z.object({
 
 const createAskerController = async (req, res, next) => {
     try {
+        // Inyectamos el ID del autor desde el token por seguridad
+        req.body.askAuthorId = req.user.userId;
         // 1. Validación estricta del body
         const validatedData = createAskerSchema.parse(req.body);
         const asker = await askerService.createAsker(validatedData);

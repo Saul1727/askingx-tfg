@@ -89,8 +89,36 @@ const updateAskStatusController = async (req, res, next) => {
     }
 };
 
+// Añade esto en tu askController.js
+const matchAskController = async (req, res, next) => {
+    try {
+        const askId = req.params.id; // Lo sacamos de la URL
+        const { giverId } = req.body; // El Connector nos dice qué donante ha elegido
+        const connectorId = req.user.userId; // Extraído automáticamente del Token de seguridad
+
+        if (!giverId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "El campo giverId es obligatorio en el body" 
+            });
+        }
+
+        // Llamamos al servicio
+        const matchedAsk = await askService.matchAsk(askId, connectorId, giverId);
+
+        res.status(200).json({
+            success: true,
+            message: "¡Match realizado con éxito!",
+            data: matchedAsk
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createAskController,
     getAllAsksController,
-    updateAskStatusController
+    updateAskStatusController,
+    matchAskController
 };

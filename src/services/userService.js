@@ -60,7 +60,7 @@ const createAskAuthor = async (userData) => {
 };
 
 const createUser = async (userData) => {
-  // 1. Verificamos si el email ya existe en la BBDD
+  // Verificamos si el email ya existe en la BBDD
   const existingUser = await prisma.user.findUnique({
     where: { email: userData.email }
   });
@@ -73,16 +73,26 @@ const createUser = async (userData) => {
 
   const hashedPassword = await hashPassword(userData.password);
 
-  // 2. Creamos el usuario en Prisma
+  // Preparamos el objeto de datos base
+  const prismaData = {
+    fullName: userData.fullName,
+    email: userData.email,
+    passwordHash: hashedPassword, 
+    role: userData.role,
+    preferredLanguage: userData.preferredLanguage || 'ES', 
+    availabilityNotes: userData.availabilityNotes
+  };
+
+  // Si el validador Zod dejó pasar dominios, los enlazamos aquí
+  if (userData.domainIds && userData.domainIds.length > 0) {
+    prismaData.specialties = {
+      connect: userData.domainIds.map(id => ({ id: id }))
+    };
+  }
+
+  //Creamos el usuario en Prisma (ahora sí, atado a su dominio si lo tiene)
   const newUser = await prisma.user.create({
-    data: {
-      fullName: userData.fullName,
-      email: userData.email,
-      passwordHash: hashedPassword, 
-      role: userData.role,
-      preferredLanguage: userData.preferredLanguage || 'ES', // Español por defecto si no lo manda
-      availabilityNotes: userData.availabilityNotes
-    }
+    data: prismaData
   });
 
   return newUser;

@@ -134,4 +134,41 @@ const updateAskStatus = async (askId, newStatus, user) => {
     return updatedAsk;
 };
 
-module.exports = { createAsk, getAllAsks, updateAskStatus };
+const matchAsk = async (askId, connectorId, giverId) => {
+    // Verificamos que la petición existe
+    const ask = await prisma.ask.findUnique({
+        where: { id: askId }
+    });
+
+    if (!ask) {
+        const error = new Error('La petición especificada no existe');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Verificamos que esté en estado OPEN
+    if (ask.status !== 'OPEN') {
+        const error = new Error('La petición no está disponible para hacer match. Debe estar en estado OPEN.');
+        error.statusCode = 400; // Bad Request
+        throw error;
+    }
+
+    //Hacemos el Match actualizando la Ask
+    const updatedAsk = await prisma.ask.update({
+        where: { id: askId },
+        data: {
+            status: 'MATCHED',
+            connector: { connect: { id: connectorId } }, // Registramos qué experto lo gestionó
+            givers: { connect: { id: giverId } }         // Añadimos al donante a la lista
+        },
+        include: {
+            connector: { select: { id: true, fullName: true } }, // Para verlo en la respuesta
+            givers: { select: { id: true, fullName: true } }
+        }
+    });
+
+    return updatedAsk;
+};
+
+
+module.exports = { createAsk, getAllAsks, updateAskStatus, matchAsk };
