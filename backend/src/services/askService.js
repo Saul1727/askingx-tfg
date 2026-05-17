@@ -29,7 +29,7 @@ const createAsk = async (askData) => {
             title: askData.title,
             description: askData.description,
             type: askData.type,
-            status: 'OPEN',
+            status: 'CREATED',
             dueDate: askData.dueDate ? new Date(askData.dueDate) : null,
             askerId: askData.askerId,
             askAuthorId: askData.askAuthorId,

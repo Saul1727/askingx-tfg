@@ -6,9 +6,11 @@ const askerRoutes = require('./routes/askerRoutes');
 const askRoutes = require('./routes/askRoutes');
 const fulfillmentRoutes = require('./routes/fulfillmentRoutes');
 const domainRoutes = require('./routes/domainRoutes');
+const cors = require('cors');
 
 const app = express();
 
+app.use(cors());
 // Middleware para parsear el body de las peticiones a JSON
 app.use(express.json());
 
