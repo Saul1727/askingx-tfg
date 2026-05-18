@@ -19,17 +19,19 @@ El proyecto se ha construido bajo una arquitectura modular basada en componentes
 ## 2. Implementación de la Interfaz de Inicio de Sesión (Login)
 
 ### 2.1. Diseño Visual y UX
-- **Estética:** Se ha replicado fielmente la identidad visual de la UPV, utilizando un fondo degradado suave (`bg-gradient-to-br from-blue-50 via-white to-gray-100`) y una tarjeta central con sombras profundas para focalizar la atención del usuario.
-- **Interactividad:** Implementación de visibilidad dinámica de contraseña y estados de carga (*loading states*) para evitar envíos duplicados.
-- **Accesibilidad y Visibilidad:** Se han forzado fondos blancos (`bg-white`) y texto oscuro (`text-gray-900`) en los inputs del login para garantizar la legibilidad absoluta, independientemente de si el usuario tiene activado el modo oscuro en su sistema.
+
+- **Estética:** Se ha replicado fielmente la identidad visual de la UPV, utilizando un fondo degradado suave y una tarjeta central con sombras profundas para focalizar la atención.
+- **Interactividad:** Implementación de visibilidad dinámica de contraseña y estados de carga (_loading states_).
+- **Accesibilidad:** Contraste garantizado con fondos blancos y texto oscuro en los inputs.
 
 ### 2.2. Lógica de Negocio y API (`src/services/authService.js`)
-- Se ha creado una capa de servicios para abstraer las peticiones HTTP.
-- **`loginUser(email, password)`**: Gestiona la comunicación con el endpoint `/api/users/login`, incluyendo el manejo de errores robusto basado en las respuestas del servidor.
+
+- Creación de una capa de servicios (`authService`) para abstraer las peticiones HTTP. Gestión de comunicación con `/api/users/login` y manejo de errores robusto.
 
 ### 2.3. Gestión del Estado y Navegación (`src/pages/Login.jsx`)
-- **Persistencia:** Almacenamiento del JWT (Token) en `localStorage` tras una autenticación exitosa.
-- **Redirección Inteligente:** Uso de un objeto `Map()` para redirigir a los usuarios a sus respectivos paneles según su rol (ADMIN, AUTHOR, CONNECTOR, GIVER).
+
+- **Persistencia:** Almacenamiento del JWT (Token) en `localStorage`.
+- **Redirección Inteligente:** Uso de un mapa de roles para redirigir a los usuarios a sus paneles (ADMIN, AUTHOR, CONNECTOR, GIVER).
 
 ---
 
@@ -38,47 +40,43 @@ El proyecto se ha construido bajo una arquitectura modular basada en componentes
 Se ha implementado un sistema de **Layouts y Outlets** para separar la estructura persistente de la aplicación del contenido dinámico.
 
 ### 3.1. Estructura Global (`src/components/layout/`)
-- **`MainLayout.jsx`**: Orquestador principal que mantiene el `Sidebar` y el `Topbar` fijos mientras cambia el contenido central.
-- **`Sidebar.jsx`**: Barra lateral con **lógica de roles integrada**. Filtra automáticamente los accesos (ej. Secciones de Admin solo visibles para el rol `ADMIN`).
-- **`Topbar.jsx`**: Incluye buscador global, selector de idiomas y acceso al perfil del usuario.
+
+- **`MainLayout.jsx`**: Orquestador principal que mantiene `Sidebar` y `Topbar` fijos.
+- **`Sidebar.jsx`**: Barra lateral con **lógica de roles integrada**.
+- **`Topbar.jsx`**: Incluye buscador global y acceso al perfil.
 
 ### 3.2. Panel Principal (`src/pages/Dashboard.jsx`)
-Vista centralizada que actúa como centro de mando para el usuario:
-- **KPI Cards:** Tarjetas visuales que resumen métricas clave (Organizaciones totales, peticiones abiertas/completadas).
-- **Gestión de Datos:** Tabla interactiva con estados codificados por colores (ABIERTA, COMPLETADA, etc.) y acciones rápidas de edición y visualización.
-- **Acciones Principales:** Botón destacado para la creación de nuevas peticiones ("+ Nueva Petición"). Gestiona el estado de apertura del modal `CreateAskModal`.
+
+Vista centralizada que actúa como centro de mando:
+
+- **KPI Cards:** Tarjetas visuales de métricas clave.
+- **Gestión de Datos:** Tabla interactiva con estados de peticiones.
+- **Acciones:** Control de estado para la apertura del modal `CreateAskModal`.
 
 ---
 
-## 4. Enrutamiento y Seguridad
+## 4. Caso de Uso 01: Creación de Peticiones (CU-01)
 
-- **Configuración de Rutas:** Centralizada en `App.jsx`, definiendo rutas públicas (Login) y rutas protegidas bajo el Layout principal.
-- **Soporte Multi-Rol:** Se han definido rutas jerárquicas para soportar la redirección específica por rol:
-    - `admin/dashboard`
-    - `author/asks`
-    - `connector/matches`
-    - `giver/history`
-- **Redirección por Defecto:** El sistema redirige automáticamente al Dashboard tras el login o al Login si no hay una sesión activa detectada.
+Se ha implementado el flujo completo (Frontend-Backend) para el registro de nuevas peticiones de ayuda, utilizando un componente modal avanzado.
 
----
+### 4.1. Componente `CreateAskModal.jsx`
 
-## 5. Caso de Uso: Nueva Petición (CU-01)
-
-Se ha implementado el flujo de creación de peticiones mediante un componente modal especializado.
-
-### 5.1. Componente `CreateAskModal.jsx`
 - **Ubicación:** `src/components/asks/CreateAskModal.jsx`.
-- **Patrón STI (Single Table Inheritance):** El formulario adapta sus campos dinámicamente según el tipo de recurso (`THINGS`, `TIME`, `EXPERTISE`, `SERVICES`).
-- **Validación y Feedback:** Implementa validaciones nativas de HTML5 y utiliza estados de React para capturar la información de forma reactiva.
+- **Carga Dinámica de Datos:** Mediante el hook `useEffect`, el componente consume las APIs de `Askers` y `Domains` al montarse, hidratando los campos `select` del formulario con datos reales de la base de datos de PostgreSQL.
+- **Patrón STI (Single Table Inheritance):** El formulario muta y adapta sus campos dinámicamente según el tipo de recurso seleccionado (`THINGS`, `TIME`, `EXPERTISE`, `SERVICES`), formateando y "limpiando" el payload antes del envío.
+- **Gestión de Fechas (Timezones):** Incorporación del campo opcional `dueDate`. Se ha implementado un cálculo en tiempo real de la zona horaria local del navegador para bloquear la selección de fechas pasadas en el HTML5, garantizando posteriormente la transformación a ISO 8601 (`toISOString()`) para su inserción en Prisma.
+- **Protección UX (Programación Defensiva):** El renderizado de listas y mapeo de datos incluye validadores estructurales (`Array.isArray`) que evitan interrupciones fatales ("crashes") en la interfaz en caso de recibir payloads inesperados del backend.
 
 ---
 
-## 6. Principios de Ingeniería y Clean Code Aplicados
+## 5. Principios de Ingeniería y Clean Code Aplicados
 
-- **Responsabilidad Única (SRP):** Descomposición de páginas complejas en sub-componentes especializados (ej. `StatCard`, `InputField`, `TableRow`).
-- **DRY (Don't Repeat Yourself):** Reutilización de componentes de UI (botones, inputs, campos de contraseña).
-- **Código Declarativo:** Uso de estructuras de datos (Maps y Arrays de configuración) para generar menús y rutas, facilitando la adición de nuevas funcionalidades sin modificar la lógica principal.
-- **Feedback Visual:** Uso de animaciones de entrada y transiciones de Tailwind para una experiencia de usuario fluida y profesional.
+- **Responsabilidad Única (SRP):** Descomposición en sub-componentes especializados.
+- **DRY (Don't Repeat Yourself):** Reutilización de componentes UI.
+- **Código Declarativo:** Uso de estructuras de datos (Maps y Arrays) para generar menús.
+- **Programación Defensiva:** Validación de respuestas del servidor antes del renderizado de componentes.
+- **Feedback Visual:** Uso de animaciones de entrada y manejo de errores visible y amigable (toasts/alerts) para informar al usuario de los estados de sus peticiones a la API.
 
 ---
-*Este documento es la "fuente de verdad" del proyecto y se actualiza con cada hito de implementación.*
+
+_Este documento es la "fuente de verdad" del proyecto y se actualiza con cada hito de implementación técnica._
