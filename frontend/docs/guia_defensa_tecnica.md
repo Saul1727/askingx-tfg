@@ -23,7 +23,8 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 
 ### 2.2. `src/App.jsx`
 - **Función:** Definición del sistema de rutas (`react-router-dom`).
-- **Lógica:** Separa las rutas públicas (Login) de las privadas (protegidas por el `MainLayout`). Esto facilita la futura implementación de guardias de seguridad (Auth Guards).
+- **Lógica:** Separa las rutas públicas (Login) de las privadas (protegidas por el `MainLayout`). 
+- **Estructura de Roles:** Se han implementado rutas específicas para cada rol de usuario (`/admin/dashboard`, `/author/asks`, `/connector/matches`, `/giver/history`) para asegurar que el sistema de redirección post-login funcione correctamente.
 
 ### 2.3. `src/services/` (Capa de Infraestructura)
 - **`authService.js`**: Contiene la lógica de comunicación con el exterior.
@@ -33,7 +34,7 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 - **`Login.jsx`**: Gestiona el acceso.
     - **Técnica:** Uso de `useNavigate` para redirección y `localStorage` para persistencia del token.
 - **`Dashboard.jsx`**: El panel principal.
-    - **Técnica:** Descomposición en sub-componentes internos (StatCard, TableRow). Esto hace que el código sea legible y fácil de testear.
+    - **Técnica:** Descomposición en sub-componentes internos (StatCard, TableRow). Gestiona la visibilidad del modal de creación de peticiones.
 
 ### 2.5. `src/components/layout/` (Componentes Estructurales)
 - **`MainLayout.jsx`**: Contenedor maestro. Usa `<Outlet />`, una característica de React Router que permite inyectar diferentes páginas manteniendo el Sidebar y Topbar fijos.
@@ -46,7 +47,7 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 ## 3. Explicación de Funcionalidades Clave (Para la defensa)
 
 ### A. Gestión de Estados (Hooks)
-- **`useState`**: Usado para datos que cambian y deben refrescar la pantalla (como el email del usuario o si el botón de login está cargando).
+- **`useState`**: Usado para datos que cambian y deben refrescar la pantalla (como el email del usuario o si el botón de login está cargando). También controla la apertura/cierre de modales.
 - **`useNavigate`**: Usado para mover al usuario entre pantallas sin recargar la página (Single Page Application - SPA).
 
 ### B. Comunicación Asíncrona (Async/Await)
@@ -57,6 +58,9 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 
 ### D. Persistencia de Sesión
 - El token se guarda en `localStorage`. **Explicación:** Esto permite que si el usuario refresca la página (F5), no pierda la sesión (aunque en una fase más avanzada de seguridad se usarían Cookies HttpOnly).
+
+### E. Lógica STI (Single Table Inheritance) en Formularios
+- En el modal de "Nueva Petición", el formulario cambia dinámicamente según el tipo de recurso (Cosas, Tiempo, etc.). Esto demuestra un diseño de base de datos eficiente y una interfaz que se adapta al modelo de datos subyacente.
 
 ---
 

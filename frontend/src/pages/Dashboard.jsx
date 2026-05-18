@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Users2, 
   CalendarDays, 
@@ -9,12 +9,17 @@ import {
   ChevronLeft, 
   ChevronRight 
 } from 'lucide-react';
+import CreateAskModal from '../components/asks/CreateAskModal';
 
 /**
  * Dashboard Page Component
  * Central statistical view and detailed tables.
+ * Now includes the "Create New Petition" modal logic.
  */
 const Dashboard = () => {
+  // Modal State Management
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
@@ -60,8 +65,9 @@ const Dashboard = () => {
               <StatusFilter label="CANCELADA" color="bg-red-600" />
             </div>
 
+            {/* Main Action: Open CU-01 Modal */}
             <button 
-              onClick={() => console.log('Abrir modal CU-01')}
+              onClick={() => setIsModalOpen(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-all shadow-md active:scale-95"
             >
               <Plus size={18} />
@@ -123,6 +129,12 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* CU-01: Create New Petition Modal */}
+      <CreateAskModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   );
 };

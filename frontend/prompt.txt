@@ -1,43 +1,41 @@
-Actúa como Arquitecto de Software Frontend y experto en React + Tailwind CSS v3.
-Tu tarea es construir el esqueleto principal de la aplicación (Layout) y el panel de control (Dashboard) basándote exactamente en la imagen adjunta.
+Actúa como un Frontend Senior en React. El modal visual de CreateAskModal.jsx ya funciona perfectamente, pero ahora necesitamos conectarlo al backend real y mejorar la UX del formulario.
 
-Vamos a dividir el trabajo en componentes limpios y escalables. Usaremos react-router-dom.
+Requisito 1: Crea el servicio API (src/services/askService.js)
 
-Requisito 1: Arquitectura de Componentes (Clean Code)
-Genera el código para los siguientes archivos respetando el Principio de Responsabilidad Única:
+Exporta una función asíncrona createAsk(askData).
 
-src/components/layout/Sidebar.jsx: La barra lateral oscura.
+Recupera el JWT del localStorage (localStorage.getItem('token')).
 
-src/components/layout/Topbar.jsx: La barra superior con buscador y perfil.
+Haz un fetch POST a http://localhost:3000/api/asks.
 
-src/components/layout/MainLayout.jsx: El contenedor global que junta Sidebar, Topbar y un <Outlet /> para inyectar las páginas.
+En los headers, incluye 'Content-Type': 'application/json' y 'Authorization': \Bearer ${token}``.
 
-src/pages/Dashboard.jsx: El contenido central de la imagen (tarjetas de estadísticas y tabla de peticiones).
+El body será JSON.stringify(askData).
 
-Requisito 2: Lógica de Rol en el Sidebar (Sidebar.jsx)
+Maneja los errores: si !response.ok, lanza un error con el mensaje del backend. Si todo va bien, devuelve la respuesta parseada.
 
-Simula la lectura del rol del usuario (asume que obtenemos role = 'AUTHOR' de un hook o contexto ficticio por ahora).
+Requisito 2: Actualiza src/components/asks/CreateAskModal.jsx
 
-Renderiza los enlaces condicionalmente:
+Importa la función createAsk del servicio.
 
-Organizaciones (Askers) y Peticiones (Asks) deben verse si es AUTHOR o ADMIN.
+Añade dos nuevos estados: isLoading (boolean) y error (string).
 
-La sección Admin -> Usuarios solo debe verse si el rol es ADMIN.
+Modifica la función handleSubmit:
 
-Deja los iconos preparados (usa lucide-react).
+Pon isLoading a true y limpia errores previos.
 
-Requisito 3: Diseño de la Vista Central (Dashboard.jsx)
+Llama a createAsk(formData).
 
-Recrea fielmente el encabezado ("Panel - AskAuthor").
+Si tiene éxito: muestra un alert('¡Petición creada con éxito!'), resetea el formData al estado inicial, y cierra el modal (onClose()).
 
-Crea las tres tarjetas superiores de estadísticas (Total Organizaciones, Peticiones Abiertas, Peticiones Completadas).
+Si falla (bloque catch): captura el error y guárdalo en el estado error.
 
-Recrea la tabla inferior con las pestañas "Mis Organizaciones" y "Mis Peticiones".
+En el finally, pon isLoading a false.
 
-La tabla debe tener las columnas exactas de la imagen: Título, Organización, Tipo, Dominio, Vencimiento, Estado, Acciones.
+Mejoras UI (UX):
 
-Botón Nueva Petición: El botón azul "+ Nueva Petición" debe estar bien posicionado, por ahora solo le pondremos un onClick={() => console.log('Abrir modal CU-01')}.
+Si hay un error, muéstralo en un cuadro rojo (bg-red-100 text-red-700 p-3 rounded mb-4) justo encima de los campos.
 
-Los "Estados" en la tabla (ABIERTA, COMPLETADA) deben tener ese pequeño círculo de color asociado (ej: amarillo para abierta, verde para completada).
+Mientras isLoading sea true, desactiva el botón de "Registrar Petición" y cambia su texto a "Guardando...".
 
-Devuélveme el código completo de estos 4 componentes, listos para integrarlos en nuestro sistema de rutas. Asegúrate de que el diseño sea responsive.
+Devuélveme el código completo de askService.js y el código actualizado de CreateAskModal.jsx.

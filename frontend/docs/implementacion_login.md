@@ -46,18 +46,34 @@ Se ha implementado un sistema de **Layouts y Outlets** para separar la estructur
 Vista centralizada que actúa como centro de mando para el usuario:
 - **KPI Cards:** Tarjetas visuales que resumen métricas clave (Organizaciones totales, peticiones abiertas/completadas).
 - **Gestión de Datos:** Tabla interactiva con estados codificados por colores (ABIERTA, COMPLETADA, etc.) y acciones rápidas de edición y visualización.
-- **Acciones Principales:** Botón destacado para la creación de nuevas peticiones ("+ Nueva Petición").
+- **Acciones Principales:** Botón destacado para la creación de nuevas peticiones ("+ Nueva Petición"). Gestiona el estado de apertura del modal `CreateAskModal`.
 
 ---
 
 ## 4. Enrutamiento y Seguridad
 
 - **Configuración de Rutas:** Centralizada en `App.jsx`, definiendo rutas públicas (Login) y rutas protegidas bajo el Layout principal.
+- **Soporte Multi-Rol:** Se han definido rutas jerárquicas para soportar la redirección específica por rol:
+    - `admin/dashboard`
+    - `author/asks`
+    - `connector/matches`
+    - `giver/history`
 - **Redirección por Defecto:** El sistema redirige automáticamente al Dashboard tras el login o al Login si no hay una sesión activa detectada.
 
 ---
 
-## 5. Principios de Ingeniería y Clean Code Aplicados
+## 5. Caso de Uso: Nueva Petición (CU-01)
+
+Se ha implementado el flujo de creación de peticiones mediante un componente modal especializado.
+
+### 5.1. Componente `CreateAskModal.jsx`
+- **Ubicación:** `src/components/asks/CreateAskModal.jsx`.
+- **Patrón STI (Single Table Inheritance):** El formulario adapta sus campos dinámicamente según el tipo de recurso (`THINGS`, `TIME`, `EXPERTISE`, `SERVICES`).
+- **Validación y Feedback:** Implementa validaciones nativas de HTML5 y utiliza estados de React para capturar la información de forma reactiva.
+
+---
+
+## 6. Principios de Ingeniería y Clean Code Aplicados
 
 - **Responsabilidad Única (SRP):** Descomposición de páginas complejas en sub-componentes especializados (ej. `StatCard`, `InputField`, `TableRow`).
 - **DRY (Don't Repeat Yourself):** Reutilización de componentes de UI (botones, inputs, campos de contraseña).
