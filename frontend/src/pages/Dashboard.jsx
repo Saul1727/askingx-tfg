@@ -10,7 +10,7 @@ import {
   ClipboardList
 } from 'lucide-react';
 import CreateAskModal from '../components/asks/CreateAskModal';
-import { getAsks } from '../services/askService';
+import { getAllAsks, getAskers } from '../services/askService';
 
 /**
  * Dashboard Page Component
@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [askToEdit, setAskToEdit] = useState(null);
   const [asksList, setAsksList] = useState([]);
+  const [askersList, setAskersList] = useState([]); // <-- Nuevo estado para organizaciones
   const [isLoading, setIsLoading] = useState(true);
   
   //  Estado para el filtro activo (null = mostrar todas)
@@ -30,9 +31,13 @@ const Dashboard = () => {
   useEffect(() => {
     if (!isModalOpen) {
       setIsLoading(true);
-      getAsks()
-        .then((data) => setAsksList(data))
-        .catch((err) => console.error("Error cargando peticiones:", err))
+      // Cargamos ambos simultáneamente
+      Promise.all([getAllAsks(), getAskers()])
+        .then(([asksData, askersData]) => {
+          setAsksList(asksData);
+          setAskersList(askersData);
+        })
+        .catch((err) => console.error("Error cargando el Dashboard:", err))
         .finally(() => {
           setIsLoading(false);
           setAskToEdit(null); // Limpiamos edición al cerrar
@@ -61,17 +66,37 @@ const Dashboard = () => {
     ? asksList.filter(ask => ask.status === activeFilter) 
     : asksList;
 
+  // CÁLCULO DE ESTADÍSTICAS REALES
+  const totalOrganizaciones = askersList.length;
+  const peticionesAbiertas = asksList.filter(ask => ask.status === 'OPEN').length;
+  const peticionesCompletadas = asksList.filter(ask => ask.status === 'FULFILLED').length;
+
   // UI: RENDERIZADO
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <h2 className="text-3xl font-bold text-slate-800">Panel - AskAuthor</h2>
 
-      {/* Stats Cards  */}
+      {/* Stats Cards - AHORA CON DATOS REALES */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard icon={<Users2 size={28} />} label="Total Organizaciones" value="8" bgColor="bg-slate-500" />
-        <StatCard icon={<CalendarDays size={28} />} label="Peticiones Abiertas" value="5" bgColor="bg-slate-600" />
-        <StatCard icon={<CheckCircle2 size={28} />} label="Peticiones Completadas" value="3" bgColor="bg-slate-700" />
+        <StatCard 
+          icon={<Users2 size={28} />} 
+          label="Total Organizaciones" 
+          value={isLoading ? '-' : totalOrganizaciones} 
+          bgColor="bg-slate-500" 
+        />
+        <StatCard 
+          icon={<CalendarDays size={28} />} 
+          label="Peticiones Abiertas" 
+          value={isLoading ? '-' : peticionesAbiertas} 
+          bgColor="bg-slate-600" 
+        />
+        <StatCard 
+          icon={<CheckCircle2 size={28} />} 
+          label="Peticiones Completadas" 
+          value={isLoading ? '-' : peticionesCompletadas} 
+          bgColor="bg-slate-700" 
+        />
       </div>
 
       {/* Main Table Section */}

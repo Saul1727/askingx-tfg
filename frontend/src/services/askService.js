@@ -50,15 +50,24 @@ export const createAsk = async (askData) => {
 /**
  * Retrieves all Asks, optionally filtered by status
  */
-export const getAsks = async (status = '') => {
-  const url = status ? `${API_BASE_URL}/asks?status=${status}` : `${API_BASE_URL}/asks`;
-  const response = await fetch(url, {
-    headers: getAuthHeader(),
-  });
+export const getAllAsks = async (status = '') => {
+  try {
+    const url = status ? `${API_BASE_URL}/asks?status=${status}` : `${API_BASE_URL}/asks`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        ...getAuthHeader()
+      },
+    });
 
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'Error al recuperar las peticiones');
-  return data.data || data;
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Error al recuperar las peticiones');
+    
+    return data.data || data;
+  } catch (error) {
+    console.error('GetAllAsks service error:', error);
+    throw error;
+  }
 };
 
 /**

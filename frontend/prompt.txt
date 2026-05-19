@@ -1,41 +1,49 @@
-Actúa como un Frontend Senior en React. El modal visual de CreateAskModal.jsx ya funciona perfectamente, pero ahora necesitamos conectarlo al backend real y mejorar la UX del formulario.
+Abre el archivo `frontend/src/services/askService.js`. 
 
-Requisito 1: Crea el servicio API (src/services/askService.js)
+El dashboard está fallando con el error "TypeError: asksList.filter is not a function". Esto ocurre porque el backend devuelve la respuesta envuelta en un objeto `{ success: true, data: [...] }`, pero el frontend está devolviendo el objeto completo en lugar de extraer el array. 
 
-Exporta una función asíncrona createAsk(askData).
+Para solucionarlo, por favor reemplaza COMPLETAMENTE la función `getAllAsks` por el siguiente código exacto (fíjate en el `return data.data || data;`):
 
-Recupera el JWT del localStorage (localStorage.getItem('token')).
+export const getAllAsks = async (status = '') => {
+  try {
+    const url = status ? `${API_BASE_URL}/asks?status=${status}` : `${API_BASE_URL}/asks`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        ...getAuthHeader()
+      },
+    });
 
-Haz un fetch POST a http://localhost:3000/api/asks.
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Error al recuperar las peticiones');
+    
+    return data.data || data;
+  } catch (error) {
+    console.error('GetAllAsks service error:', error);
+    throw error;
+  }
+};
+mira lo que suleta le backend:
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
+[ERROR] Token expirado.
 
-En los headers, incluye 'Content-Type': 'application/json' y 'Authorization': \Bearer ${token}``.
-
-El body será JSON.stringify(askData).
-
-Maneja los errores: si !response.ok, lanza un error con el mensaje del backend. Si todo va bien, devuelve la respuesta parseada.
-
-Requisito 2: Actualiza src/components/asks/CreateAskModal.jsx
-
-Importa la función createAsk del servicio.
-
-Añade dos nuevos estados: isLoading (boolean) y error (string).
-
-Modifica la función handleSubmit:
-
-Pon isLoading a true y limpia errores previos.
-
-Llama a createAsk(formData).
-
-Si tiene éxito: muestra un alert('¡Petición creada con éxito!'), resetea el formData al estado inicial, y cierra el modal (onClose()).
-
-Si falla (bloque catch): captura el error y guárdalo en el estado error.
-
-En el finally, pon isLoading a false.
-
-Mejoras UI (UX):
-
-Si hay un error, muéstralo en un cuadro rojo (bg-red-100 text-red-700 p-3 rounded mb-4) justo encima de los campos.
-
-Mientras isLoading sea true, desactiva el botón de "Registrar Petición" y cambia su texto a "Guardando...".
-
-Devuélveme el código completo de askService.js y el código actualizado de CreateAskModal.jsx.
