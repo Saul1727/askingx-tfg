@@ -1,5 +1,5 @@
 const express = require('express');
-const { createAskController, getAllAsksController, updateAskStatusController, matchAskController } = require('../controllers/askController');
+const { createAskController, getAllAsksController, updateAskController, updateAskStatusController, matchAskController } = require('../controllers/askController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 
@@ -18,6 +18,9 @@ router.post('/', roleMiddleware(['AUTHOR']), createAskController);
 router.patch('/:id/status', roleMiddleware(['AUTHOR', 'ADMIN','CONNECTOR']), updateAskStatusController);
 
 // Ruta para que un experto asigne un donante a una petición
-router.patch('/:id/match', authMiddleware, roleMiddleware(['CONNECTOR']), matchAskController);
+router.patch('/:id/match', roleMiddleware(['CONNECTOR']), matchAskController);
+
+// PUT /api/asks/:id - Edición completa de la petición (desde el formulario)
+router.put('/:id', roleMiddleware(['AUTHOR', 'ADMIN']), updateAskController);
 
 module.exports = router;

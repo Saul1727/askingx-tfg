@@ -1,7 +1,7 @@
 const { z } = require('zod');
 const askService = require('../services/askService');
 
-//Esquema de validacion para la Peticion (Ask)
+// Esquema de validación para la Creación de la Petición (Ask)
 const createAskSchema = z.object({
   title: z.string().min(5, "El título debe tener al menos 5 caracteres"),
   description: z.string().min(15, "La descripción debe ser más detallada (mínimo 15 caracteres)"),
@@ -18,20 +18,22 @@ const createAskSchema = z.object({
   serviceLocation: z.string().optional()
 });
 
-//Esquema de validación para actualizar una Petición (Ask)
+// Esquema de validación para la Edición Completa de la Petición
+const updateAskSchema = createAskSchema.partial().extend({
+  status: z.enum(['CREATED', 'OPEN', 'MATCHED', 'FULFILLED', 'CANCELLED', 'EXPIRED']).optional()
+});
+
+// Esquema de validación para actualizar ÚNICAMENTE el estado de una Petición
 const updateAskStatusSchema = z.object({
-    status: z.enum(['CREATED', 'OPEN', 'MATCHED', 'FULFILLED', 'CANCELLED', 'EXPIRED'],
-         {errorMap: () => ({ message: "El estado proporcionado no es válido para el sistema." })
-    })
+    status: z.enum(
+        ['CREATED', 'OPEN', 'MATCHED', 'FULFILLED', 'CANCELLED', 'EXPIRED'],
+        { errorMap: () => ({ message: "El estado proporcionado no es válido para el sistema." }) }
+    )
 });
 
 const createAskController = async (req, res, next) => {
     try {
-        // INYECCIÓN DE SEGURIDAD ANTI-SUPLANTACIÓN
-        // Forzamos que el autor de la petición sea SÍ O SÍ el ID extraído del Token JWT verificado.
         req.body.askAuthorId = req.user.userId;
-
-        // 1. Validación estricta del body (ahora ya lleva el ID seguro)
         const validatedData = createAskSchema.parse(req.body);
         const ask = await askService.createAsk(validatedData);
 
@@ -41,18 +43,15 @@ const createAskController = async (req, res, next) => {
             data: ask
         });
     } catch (error) {
-        // Delegamos al src/middlewares/errorHandler.js
         next(error);
     }
 };
 
 const getAllAsksController = async (req, res, next) => {
     try {
-        //Extraemos filtros de query params (si los hay)
         const filters = {
             status: req.query.status,
         };
-
 
         const asks = await askService.getAllAsks(req.user, filters);
 
@@ -66,15 +65,32 @@ const getAllAsksController = async (req, res, next) => {
     }
 };
 
-// Controlador para modificar el estado de una Petición (PATCH)
+// Edición Completa de la Petición (PUT)
+const updateAskController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        z.string().uuid("El ID de la petición debe ser un UUID válido").parse(id);
+        const validatedData = updateAskSchema.parse(req.body);
+
+        const updatedAsk = await askService.updateAsk(id, validatedData, req.user);
+
+        res.status(200).json({
+            success: true,
+            message: 'Petición (Ask) actualizada con éxito',
+            data: updatedAsk
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Controlador para modificar el estado de una Petición de forma aislada (PATCH)
 const updateAskStatusController = async (req, res, next) => {
     try {
         const { id } = req.params;
         
-        // Validamos que en la URL venga un UUID correcto
         z.string().uuid("El ID de la petición debe ser un UUID válido").parse(id);
-
-        // Validamos que el JSON del body sea correcto (ej: { "status": "OPEN" })
         const validatedData = updateAskStatusSchema.parse(req.body);
 
         const updatedAsk = await askService.updateAskStatus(id, validatedData.status, req.user);
@@ -89,12 +105,11 @@ const updateAskStatusController = async (req, res, next) => {
     }
 };
 
-// Añade esto en tu askController.js
 const matchAskController = async (req, res, next) => {
     try {
-        const askId = req.params.id; // Lo sacamos de la URL
-        const { giverId } = req.body; // El Connector nos dice qué donante ha elegido
-        const connectorId = req.user.userId; // Extraído automáticamente del Token de seguridad
+        const askId = req.params.id;
+        const { giverId } = req.body;
+        const connectorId = req.user.userId;
 
         if (!giverId) {
             return res.status(400).json({ 
@@ -103,7 +118,6 @@ const matchAskController = async (req, res, next) => {
             });
         }
 
-        // Llamamos al servicio
         const matchedAsk = await askService.matchAsk(askId, connectorId, giverId);
 
         res.status(200).json({
@@ -119,6 +133,7 @@ const matchAskController = async (req, res, next) => {
 module.exports = {
     createAskController,
     getAllAsksController,
+    updateAskController, 
     updateAskStatusController,
     matchAskController
 };

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, AlertCircle } from 'lucide-react';
-import { createAsk, getAskers, getDomains } from '../../services/askService';
+import { createAsk, updateAsk, getAskers, getDomains } from '../../services/askService';
 
-const CreateAskModal = ({ isOpen, onClose }) => {
+const CreateAskModal = ({ isOpen, onClose, askToEdit = null }) => {
   const initialFormData = {
     askerId: '',
     domainId: '',
@@ -23,7 +23,8 @@ const CreateAskModal = ({ isOpen, onClose }) => {
   const [askersList, setAskersList] = useState([]);
   const [domainsList, setDomainsList] = useState([]);
 
-  // TRUCO SENIOR: Calculamos la fecha de hoy en formato YYYY-MM-DD
+  const isEditMode = !!askToEdit;
+
   // TRUCO SENIOR: Calculamos la fecha de hoy basándonos en tu ZONA HORARIA LOCAL
   const date = new Date();
   const year = date.getFullYear();
@@ -31,12 +32,32 @@ const CreateAskModal = ({ isOpen, onClose }) => {
   const day = String(date.getDate()).padStart(2, '0');
   const localToday = `${year}-${month}-${day}`;
 
+  // Efecto para cargar listas y resetear/cargar datos del formulario
   useEffect(() => {
     if (isOpen) {
+      // Cargar selectores
       getAskers().then(setAskersList).catch(err => console.error("Error Askers:", err));
       getDomains().then(setDomainsList).catch(err => console.error("Error Domains:", err));
+
+      // Si estamos editando, rellenamos el formulario
+      if (askToEdit) {
+        setFormData({
+          askerId: askToEdit.askerId || '',
+          domainId: askToEdit.domainId || '',
+          title: askToEdit.title || '',
+          description: askToEdit.description || '',
+          type: askToEdit.type || 'THINGS',
+          dueDate: askToEdit.dueDate ? askToEdit.dueDate.split('T')[0] : '',
+          quantityRequested: askToEdit.quantityRequested || '',
+          estimatedHours: askToEdit.estimatedHours || '',
+          serviceLocation: askToEdit.serviceLocation || '',
+          requiredSkill: askToEdit.requiredSkill || '',
+        });
+      } else {
+        setFormData(initialFormData);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, askToEdit]);
 
   if (!isOpen) return null;
 
@@ -63,6 +84,7 @@ const CreateAskModal = ({ isOpen, onClose }) => {
         payload.dueDate = new Date(formData.dueDate).toISOString();
       }
 
+      // Lógica de campos especializados según el tipo
       if (formData.type === 'THINGS') {
         payload.quantityRequested = parseInt(formData.quantityRequested, 10);
       } else if (formData.type === 'TIME') {
@@ -73,10 +95,14 @@ const CreateAskModal = ({ isOpen, onClose }) => {
         payload.serviceLocation = formData.serviceLocation;
       }
 
-      await createAsk(payload);
+      if (isEditMode) {
+        await updateAsk(askToEdit.id, payload);
+        alert('¡Petición actualizada con éxito!');
+      } else {
+        await createAsk(payload);
+        alert('¡Petición creada con éxito!');
+      }
       
-      alert('¡Petición creada con éxito!');
-      setFormData(initialFormData);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -91,7 +117,9 @@ const CreateAskModal = ({ isOpen, onClose }) => {
 
       <div className="relative bg-white w-full max-w-md max-h-[90vh] rounded-xl shadow-2xl overflow-y-auto animate-in zoom-in duration-300">
         <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex justify-between items-center z-10">
-          <h2 className="text-xl font-bold text-slate-800">Nueva Petición</h2>
+          <h2 className="text-xl font-bold text-slate-800">
+            {isEditMode ? 'Editar Petición' : 'Nueva Petición'}
+          </h2>
           <button onClick={onClose} disabled={isLoading} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600 disabled:opacity-30">
             <X size={20} />
           </button>
@@ -197,7 +225,11 @@ const CreateAskModal = ({ isOpen, onClose }) => {
 
           <div className="pt-4">
             <button type="submit" disabled={isLoading} className={`w-full ${isLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98]'} text-white font-bold py-3 rounded-lg shadow-lg transition-all flex justify-center items-center gap-2`}>
-              {isLoading ? <><Loader2 className="animate-spin" size={20} /> Guardando...</> : 'Registrar Petición'}
+              {isLoading ? (
+                <><Loader2 className="animate-spin" size={20} /> Guardando...</>
+              ) : (
+                isEditMode ? 'Guardar Cambios' : 'Registrar Petición'
+              )}
             </button>
           </div>
         </form>

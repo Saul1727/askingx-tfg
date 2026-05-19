@@ -57,9 +57,10 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 - **`useEffect`**: Fundamental en modales como `CreateAskModal` para lanzar peticiones asíncronas a la API (GET de Organizaciones y Dominios) exactamente en el momento en que el componente se monta/abre en pantalla.
 - **`useNavigate`**: Usado para enrutamiento SPA (Single Page Application).
 
-### B. Lógica STI (Single Table Inheritance) en Formularios
+### B. Lógica STI (Single Table Inheritance) y Reutilización en Formularios
 
-- En el modal de "Nueva Petición", el formulario muta dinámicamente según el tipo de recurso seleccionado (Cosas, Tiempo, etc.). Esto demuestra un diseño frontend que se adapta perfectamente a una arquitectura de base de datos eficiente, enviando únicamente los campos (payload) requeridos por cada tipo.
+- **Reutilización del Modal:** El `CreateAskModal` ha sido diseñado para ser polimórfico. Mediante la prop `askToEdit`, el mismo componente es capaz de funcionar en modo **Creación** (POST) o modo **Edición** (PUT). Esto reduce la duplicidad de código y centraliza la lógica de validación de campos complejos (STI) en un único punto.
+- **Mutación Dinámica:** El formulario muta dinámicamente según el tipo de recurso seleccionado (Cosas, Tiempo, etc.). Esto demuestra un diseño frontend que se adapta perfectamente a una arquitectura de base de datos eficiente, enviando únicamente los campos (payload) requeridos por cada tipo.
 
 ### C. Gestión de Fechas y Zonas Horarias
 

@@ -55,13 +55,14 @@ Vista centralizada que actúa como centro de mando:
 
 ---
 
-## 4. Caso de Uso 01: Creación de Peticiones (CU-01)
+## 4. Gestión Integral de Peticiones (CU-01: Creación y Edición)
 
-Se ha implementado el flujo completo (Frontend-Backend) para el registro de nuevas peticiones de ayuda, utilizando un componente modal avanzado.
+Se ha implementado el flujo completo (Frontend-Backend) para el registro y modificación de peticiones de ayuda, utilizando un componente modal avanzado y polimórfico.
 
-### 4.1. Componente `CreateAskModal.jsx`
+### 4.1. Componente `CreateAskModal.jsx` (Polimorfismo)
 
 - **Ubicación:** `src/components/asks/CreateAskModal.jsx`.
+- **Modos de Operación:** Mediante la prop `askToEdit`, el componente cambia dinámicamente entre modo **Registro** (POST) y modo **Edición** (PUT). Si se recibe una petición existente, el formulario se auto-hidrata con los valores actuales.
 - **Carga Dinámica de Datos:** Mediante el hook `useEffect`, el componente consume las APIs de `Askers` y `Domains` al montarse, hidratando los campos `select` del formulario con datos reales de la base de datos de PostgreSQL.
 - **Patrón STI (Single Table Inheritance):** El formulario muta y adapta sus campos dinámicamente según el tipo de recurso seleccionado (`THINGS`, `TIME`, `EXPERTISE`, `SERVICES`), formateando y "limpiando" el payload antes del envío.
 - **Gestión de Fechas (Timezones):** Incorporación del campo opcional `dueDate`. Se ha implementado un cálculo en tiempo real de la zona horaria local del navegador para bloquear la selección de fechas pasadas en el HTML5, garantizando posteriormente la transformación a ISO 8601 (`toISOString()`) para su inserción en Prisma.

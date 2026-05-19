@@ -1,19 +1,43 @@
 /**
- * Ask Service
- * Handles API communications related to petitions (Asks).
+ * Ask Service (Frontend)
+ * Handles API calls to the backend for everything related to Asks.
  */
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
-export const createAsk = async (askData) => {
+/**
+ * Helper to get the auth token from localStorage
+ */
+const getAuthHeader = () => {
   const token = localStorage.getItem('token');
-  if (!token) throw new Error('No se encontró un token de sesión.');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
 
+/**
+ * Helper to get the current user ID from the JWT token
+ */
+const getCurrentUserId = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  try {
+    const payloadBase64 = token.split('.')[1];
+    const decodedJson = atob(payloadBase64);
+    const payload = JSON.parse(decodedJson);
+    return payload.userId;
+  } catch (e) {
+    return null;
+  }
+};
+
+/**
+ * Creates a new Ask in the system
+ */
+export const createAsk = async (askData) => {
   const response = await fetch(`${API_BASE_URL}/asks`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      ...getAuthHeader()
     },
     body: JSON.stringify(askData),
   });
@@ -23,36 +47,99 @@ export const createAsk = async (askData) => {
   return data;
 };
 
-// --- GETTERS PARA LOS DESPLEGABLES ---
-
-export const getAskers = async () => {
-  const token = localStorage.getItem('token');
-  if (!token) return [];
-
-  // TRUCO SENIOR: Decodificamos el JWT a mano para sacar tu userId
-  const payloadBase64 = token.split('.')[1];
-  const decodedJson = atob(payloadBase64);
-  const payload = JSON.parse(decodedJson);
-  const authorId = payload.userId; // Este es tu ID de sesión
-
-  // Llamamos a la ruta real de tu backend que requiere el ID
-  const response = await fetch(`${API_BASE_URL}/askers/author/${authorId}`, {
-    headers: { 'Authorization': `Bearer ${token}` },
+/**
+ * Retrieves all Asks, optionally filtered by status
+ */
+export const getAsks = async (status = '') => {
+  const url = status ? `${API_BASE_URL}/asks?status=${status}` : `${API_BASE_URL}/asks`;
+  const response = await fetch(url, {
+    headers: getAuthHeader(),
   });
-  
-  if (!response.ok) throw new Error('Error al obtener organizaciones');
-  
-  const json = await response.json();
-  return Array.isArray(json) ? json : (json.data || json.askers || []);
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Error al recuperar las peticiones');
+  return data.data || data;
 };
 
-export const getDomains = async () => {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE_URL}/domains`, {
-    headers: { 'Authorization': `Bearer ${token}` },
+/**
+ * Updates an Ask completely (PUT)
+ */
+export const updateAsk = async (id, askData) => {
+  const response = await fetch(`${API_BASE_URL}/asks/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader()
+    },
+    body: JSON.stringify(askData),
   });
-  if (!response.ok) throw new Error('Error al obtener dominios');
-  
-  const json = await response.json();
-  return Array.isArray(json) ? json : (json.data || json.domains || []);
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Error al actualizar la petición');
+  return data;
+};
+
+/**
+ * Updates the status of an Ask (PATCH)
+ */
+export const updateAskStatus = async (id, status) => {
+  const response = await fetch(`${API_BASE_URL}/asks/${id}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader()
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Error al actualizar el estado');
+  return data;
+};
+
+/**
+ * Performs a match between an Ask and a Giver (PATCH)
+ */
+export const matchAsk = async (id, giverId) => {
+  const response = await fetch(`${API_BASE_URL}/asks/${id}/match`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader()
+    },
+    body: JSON.stringify({ giverId }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Error al realizar el match');
+  return data;
+};
+
+/**
+ * Retrieves askers associated with the current author
+ */
+export const getAskers = async () => {
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+
+  const response = await fetch(`${API_BASE_URL}/askers/author/${userId}`, {
+    headers: getAuthHeader(),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Error al obtener organizaciones');
+  return data.data || data;
+};
+
+/**
+ * Retrieves all help domains
+ */
+export const getDomains = async () => {
+  const response = await fetch(`${API_BASE_URL}/domains`, {
+    headers: getAuthHeader(),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Error al obtener dominios');
+  return data.data || data;
 };

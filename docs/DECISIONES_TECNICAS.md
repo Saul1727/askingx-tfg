@@ -78,11 +78,14 @@ Decisión: Se ha implementado una validación estricta en el registro de usuario
 
 Justificación: Para cumplir fielmente con el diagrama de clases (UML), los roles CONNECTOR y GIVER no pueden existir sin al menos un dominio asignado. El backend ahora bloquea (400 Bad Request) cualquier intento de crear estos perfiles con el array de specialties vacío.
 
-12. Lógica de Negocio: Match vs Status Update
+12. Lógica de Negocio: Match vs Status Update vs Edición Completa
 
-Decisión: Se ha creado el endpoint específico PATCH /api/asks/:id/match separado de la actualización de estado genérica.
+Decisión: Se han diferenciado tres niveles de actualización para una Petición (Ask):
+- **PATCH /api/asks/:id/status**: Para transiciones rápidas de estado (flujo HITL).
+- **PATCH /api/asks/:id/match**: Para la vinculación relacional con un donante.
+- **PUT /api/asks/:id**: Para la edición completa de los campos de la petición (título, descripción, fechas, etc.).
 
-Justificación: Un "Match" no es solo un cambio de estado; es una operación relacional. Esta función vincula atómicamente al CONNECTOR (gestor) y al GIVER (donante) con la petición, garantizando la trazabilidad exigida en el modelo AskingX.
+Justificación: Separar la edición completa del cambio de estado permite aplicar reglas de validación distintas y garantiza que una edición accidental no altere el flujo de vida de la petición de forma imprevista. El uso de PUT sigue los estándares REST para reemplazo/actualización completa del recurso.
 
 13. Protección contra Sobredonación (Agregación en Caliente)
 

@@ -171,4 +171,46 @@ const matchAsk = async (askId, connectorId, giverId) => {
 };
 
 
-module.exports = { createAsk, getAllAsks, updateAskStatus, matchAsk };
+const updateAsk = async (askId, updateData, user) => {
+    // 1. Verificamos que la Ask existe
+    const existingAsk = await prisma.ask.findUnique({
+        where: { id: askId }
+    });
+
+    if (!existingAsk) {
+        const error = new Error('La petición especificada no existe');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // 2. Seguridad: Un AUTHOR solo puede editar sus propias Asks
+    if (user.role === 'AUTHOR' && existingAsk.askAuthorId !== user.userId) {
+        const error = new Error('No tienes permisos para modificar esta petición');
+        error.statusCode = 403;
+        throw error;
+    }
+
+    // 3. Realizamos la actualización
+    const updatedAsk = await prisma.ask.update({
+        where: { id: askId },
+        data: {
+            title: updateData.title,
+            description: updateData.description,
+            type: updateData.type,
+            status: updateData.status,
+            dueDate: updateData.dueDate ? new Date(updateData.dueDate) : undefined,
+            askerId: updateData.askerId,
+            domainId: updateData.domainId,
+            
+            // Campos especializados (STI)
+            quantityRequested: updateData.quantityRequested,
+            estimatedHours: updateData.estimatedHours,
+            requiredSkill: updateData.requiredSkill,
+            serviceLocation: updateData.serviceLocation,
+        }
+    });
+
+    return updatedAsk;
+};
+
+module.exports = { createAsk, getAllAsks, updateAsk, updateAskStatus, matchAsk };
