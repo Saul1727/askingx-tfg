@@ -128,10 +128,24 @@ const loginUser = async (credentials) => {
   return { user, token };
 };
 
+// Obtener todos los Givers (Voluntarios) para el Connector
+const getGivers = async () => {
+    const givers = await prisma.user.findMany({
+        where: { role: 'GIVER' },
+        select: { 
+            id: true, 
+            fullName: true, 
+            email: true 
+        }
+    });
+    return givers;
+};
+
 module.exports = {
   createAdmin,
   createAskAuthor,
   loginUser,
-  createUser
+  createUser,
+  getGivers
 };
   

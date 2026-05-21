@@ -1,49 +1,35 @@
-Abre el archivo `frontend/src/services/askService.js`. 
-
-El dashboard está fallando con el error "TypeError: asksList.filter is not a function". Esto ocurre porque el backend devuelve la respuesta envuelta en un objeto `{ success: true, data: [...] }`, pero el frontend está devolviendo el objeto completo en lugar de extraer el array. 
-
-Para solucionarlo, por favor reemplaza COMPLETAMENTE la función `getAllAsks` por el siguiente código exacto (fíjate en el `return data.data || data;`):
-
-export const getAllAsks = async (status = '') => {
-  try {
-    const url = status ? `${API_BASE_URL}/asks?status=${status}` : `${API_BASE_URL}/asks`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        ...getAuthHeader()
-      },
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Error al recuperar las peticiones');
-    
-    return data.data || data;
-  } catch (error) {
-    console.error('GetAllAsks service error:', error);
-    throw error;
-  }
-};
-mira lo que suleta le backend:
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-[ERROR] Token expirado.
-
+3:36:59 [vite] Internal server error: Failed to resolve import "../services/userService" from "src/pages/ConnectorKanban.jsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: C:/Users/Saúl/Desktop/TFG/askingx-tfg/frontend/src/pages/ConnectorKanban.jsx:4:26
+  2  |  import { KanbanSquare, Loader2, Users, CheckCircle2, Clock, MapPin, X, ArrowRight } from "lucide-react";
+  3  |  import { getAllAsks, matchAsk, updateAskStatus } from "../services/askService";
+  4  |  import { getGivers } from "../services/userService";
+     |                             ^
+  5  |  var _jsxFileName = "C:/Users/Saúl/Desktop/TFG/askingx-tfg/frontend/src/pages/ConnectorKanban.jsx";
+  6  |  import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
+      at TransformPluginContext._formatLog (file:///C:/Users/Sa%C3%BAl/Desktop/TFG/askingx-tfg/frontend/node_modules/vite/dist/node/chunks/node.js:30486:39)
+      at TransformPluginContext.error (file:///C:/Users/Sa%C3%BAl/Desktop/TFG/askingx-tfg/frontend/node_modules/vite/dist/node/chunks/node.js:30483:14)
+      at normalizeUrl (file:///C:/Users/Sa%C3%BAl/Desktop/TFG/askingx-tfg/frontend/node_modules/vite/dist/node/chunks/node.js:27725:18)
+      at async file:///C:/Users/Sa%C3%BAl/Desktop/TFG/askingx-tfg/frontend/node_modules/vite/dist/node/chunks/node.js:27788:30
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/Sa%C3%BAl/Desktop/TFG/askingx-tfg/frontend/node_modules/vite/dist/node/chunks/node.js:27756:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/Sa%C3%BAl/Desktop/TFG/askingx-tfg/frontend/node_modules/vite/dist/node/chunks/node.js:30271:14)
+      at async loadAndTransform (file:///C:/Users/Sa%C3%BAl/Desktop/TFG/askingx-tfg/frontend/node_modules/vite/dist/node/chunks/node.js:24532:26)
+23:36:59 [vite] (client) Pre-transform error: Failed to resolve import "../services/userService" from "src/pages/ConnectorKanban.jsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: C:/Users/Saúl/Desktop/TFG/askingx-tfg/frontend/src/pages/ConnectorKanban.jsx:4:26
+  2  |  import { KanbanSquare, Loader2, Users, CheckCircle2, Clock, MapPin, X, ArrowRight } from "lucide-react";
+  3  |  import { getAllAsks, matchAsk, updateAskStatus } from "../services/askService";
+  4  |  import { getGivers } from "../services/userService";
+     |                             ^
+  5  |  var _jsxFileName = "C:/Users/Saúl/Desktop/TFG/askingx-tfg/frontend/src/pages/ConnectorKanban.jsx";
+  6  |  import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
+23:36:59 [vite] (client) Pre-transform error: Failed to resolve import "../services/userService" from "src/pages/ConnectorKanban.jsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: C:/Users/Saúl/Desktop/TFG/askingx-tfg/frontend/src/pages/ConnectorKanban.jsx:4:26
+  2  |  import { KanbanSquare, Loader2, Users, CheckCircle2, Clock, MapPin, X, ArrowRight } from "lucide-react";
+  3  |  import { getAllAsks, matchAsk, updateAskStatus } from "../services/askService";
+  4  |  import { getGivers } from "../services/userService";
+     |                             ^
+  5  |  var _jsxFileName = "C:/Users/Saúl/Desktop/TFG/askingx-tfg/frontend/src/pages/ConnectorKanban.jsx";
+  6  |  import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime"; (x2)

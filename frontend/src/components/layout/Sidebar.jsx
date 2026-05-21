@@ -7,7 +7,8 @@ import {
   History, 
   Settings, 
   Users, 
-  Layers 
+  Layers,
+  KanbanSquare 
 } from 'lucide-react';
 
 /**
@@ -16,10 +17,13 @@ import {
  */
 const Sidebar = ({ userRole = 'AUTHOR' }) => {
   const isAdmin = userRole === 'ADMIN';
+  const isConnector = userRole === 'CONNECTOR';
   const isAuthorOrAdmin = userRole === 'AUTHOR' || isAdmin;
+  const isConnectorOrAdmin = isConnector || isAdmin;
 
   const navItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard', show: true },
+    { name: 'Tablero (Kanban)', icon: <KanbanSquare size={20} />, path: '/connector/kanban', show: isConnectorOrAdmin },
     { name: 'Organizaciones (Askers)', icon: <Building2 size={20} />, path: '/askers', show: isAuthorOrAdmin },
     { name: 'Peticiones (Asks)', icon: <FileText size={20} />, path: '/asks', show: isAuthorOrAdmin },
     { name: 'Historias de Impacto', icon: <History size={20} />, path: '/stories', show: true },

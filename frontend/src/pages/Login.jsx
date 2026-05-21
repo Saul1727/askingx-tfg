@@ -20,7 +20,7 @@ const Login = () => {
   const roleRedirectMap = new Map([
     ['ADMIN', '/admin/dashboard'],
     ['AUTHOR', '/author/asks'],
-    ['CONNECTOR', '/connector/matches'],
+    ['CONNECTOR', '/connector/kanban'],
     ['GIVER', '/giver/history'],
   ]);
 
@@ -44,9 +44,10 @@ const Login = () => {
     try {
       const response = await loginUser(email, password);
       
-      // Store token securely
+      // Store token and user info securely
       const { token, user } = response.data;
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
 
       // Role-based Redirection
       const redirectPath = roleRedirectMap.get(user.role) || '/';

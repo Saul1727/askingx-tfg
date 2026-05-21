@@ -1,7 +1,6 @@
 const prisma = require('../config/prisma');
 
 const createAsker = async (askerData) => {
-
     const author = await prisma.user.findUnique({
         where: { id: askerData.askAuthorId }
     });
@@ -48,7 +47,49 @@ const getAskersByAuthor = async (authorId) => {
     return askers;
 };
 
+// Recibimos askerId, userId y userRole
+const deleteAsker = async (askerId, userId, userRole) => {
+    // Buscamos el Asker y contamos cuántas Asks tiene asociadas
+    const asker = await prisma.asker.findUnique({
+        where: { id: askerId },
+        include: {
+            _count: {
+                select: { asks: true }
+            }
+        }
+    });
+
+    // Validaciones de existencia
+    if (!asker) {
+        const error = new Error('La organización no existe');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Regla de Permisos (Admin o Dueño)
+    if (userRole !== 'ADMIN' && asker.askAuthorId !== userId) {
+        const error = new Error('No tienes permisos para eliminar esta organización');
+        error.statusCode = 403; 
+        throw error;
+    }
+
+    // No se puede borrar si tiene peticiones
+    if (asker._count.asks > 0) {
+        const error = new Error('No puedes eliminar una organización que ya tiene peticiones en el sistema. Debes cancelar o eliminar sus peticiones primero.');
+        error.statusCode = 409; // Conflict
+        throw error;
+    }
+
+    // Si todo está OK, eliminamos
+    await prisma.asker.delete({
+        where: { id: askerId }
+    });
+
+    return true;
+};
+
 module.exports = {
     createAsker,
-    getAskersByAuthor
+    getAskersByAuthor,
+    deleteAsker 
 };

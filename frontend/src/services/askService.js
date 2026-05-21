@@ -152,3 +152,45 @@ export const getDomains = async () => {
   if (!response.ok) throw new Error(data.message || 'Error al obtener dominios');
   return data.data || data;
 };
+
+// Añadir al final de askService.js
+export const createAsker = async (askerData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/askers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(askerData),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Error al crear la organización');
+    return data;
+  } catch (error) {
+    console.error('CreateAsker service error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Elimina un Asker (Organización/Persona)
+ */
+export const deleteAsker = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/askers/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeader(),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Error al eliminar la organización');
+    return data;
+  } catch (error) {
+    console.error('DeleteAsker service error:', error);
+    throw error;
+  }
+};
+
+

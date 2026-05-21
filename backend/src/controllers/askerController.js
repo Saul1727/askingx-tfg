@@ -53,7 +53,26 @@ const getAskersByAuthorController = async (req, res, next) => {
     }
 };
 
+// Actualiza el deleteAskerController:
+const deleteAskerController = async (req, res, next) => {
+    try {
+        const askerId = req.params.id;
+        const userId = req.user.userId; 
+        const userRole = req.user.role;
+
+        z.string().uuid("El ID de la organización debe ser un UUID válido").parse(askerId);
+
+        // Le pasamos el userId y el userRole al servicio
+        await askerService.deleteAsker(askerId, userId, userRole);
+
+        res.status(200).json({ success: true, message: 'Organización eliminada con éxito' });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createAskerController,
-    getAskersByAuthorController
+    getAskersByAuthorController,
+    deleteAskerController
 };

@@ -8,8 +8,10 @@ import Topbar from './Topbar';
  * Global architecture containing Sidebar, Topbar, and a dynamic content area.
  */
 const MainLayout = () => {
-  // Simulate fetching role (AUTHOR in this case)
-  const userRole = 'AUTHOR';
+  // Get user info from localStorage
+  const userJson = localStorage.getItem('user');
+  const user = userJson ? JSON.parse(userJson) : null;
+  const userRole = user?.role || 'AUTHOR'; // Fallback to AUTHOR if not found
 
   return (
     <div className="flex h-screen bg-[#f8fafc] overflow-hidden">

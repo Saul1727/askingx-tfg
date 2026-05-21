@@ -124,9 +124,23 @@ const loginUserController = async (req, res, next) => {
   }
 };
 
+const getGiversController = async (req, res, next) => {
+    try {
+        const givers = await userService.getGivers();
+        res.status(200).json({
+            success: true,
+            data: givers
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 module.exports = {
   createAdminController,
   createAskAuthorController,
   registerUserController,
-  loginUserController
+  loginUserController,
+  getGiversController
 };

@@ -1,5 +1,5 @@
 const express = require('express');
-const { createAdminController, createAskAuthorController, registerUserController, loginUserController } = require('../controllers/userController');
+const { createAdminController, createAskAuthorController, registerUserController, loginUserController, getGiversController } = require('../controllers/userController');
 const { register } = require('node:module');
 
 const router = express.Router();
@@ -15,5 +15,8 @@ router.post('/register', registerUserController);
 
 // POST /api/users/login
 router.post('/login', loginUserController);
+
+// GET /api/users/givers -> ver la lista de voluntarios
+router.get('/givers', getGiversController);
 
 module.exports = router;
