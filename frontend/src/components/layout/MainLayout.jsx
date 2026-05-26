@@ -1,7 +1,7 @@
-import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import { getUser } from '../../services/authService';
 
 /**
  * MainLayout Component
@@ -9,8 +9,7 @@ import Topbar from './Topbar';
  */
 const MainLayout = () => {
   // Get user info from localStorage
-  const userJson = localStorage.getItem('user');
-  const user = userJson ? JSON.parse(userJson) : null;
+  const user = getUser();
   const userRole = user?.role || 'AUTHOR'; // Fallback to AUTHOR if not found
 
   return (

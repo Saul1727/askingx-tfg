@@ -8,22 +8,26 @@ const API_BASE_URL = 'http://localhost:3000/api';
 /**
  * Authenticates a user against the backend API.
  * 
- * @param {string} email - User's email
- * @param {string} password - User's password
+ * @param {Object} credentials - User's credentials {email, password}
  * @returns {Promise<Object>} The parsed response data from the backend
  * @throws {Error} If the response is not OK or the request fails
  */
-export const loginUser = async (email, password) => {
+export const loginUser = async (credentials) => {
   try {
     const response = await fetch(`${API_BASE_URL}/users/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(credentials),
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      data = { message: 'Error de red o respuesta inválida del servidor' };
+    }
 
     if (!response.ok) {
       // Use the error message from the backend if available, otherwise a generic one
@@ -37,3 +41,28 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 };
+
+export const getToken = () => {
+  return localStorage.getItem('token');
+};
+
+export const getUser = () => {
+  const user = localStorage.getItem('user');
+  if (!user) return null;
+  try {
+    return JSON.parse(user);
+  } catch (e) {
+    return null;
+  }
+};
+
+export const logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = '/';
+};
+
+export const isAuthenticated = () => {
+  return !!getToken();
+};
+

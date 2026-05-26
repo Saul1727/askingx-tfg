@@ -8,8 +8,10 @@ import {
   Settings, 
   Users, 
   Layers,
-  KanbanSquare 
+  KanbanSquare,
+  LogOut
 } from 'lucide-react';
+import { logout } from '../../services/authService';
 
 /**
  * Sidebar Component
@@ -58,6 +60,21 @@ const Sidebar = ({ userRole = 'AUTHOR' }) => {
           <SidebarLink key={item.path} item={item} />
         ))}
       </nav>
+
+      {/* Logout Button */}
+      <div className="p-4 mt-auto border-t border-slate-700">
+        <button 
+          onClick={() => {
+            if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+              logout();
+            }
+          }}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 w-full text-slate-300 hover:bg-red-500/10 hover:text-red-400 group"
+        >
+          <LogOut size={20} className="opacity-70 group-hover:opacity-100" />
+          <span className="text-sm font-medium">Cerrar Sesión</span>
+        </button>
+      </div>
     </aside>
   );
 };

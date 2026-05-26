@@ -27,19 +27,25 @@ El proyecto se ha construido bajo una arquitectura modular basada en componentes
 ### 2.2. Lógica de Negocio y API (`src/services/authService.js`)
 
 - Creación de una capa de servicios (`authService`) para abstraer las peticiones HTTP. Gestión de comunicación con `/api/users/login` y manejo de errores robusto.
+- **Helpers de Sesión:** Implementación de funciones exportables (`getToken`, `getUser`, `logout`, `isAuthenticated`) para estandarizar el acceso seguro al `localStorage` en toda la aplicación, previniendo errores de parseo (ej. capturando excepciones de `JSON.parse` que antes causaban pantallas blancas).
 
 ### 2.3. Gestión del Estado y Navegación (`src/pages/Login.jsx`)
 
-- **Persistencia:** Almacenamiento del JWT (Token) en `localStorage`.
-- **Redirección Inteligente:** Uso de un mapa de roles para redirigir a los usuarios a sus paneles (ADMIN, AUTHOR, CONNECTOR, GIVER).
+- **Persistencia:** Almacenamiento tanto del JWT (Token) como del objeto de usuario en `localStorage` tras el inicio de sesión.
+- **Redirección Inteligente:** Redirección centralizada al panel de control tras un login exitoso.
 
 ---
 
 ## 3. Arquitectura de Layout y Panel de Control (Dashboard)
 
-Se ha implementado un sistema de **Layouts y Outlets** para separar la estructura persistente de la aplicación del contenido dinámico.
+Se ha implementado un sistema de **Layouts y Outlets** para separar la estructura persistente de la aplicación del contenido dinámico, reforzado con seguridad perimetral.
 
-### 3.1. Estructura Global (`src/components/layout/`)
+### 3.1. Seguridad de Rutas (`src/components/layout/ProtectedRoute.jsx`)
+
+- **Patrón Higher-Order Component (HOC):** Se ha desarrollado un componente `ProtectedRoute` que envuelve todas las rutas privadas de la aplicación.
+- **Lógica:** Al intentar acceder a cualquier ruta del Dashboard, el componente verifica la existencia de una sesión válida mediante `isAuthenticated()`. Si el usuario no está logueado, es interceptado y redirigido automáticamente a la pantalla de `/login` mediante el componente `<Navigate />` de React Router.
+
+### 3.2. Estructura Global (`src/components/layout/`)
 
 - **`MainLayout.jsx`**: Orquestador principal que mantiene `Sidebar` y `Topbar` fijos.
 - **`Sidebar.jsx`**: Barra lateral con **lógica de roles integrada**.

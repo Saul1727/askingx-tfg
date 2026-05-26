@@ -108,21 +108,21 @@ const updateAskStatusController = async (req, res, next) => {
 const matchAskController = async (req, res, next) => {
     try {
         const askId = req.params.id;
-        const { giverId } = req.body;
+        const { giverIds } = req.body;
         const connectorId = req.user.userId;
 
-        if (!giverId) {
+        if (!giverIds || !Array.isArray(giverIds)) {
             return res.status(400).json({ 
                 success: false, 
-                message: "El campo giverId es obligatorio en el body" 
+                message: "El campo giverIds es obligatorio en el body y debe ser un array" 
             });
         }
 
-        const matchedAsk = await askService.matchAsk(askId, connectorId, giverId);
+        const matchedAsk = await askService.matchAsk(askId, connectorId, giverIds);
 
         res.status(200).json({
             success: true,
-            message: "¡Match realizado con éxito!",
+            message: "¡Match actualizado con éxito!",
             data: matchedAsk
         });
     } catch (error) {

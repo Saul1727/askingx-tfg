@@ -107,20 +107,20 @@ export const updateAskStatus = async (id, status) => {
 };
 
 /**
- * Performs a match between an Ask and a Giver (PATCH)
+ * Performs a match between an Ask and one or more Givers (PATCH)
  */
-export const matchAsk = async (id, giverId) => {
+export const matchAsk = async (id, giverIds) => {
   const response = await fetch(`${API_BASE_URL}/asks/${id}/match`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader()
     },
-    body: JSON.stringify({ giverId }),
+    body: JSON.stringify({ giverIds }),
   });
 
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'Error al realizar el match');
+  if (!response.ok) throw new Error(data.message || 'Error al actualizar voluntarios');
   return data;
 };
 

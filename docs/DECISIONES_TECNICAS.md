@@ -47,13 +47,17 @@ Decisión: Solo el AUTHOR (o el ADMIN) puede realizar el PATCH final al estado F
 Justificación: Dado que la ayuda es física (bienes o servicios reales), el sistema no puede dar por finalizado un caso hasta que el trabajador social verifique la recepción y calidad de la ayuda. Esto garantiza la veracidad de los datos antes de generar la Story de impacto.
 
 7. Privacidad y Visibilidad de Datos
-   Se ha implementado una lógica de filtrado dinámico en getAllAsks para proteger la privacidad de los solicitantes vulnerables:
+   Se ha implementado una lógica de filtrado dinámico (Query-level filtering) en la función `getAllAsks` del servicio para proteger la privacidad de los solicitantes vulnerables y segmentar el trabajo:
 
-ADMIN/CONNECTOR: Acceso a búsqueda global (dentro de su especialidad) para gestionar conexiones.
+ADMIN: Acceso global a todas las peticiones.
 
-AUTHOR: Vista exclusiva de los casos gestionados por su propia organización.
+CONNECTOR: Visibilidad segmentada dinámicamente y protección contra saturación visual. 
+- **La Bolsa de Trabajo:** El sistema hace una pre-consulta de las especialidades (Domains) del usuario y le muestra únicamente las peticiones que están en estado `OPEN` y que coinciden con sus áreas de pericia. No puede ver peticiones recién creadas (`CREATED`) que aún no han sido aprobadas para publicación.
+- **Historial Personal:** Una vez que un Connector asume o cierra un caso (`MATCHED` o `FULFILLED`), ese caso queda asociado a su `connectorId`. La regla de negocio dicta que un Connector solo visualiza su propio historial de éxito, evitando saturar su tablero con casos resueltos por otros expertos de la misma rama.
 
-GIVER: Acceso limitado únicamente a su historial personal de donaciones realizadas. No tiene acceso a la "bolsa" de peticiones abiertas, ya que es considerado un agente externo a la gestión logística de la plataforma.
+AUTHOR: Vista exclusiva de las peticiones creadas por él mismo (`askAuthorId`).
+
+GIVER: Acceso limitado únicamente a su historial personal de donaciones realizadas (`fulfillments`). No tiene acceso a la "bolsa" de peticiones abiertas, ya que es considerado un agente externo a la gestión logística de la plataforma.
 
 8. Validación Estricta con Zod
    Se utiliza Zod para garantizar que ninguna petición malformada alcance la base de datos:

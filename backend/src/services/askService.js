@@ -47,63 +47,76 @@ const createAsk = async (askData) => {
 };
 
 const getAllAsks = async (user, filters = {}) => {
-    //Construimos el objeto de consulta para Prisma
+    // Construimos el objeto de consulta para Prisma
     const query = {
         include: {
             asker: true, // Incluimos datos del Asker
             domain: true, // Incluimos los dominio asociado
-            fulfillments: true // Para que el front veas las donaciones
-    },
-    where: {}
-};
-
-//Si hay estado aplicamos el filtro
-if (filters.status) {
-    query.where.status = filters.status ;
-}
-
-// VISIBILIDAD por roles
-
-// ADMIN
-if (user.role === 'ADMIN') {
-    // Los ADMIN pueden ver todas las Asks, no aplicamos restricciones adicionales
-}
-
-// CONNECTOR (solo sus doominos)
-else if (user.role === 'CONNECTOR') {
-
-    const connectorInfo = await prisma.user.findUnique({
-        where: { id: user.userId },
-        include: { specialties: true } 
-    });
-
-    // ?, para evitar fallos sino lo encuentra
-   const specialtyIds = connectorInfo?.specialties?.map(d => d.id) || [];
-
-        query.where.OR = [
-            { 
-                status: 'OPEN',
-                domainId: { in: specialtyIds } // Solo ve lo de su especialidad
-            }, 
-            { connectorId: user.userId }
-        ];
-}
-
-// AUTHOR (solo sus Asks)
-else if (user.role === 'AUTHOR') {
-    query.where.askAuthorId = user.userId;
-}
-
-// GIVER (solo su historial FULFILLMENT)
-else if (user.role === 'GIVER') {
-    query.where.fulfillments = {
-        some: { giverId: user.userId }
+            fulfillments: true, // Para que el front veas las donaciones
+            givers: { select: { id: true, fullName: true } } // Incluimos los givers asignados
+        },
+        where: {}
     };
-}
 
-// Consulta con reglas aplicadas
-const asks = await prisma.ask.findMany(query);
-return asks;
+    // VISIBILIDAD por roles
+
+    // ADMIN
+    if (user.role === 'ADMIN') {
+        // Los ADMIN pueden ver todas las Asks, no aplicamos restricciones adicionales
+        if (filters.status) {
+            query.where.status = filters.status;
+        }
+    }
+
+    // CONNECTOR (solo sus doominos)
+    else if (user.role === 'CONNECTOR') {
+        const connectorInfo = await prisma.user.findUnique({
+            where: { id: user.userId },
+            include: { specialties: true } 
+        });
+
+        const specialtyIds = connectorInfo?.specialties?.map(d => d.id) || [];
+
+        // Regla de Negocio Corregida:
+        // Un Connector solo puede ver la "Bolsa de trabajo" de peticiones que están en estado OPEN (listas para hacer match)
+        // O bien, las peticiones que él mismo ya está gestionando (connectorId === user.userId), sin importar su estado actual.
+        query.where.OR = [
+            {
+                status: 'OPEN',
+                domainId: { in: specialtyIds }
+            },
+            {
+                connectorId: user.userId
+            }
+        ];
+
+        // Si el cliente envía un status específico, lo respetamos añadiéndolo al where global (Prisma lo evalúa como AND)
+        if (filters.status) {
+            query.where.status = filters.status;
+        }
+    }
+
+    // AUTHOR (solo sus Asks)
+    else if (user.role === 'AUTHOR') {
+        query.where.askAuthorId = user.userId;
+        if (filters.status) {
+            query.where.status = filters.status;
+        }
+    }
+
+    // GIVER (solo su historial FULFILLMENT)
+    else if (user.role === 'GIVER') {
+        query.where.fulfillments = {
+            some: { giverId: user.userId }
+        };
+        if (filters.status) {
+            query.where.status = filters.status;
+        }
+    }
+
+    // Consulta con reglas aplicadas
+    const asks = await prisma.ask.findMany(query);
+    return asks;
 };
 
 const updateAskStatus = async (askId, newStatus, user) => {
@@ -134,7 +147,7 @@ const updateAskStatus = async (askId, newStatus, user) => {
     return updatedAsk;
 };
 
-const matchAsk = async (askId, connectorId, giverId) => {
+const matchAsk = async (askId, connectorId, giverIds) => {
     // Verificamos que la petición existe
     const ask = await prisma.ask.findUnique({
         where: { id: askId }
@@ -146,20 +159,23 @@ const matchAsk = async (askId, connectorId, giverId) => {
         throw error;
     }
 
-    // Verificamos que esté en estado OPEN
-    if (ask.status !== 'OPEN') {
-        const error = new Error('La petición no está disponible para hacer match. Debe estar en estado OPEN.');
+    // Verificamos que esté en estado OPEN o MATCHED (ya que ahora podemos editar matches existentes)
+    if (ask.status !== 'OPEN' && ask.status !== 'MATCHED') {
+        const error = new Error('La petición no está disponible para editar sus Givers.');
         error.statusCode = 400; // Bad Request
         throw error;
     }
 
-    //Hacemos el Match actualizando la Ask
+    // Hacemos el Match actualizando la Ask
+    // Si eliminan a todos los givers (array vacío), la petición vuelve a estar OPEN
+    const newStatus = giverIds.length > 0 ? 'MATCHED' : 'OPEN';
+
     const updatedAsk = await prisma.ask.update({
         where: { id: askId },
         data: {
-            status: 'MATCHED',
+            status: newStatus,
             connector: { connect: { id: connectorId } }, // Registramos qué experto lo gestionó
-            givers: { connect: { id: giverId } }         // Añadimos al donante a la lista
+            givers: { set: giverIds.map(id => ({ id })) } // Reemplaza la lista completa (añade/elimina)
         },
         include: {
             connector: { select: { id: true, fullName: true } }, // Para verlo en la respuesta
