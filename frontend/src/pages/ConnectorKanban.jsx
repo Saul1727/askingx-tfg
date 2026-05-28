@@ -1,17 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, CheckCircle2, MoreVertical, Users } from 'lucide-react';
+import { Loader2, CheckCircle2, MoreVertical, Users, Edit } from 'lucide-react';
 import { getAllAsks, matchAsk, updateAskStatus } from '../services/askService';
 import { getGivers } from '../services/userService';
+import { getUser } from '../services/authService';
+import ConnectorViewAskModal from '../components/asks/ConnectorViewAskModal';
+import CreateAskModal from '../components/asks/CreateAskModal';
 
 const ConnectorKanban = () => {
   const [asks, setAsks] = useState([]);
   const [givers, setGivers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const currentUser = getUser();
+  const isAdmin = currentUser?.role === 'ADMIN';
 
   // Estados para el Modal de Match
   const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
   const [selectedAskForMatch, setSelectedAskForMatch] = useState(null);
   const [selectedGiverIds, setSelectedGiverIds] = useState([]);
+
+  // Estados para el Modal de Vista
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedAskForView, setSelectedAskForView] = useState(null);
+
+  // Estados para el Modal de Edición (Reutilizando CreateAskModal)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [askToEdit, setAskToEdit] = useState(null);
 
   const fetchData = () => {
     setIsLoading(true);
@@ -47,23 +60,20 @@ const ConnectorKanban = () => {
   // --- LÓGICA DE TRANSICIÓN DE ESTADOS ---
   const processStatusChange = async (ask, newStatus) => {
     try {
-      if ((ask.status === 'OPEN' || ask.status === 'CREATED') && newStatus === 'MATCHED') {
+      if (newStatus === 'MATCHED') {
         setSelectedAskForMatch(ask);
         setSelectedGiverIds(ask.givers?.map(g => g.id) || []);
         setIsMatchModalOpen(true);
       } 
       else if (ask.status === 'MATCHED' && newStatus === 'OPEN') {
         if (window.confirm("¿Seguro que quieres deshacer la asignación y devolverla a Abierta?")) {
-          // Removeremos todos los givers
           await matchAsk(ask.id, []);
           fetchData();
         }
       } 
-      else if (ask.status === 'MATCHED' && newStatus === 'FULFILLED') {
-        if (window.confirm("¿Confirmas que la ayuda ha sido entregada y completada con éxito?")) {
-          await updateAskStatus(ask.id, 'FULFILLED');
-          fetchData();
-        }
+      else if (newStatus === 'OPEN' || newStatus === 'CREATED' || newStatus === 'FULFILLED') {
+         await updateAskStatus(ask.id, newStatus);
+         fetchData();
       }
       else {
         alert("Transición no permitida directamente.");
@@ -73,10 +83,38 @@ const ConnectorKanban = () => {
     }
   };
 
+  const handleEditAsk = (ask) => {
+    setAskToEdit(ask);
+    setIsEditModalOpen(true);
+  };
+
   const handleEditGivers = (ask) => {
     setSelectedAskForMatch(ask);
     setSelectedGiverIds(ask.givers?.map(g => g.id) || []);
     setIsMatchModalOpen(true);
+  };
+
+  const handleCancelAsk = async (askId) => {
+    if (window.confirm("¿Seguro que quieres cancelar esta petición? Esta acción no se puede deshacer.")) {
+      try {
+        await updateAskStatus(askId, 'CANCELLED');
+        fetchData(); // Recargar datos
+        setIsViewModalOpen(false); // Cerrar modal
+      } catch (error) {
+        alert("Error al cancelar la petición: " + error.message);
+      }
+    }
+  };
+
+  const handleReassignGivers = (ask) => {
+    setIsViewModalOpen(false);
+    handleEditGivers(ask);
+  };
+
+  // EJECUCIÓN DEL MATCH 
+  const handleViewAskDetails = (ask) => {
+    setSelectedAskForView(ask);
+    setIsViewModalOpen(true);
   };
 
   // EJECUCIÓN DEL MATCH 
@@ -101,7 +139,8 @@ const ConnectorKanban = () => {
   };
 
   // Columnas del tablero
-  const openAsks = asks.filter(a => a.status === 'OPEN' || a.status === 'CREATED');
+  const createdAsks = asks.filter(a => a.status === 'CREATED');
+  const openAsks = asks.filter(a => a.status === 'OPEN');
   const matchedAsks = asks.filter(a => a.status === 'MATCHED');
   const fulfilledAsks = asks.filter(a => a.status === 'FULFILLED');
 
@@ -138,8 +177,30 @@ const ConnectorKanban = () => {
       {isLoading ? (
         <div className="flex-1 flex justify-center items-center"><Loader2 className="animate-spin text-slate-400" size={40}/></div>
       ) : (
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden px-4">
+        <div className={`flex-1 grid grid-cols-1 ${isAdmin ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 overflow-hidden px-4`}>
           
+          {/* COLUMNA 0: NUEVAS (Solo Admin) */}
+          {isAdmin && (
+            <KanbanColumn 
+              title="NUEVAS" 
+              dotColor="bg-blue-500" 
+              onDragOver={handleDragOver} 
+              onDrop={(e) => handleDrop(e, 'CREATED')}
+            >
+              {createdAsks.map(ask => (
+                <AskCard 
+                  key={ask.id} 
+                  ask={ask} 
+                  dotColor="bg-blue-500"
+                  onDragStart={handleDragStart} 
+                  getInitials={getInitials}
+                  onViewDetails={() => handleViewAskDetails(ask)}
+                  onEditAsk={() => handleEditAsk(ask)}
+                />
+              ))}
+            </KanbanColumn>
+          )}
+
           {/* COLUMNA 1: ABIERTA */}
           <KanbanColumn 
             title="ABIERTA" 
@@ -154,6 +215,8 @@ const ConnectorKanban = () => {
                 dotColor="bg-[#F5D033]"
                 onDragStart={handleDragStart} 
                 getInitials={getInitials}
+                onViewDetails={() => handleViewAskDetails(ask)}
+                onEditAsk={isAdmin ? () => handleEditAsk(ask) : null}
               />
             ))}
           </KanbanColumn>
@@ -186,6 +249,8 @@ const ConnectorKanban = () => {
                 onDragStart={handleDragStart} 
                 getInitials={getInitials}
                 onEditGivers={() => handleEditGivers(ask)}
+                onViewDetails={() => handleViewAskDetails(ask)}
+                onEditAsk={isAdmin ? () => handleEditAsk(ask) : null}
               />
             ))}
           </KanbanColumn>
@@ -205,6 +270,7 @@ const ConnectorKanban = () => {
                 onDragStart={handleDragStart} 
                 isStatic 
                 getInitials={getInitials}
+                onViewDetails={() => handleViewAskDetails(ask)}
               />
             ))}
           </KanbanColumn>
@@ -257,6 +323,26 @@ const ConnectorKanban = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL PARA VER DETALLES DE LA PETICIÓN */}
+      <ConnectorViewAskModal 
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        ask={selectedAskForView}
+        onCancelAsk={handleCancelAsk}
+        onReassignGivers={handleReassignGivers}
+      />
+
+      {/* MODAL PARA EDITAR LA PETICIÓN (ADMIN/CONNECTOR) */}
+      <CreateAskModal 
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setAskToEdit(null);
+          fetchData(); // Recargar datos tras editar
+        }}
+        askToEdit={askToEdit}
+      />
     </div>
   );
 };
@@ -281,7 +367,7 @@ const KanbanColumn = ({ title, dotColor, children, onDragOver, onDrop, isCenterC
   </div>
 );
 
-const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGivers }) => {
+const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGivers, onViewDetails, onEditAsk }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -311,7 +397,8 @@ const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGive
     <div 
       draggable={!isStatic}
       onDragStart={(e) => !isStatic && onDragStart(e, ask.id)}
-      className={`bg-white p-4 rounded-lg shadow-sm border border-slate-200 relative ${!isStatic ? 'cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow' : ''}`}
+      onClick={onViewDetails}
+      className={`bg-white p-4 rounded-lg shadow-sm border border-slate-200 relative ${!isStatic ? 'cursor-grab active:cursor-grabbing' : ''} hover:shadow-md hover:border-slate-300 transition-all duration-200 cursor-pointer`}
     >
       {/* Título y opciones */}
       <div className="flex justify-between items-start mb-3 relative">
@@ -325,7 +412,7 @@ const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGive
         </div>
         
         {/* Menú de 3 puntos */}
-        {(!isStatic && onEditGivers) && (
+        {!isStatic && (
           <div className="absolute right-0 top-0" ref={menuRef}>
             <button 
               onClick={(e) => { e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }}
@@ -336,16 +423,30 @@ const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGive
             
             {isMenuOpen && (
               <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-md shadow-lg py-1 z-20">
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    setIsMenuOpen(false); 
-                    onEditGivers(); 
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                >
-                  <Users size={14} /> Gestionar Voluntarios
-                </button>
+                {onEditAsk && (
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setIsMenuOpen(false); 
+                      onEditAsk(); 
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <Edit size={14} /> Editar Detalles
+                  </button>
+                )}
+                {onEditGivers && (
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setIsMenuOpen(false); 
+                      onEditGivers(); 
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <Users size={14} /> Gestionar Voluntarios
+                  </button>
+                )}
               </div>
             )}
           </div>

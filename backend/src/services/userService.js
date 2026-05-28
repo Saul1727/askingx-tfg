@@ -2,12 +2,25 @@ const prisma = require('../config/prisma');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+/**
+ * Hashes a plain-text password.
+ * @param {string} password - The plain-text password.
+ * @returns {Promise<string>} The hashed password.
+ */
 const hashPassword = async (password) => {
   return await bcrypt.hash(password, 10);
 };
 
+/**
+ * Creates a new user with the ADMIN role.
+ * @param {object} userData - The user data.
+ * @param {string} userData.fullName - The user's full name.
+ * @param {string} userData.email - The user's email.
+ * @param {string} userData.password - The user's plain-text password.
+ * @returns {Promise<object>} The created user object.
+ * @throws {Error} If the email is already registered.
+ */
 const createAdmin = async (userData) => {
-  // 1. Verificamos si el email ya existe para evitar errores no controlados de Prisma
   const existingUser = await prisma.user.findUnique({
     where: { email: userData.email }
   });
@@ -18,11 +31,8 @@ const createAdmin = async (userData) => {
     throw error;
   }
 
-  // 2. Hasheamos la contraseña antes de crear el usuario
   const hashedPassword = await hashPassword(userData.password);
 
-
-  // 3. Creamos el usuario forzando el rol ADMIN y guardando el hash
   const newUser = await prisma.user.create({
     data: {
       fullName: userData.fullName,
@@ -35,6 +45,15 @@ const createAdmin = async (userData) => {
   return newUser;
 };
 
+/**
+ * Creates a new user with the AUTHOR role.
+ * @param {object} userData - The user data.
+ * @param {string} userData.fullName - The user's full name.
+ * @param {string} userData.email - The user's email.
+ * @param {string} userData.password - The user's plain-text password.
+ * @returns {Promise<object>} The created user object.
+ * @throws {Error} If the email is already registered.
+ */
 const createAskAuthor = async (userData) => {
     const existingUser = await prisma.user.findUnique({
         where: { email: userData.email }
@@ -59,8 +78,13 @@ const createAskAuthor = async (userData) => {
     return newUser;
 };
 
+/**
+ * Creates a new user with any role and connects them to domains if specified.
+ * @param {object} userData - The user data from the controller.
+ * @returns {Promise<object>} The created user object.
+ * @throws {Error} If the email is already registered.
+ */
 const createUser = async (userData) => {
-  // Verificamos si el email ya existe en la BBDD
   const existingUser = await prisma.user.findUnique({
     where: { email: userData.email }
   });
@@ -73,7 +97,6 @@ const createUser = async (userData) => {
 
   const hashedPassword = await hashPassword(userData.password);
 
-  // Preparamos el objeto de datos base
   const prismaData = {
     fullName: userData.fullName,
     email: userData.email,
@@ -83,14 +106,12 @@ const createUser = async (userData) => {
     availabilityNotes: userData.availabilityNotes
   };
 
-  // Si el validador Zod dejó pasar dominios, los enlazamos aquí
   if (userData.domainIds && userData.domainIds.length > 0) {
     prismaData.specialties = {
       connect: userData.domainIds.map(id => ({ id: id }))
     };
   }
 
-  //Creamos el usuario en Prisma (ahora sí, atado a su dominio si lo tiene)
   const newUser = await prisma.user.create({
     data: prismaData
   });
@@ -98,37 +119,46 @@ const createUser = async (userData) => {
   return newUser;
 };
 
+/**
+ * Authenticates a user and returns the user object and a JWT.
+ * @param {object} credentials - The user's login credentials.
+ * @param {string} credentials.email - The user's email.
+ * @param {string} credentials.password - The user's password.
+ * @returns {Promise<{user: object, token: string}>} An object containing the user and the JWT.
+ * @throws {Error} If credentials are invalid.
+ */
 const loginUser = async (credentials) => {
-
   const user = await prisma.user.findUnique({
     where: { email: credentials.email }
   });
 
-  // Si no existe, devolvemos 401 Unauthorized (sin dar detalles por seguridad)
-  if (!user) {
-    const error = new Error('Credenciales inválidas.');
+  if (!user || !user.isActive) { // Also check if user is active
+    const error = new Error('Credenciales inválidas o usuario inactivo.');
     error.statusCode = 401;
     throw error;
   }
-  // Comparamos la contraseña hasheada con la que el usuario ingresó
+
   const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
 
   if (!isPasswordValid) {
-    const error = new Error('Credenciales inválidas.');
+    const error = new Error('Credenciales inválidas o usuario inactivo.');
     error.statusCode = 401;
     throw error;
   }
 
   const token = jwt.sign(
     { userId: user.id, role: user.role },
-    process.env.JWT_SECRET, // Lo guardamos en el .env
-    { expiresIn: '24h' } // Caduca en 24h
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
   );
 
   return { user, token };
 };
 
-// Obtener todos los Givers (Voluntarios) para el Connector
+/**
+ * Retrieves all users with the GIVER role.
+ * @returns {Promise<Array<object>>} A list of givers with selected fields.
+ */
 const getGivers = async () => {
     const givers = await prisma.user.findMany({
         where: { role: 'GIVER' },
@@ -141,11 +171,58 @@ const getGivers = async () => {
     return givers;
 };
 
+/**
+ * Retrieves all users in the system. For Admin use.
+ * @returns {Promise<Array<object>>} A list of all users with safe-to-expose fields.
+ */
+const getAllUsers = async () => {
+    const users = await prisma.user.findMany({
+        select: {
+            id: true,
+            fullName: true,
+            email: true,
+            role: true,
+            preferredLanguage: true,
+            isActive: true,
+            availabilityNotes: true,
+            createdAt: true
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
+    return users;
+};
+
+/**
+ * Updates a user's data.
+ * @param {string} userId - The ID of the user to update.
+ * @param {object} dataToUpdate - An object containing the fields to update.
+ * @returns {Promise<object>} The updated user object.
+ * @throws {Error} If the user is not found.
+ */
+const updateUser = async (userId, dataToUpdate) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        const error = new Error('Usuario no encontrado');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: dataToUpdate
+    });
+    return updatedUser;
+};
+
 module.exports = {
   createAdmin,
   createAskAuthor,
   loginUser,
   createUser,
-  getGivers
+  getGivers,
+  getAllUsers,
+  updateUser
 };
   

@@ -7,6 +7,10 @@ import './App.css';
 import Askers from './pages/Askers';
 import Asks from './pages/Asks'; 
 import ConnectorKanban from './pages/ConnectorKanban';
+import AdminConfiguration from './pages/Admin/Configuration';
+import AdminDashboard from './pages/Admin/Dashboard';
+import UserManagementPanel from './components/admin/UserManagementPanel';
+import DomainManagementPanel from './components/admin/DomainManagementPanel';
 
 /**
  * Main Application Component
@@ -34,12 +38,16 @@ function App() {
           {/* ROLE-BASED ROUTES (Pending specific views)*/}
           
           {/* Admin Routes */}
-          <Route path="admin/dashboard" element={<Dashboard />} />
-          <Route path="admin/users" element={<div className="p-8"><h2>Administración de Usuarios</h2><p>Página en construcción...</p></div>} />
-          <Route path="admin/conceptual" element={<div className="p-8"><h2>Conceptual</h2><p>Página en construcción...</p></div>} />
+          <Route path="admin/dashboard" element={<AdminDashboard />} />
+          <Route path="admin/configuration" element={<AdminConfiguration />} />
+          
+          {/* Admin Management Pages */}
+          <Route path="admin/users" element={<div className="p-8 bg-slate-50 min-h-full"><UserManagementPanel /></div>} />
+          <Route path="admin/conceptual" element={<div className="p-8 bg-slate-50 min-h-full"><DomainManagementPanel /></div>} />
 
           {/* Author Routes */}
           <Route path="author/asks" element={<Dashboard />} />
+
 
           {/* Connector Routes */}
           <Route path="connector/kanban" element={<ConnectorKanban />} />

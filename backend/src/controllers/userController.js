@@ -136,11 +136,49 @@ const getGiversController = async (req, res, next) => {
     }
 };
 
+const getAllUsersController = async (req, res, next) => {
+    try {
+        const users = await userService.getAllUsers();
+        res.status(200).json({
+            success: true,
+            message: 'Usuarios recuperados con éxito',
+            data: users
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const updateUserController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        // For now, only allow updating the 'isActive' field for deactivation
+        const updateSchema = z.object({
+            isActive: z.boolean()
+        });
+        const validatedData = updateSchema.parse(req.body);
+
+        const updatedUser = await userService.updateUser(id, validatedData);
+        
+        const { passwordHash, ...userWithoutPassword } = updatedUser;
+
+        res.status(200).json({
+            success: true,
+            message: 'Usuario actualizado con éxito',
+            data: userWithoutPassword
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 module.exports = {
   createAdminController,
   createAskAuthorController,
   registerUserController,
   loginUserController,
-  getGiversController
+  getGiversController,
+  getAllUsersController,
+  updateUserController
 };

@@ -6,6 +6,7 @@ const askerRoutes = require('./routes/askerRoutes');
 const askRoutes = require('./routes/askRoutes');
 const fulfillmentRoutes = require('./routes/fulfillmentRoutes');
 const domainRoutes = require('./routes/domainRoutes');
+const statsRoutes = require('./routes/statsRoutes');
 const cors = require('cors');
 
 const app = express();
@@ -29,6 +30,8 @@ app.use('/api/asks', askRoutes);
 app.use('/api/fulfillments', fulfillmentRoutes);
 // Rutas de dominios temáticos
 app.use('/api/domains', domainRoutes);
+// Rutas de estadísticas
+app.use('/api/stats', statsRoutes);
 
 // Middleware global de errores (DEBE ir al final de todo)
 app.use(errorHandler);

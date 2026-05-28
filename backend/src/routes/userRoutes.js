@@ -1,8 +1,33 @@
 const express = require('express');
-const { createAdminController, createAskAuthorController, registerUserController, loginUserController, getGiversController } = require('../controllers/userController');
-const { register } = require('node:module');
+const { 
+    createAdminController, 
+    createAskAuthorController, 
+    registerUserController, 
+    loginUserController, 
+    getGiversController,
+    getAllUsersController,
+    updateUserController
+} = require('../controllers/userController');
+const authMiddleware = require('../middlewares/authMiddleware');
+const roleMiddleware = require('../middlewares/roleMiddleware');
 
 const router = express.Router();
+
+// GET /api/users/ -> Protegido para que solo los ADMIN puedan ver todos los usuarios
+router.get(
+    '/',
+    authMiddleware,
+    roleMiddleware(['ADMIN']),
+    getAllUsersController
+);
+
+// PATCH /api/users/:id -> Protegido para que solo los ADMIN puedan actualizar usuarios
+router.patch(
+    '/:id',
+    authMiddleware,
+    roleMiddleware(['ADMIN']),
+    updateUserController
+);
 
 // POST /api/users/admin
 router.post('/admin', createAdminController);

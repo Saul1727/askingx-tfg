@@ -193,4 +193,30 @@ export const deleteAsker = async (id) => {
   }
 };
 
+export const createDomain = async (domainData) => {
+    const response = await fetch(`${API_BASE_URL}/domains`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+        },
+        body: JSON.stringify(domainData),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Error al crear el dominio');
+    return data.data;
+};
+
+export const deleteDomain = async (domainId) => {
+    const response = await fetch(`${API_BASE_URL}/domains/${domainId}`, {
+        method: 'DELETE',
+        headers: { ...getAuthHeader() },
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Error al eliminar el dominio');
+    return data;
+};
+
 

@@ -141,7 +141,7 @@ const CreateAskModal = ({ isOpen, onClose, askToEdit = null }) => {
           
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Organización o Solicitante</label>
-            <select name="askerId" value={formData.askerId} onChange={handleChange} disabled={isLoading} className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+            <select name="askerId" value={formData.askerId} onChange={handleChange} disabled={isLoading} className="w-full bg-slate-50 text-slate-900 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
               <option value="">Seleccione una organización/persona...</option>
               {Array.isArray(askersList) && askersList.map(asker => {
                 const displayName = asker.organizationName 
@@ -158,7 +158,7 @@ const CreateAskModal = ({ isOpen, onClose, askToEdit = null }) => {
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Dominio de Ayuda</label>
-            <select name="domainId" value={formData.domainId} onChange={handleChange} disabled={isLoading} className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+            <select name="domainId" value={formData.domainId} onChange={handleChange} disabled={isLoading} className="w-full bg-slate-50 text-slate-900 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
               <option value="">Seleccione un dominio...</option>
               {Array.isArray(domainsList) && domainsList.map(domain => (
                 <option key={domain.id} value={domain.id}>
@@ -170,12 +170,12 @@ const CreateAskModal = ({ isOpen, onClose, askToEdit = null }) => {
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Título de la Petición</label>
-            <input type="text" name="title" value={formData.title} onChange={handleChange} disabled={isLoading} placeholder="Ej: Necesitamos 50 mascarillas" className="w-full bg-white text-slate-900 placeholder-slate-400 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required />
+            <input type="text" name="title" value={formData.title} onChange={handleChange} disabled={isLoading} placeholder="Ej: Necesitamos 50 mascarillas" className="w-full bg-slate-50 text-slate-900 placeholder-slate-400 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Descripción</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} disabled={isLoading} placeholder="Añade los detalles de la petición..." rows="3" className="w-full bg-white text-slate-900 placeholder-slate-400 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none" required />
+            <textarea name="description" value={formData.description} onChange={handleChange} disabled={isLoading} placeholder="Añade los detalles de la petición..." rows="3" className="w-full bg-slate-50 text-slate-900 placeholder-slate-400 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none" required />
           </div>
 
           <div className="space-y-1.5">
@@ -187,13 +187,13 @@ const CreateAskModal = ({ isOpen, onClose, askToEdit = null }) => {
               onChange={handleChange} 
               disabled={isLoading} 
               min={localToday} 
-              className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
+              className="w-full bg-slate-50 text-slate-900 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm" 
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Tipo de Recurso</label>
-            <select name="type" value={formData.type} onChange={handleChange} disabled={isLoading} className="w-full bg-white text-blue-700 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" required>
+            <select name="type" value={formData.type} onChange={handleChange} disabled={isLoading} className="w-full bg-slate-50 text-blue-700 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" required>
               <option value="THINGS">COSAS (Materiales)</option>
               <option value="TIME">TIEMPO (Voluntariado)</option>
               <option value="EXPERTISE">CONOCIMIENTO (Asesoría)</option>
@@ -204,27 +204,27 @@ const CreateAskModal = ({ isOpen, onClose, askToEdit = null }) => {
           {formData.type === 'THINGS' && (
             <div className="p-4 bg-blue-50 rounded-lg space-y-3">
               <label className="text-xs font-bold text-blue-700 uppercase">Cantidad Necesaria</label>
-              <input type="number" name="quantityRequested" value={formData.quantityRequested} onChange={handleChange} disabled={isLoading} className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required />
+              <input type="number" name="quantityRequested" value={formData.quantityRequested} onChange={handleChange} disabled={isLoading} className="w-full bg-slate-50 text-slate-900 px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500 outline-none text-sm" required />
             </div>
           )}
 
           {formData.type === 'TIME' && (
             <div className="p-4 bg-green-50 rounded-lg space-y-3">
               <label className="text-xs font-bold text-green-700 uppercase">Horas Estimadas</label>
-              <input type="number" name="estimatedHours" value={formData.estimatedHours} onChange={handleChange} disabled={isLoading} className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-green-200 focus:ring-2 focus:ring-green-500 outline-none text-sm mb-3" required />
+              <input type="number" name="estimatedHours" value={formData.estimatedHours} onChange={handleChange} disabled={isLoading} className="w-full bg-slate-50 text-slate-900 px-4 py-2 rounded-lg border border-green-200 focus:ring-2 focus:ring-green-500 outline-none text-sm mb-3" required />
               
               <label className="text-xs font-bold text-green-700 uppercase block mt-3">Lugar del Servicio</label>
-              <input type="text" name="serviceLocation" value={formData.serviceLocation} onChange={handleChange} disabled={isLoading} className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-green-200 focus:ring-2 focus:ring-green-500 outline-none text-sm" required />
+              <input type="text" name="serviceLocation" value={formData.serviceLocation} onChange={handleChange} disabled={isLoading} className="w-full bg-slate-50 text-slate-900 px-4 py-2 rounded-lg border border-green-200 focus:ring-2 focus:ring-green-500 outline-none text-sm" required />
             </div>
           )}
 
           {(formData.type === 'EXPERTISE' || formData.type === 'SERVICES') && (
             <div className="p-4 bg-purple-50 rounded-lg space-y-3">
               <label className="text-xs font-bold text-purple-700 uppercase">Habilidad Requerida</label>
-              <input type="text" name="requiredSkill" value={formData.requiredSkill} onChange={handleChange} disabled={isLoading} className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-purple-200 focus:ring-2 focus:ring-purple-500 outline-none text-sm mb-3" required />
+              <input type="text" name="requiredSkill" value={formData.requiredSkill} onChange={handleChange} disabled={isLoading} className="w-full bg-slate-50 text-slate-900 px-4 py-2 rounded-lg border border-purple-200 focus:ring-2 focus:ring-purple-500 outline-none text-sm mb-3" required />
               
               <label className="text-xs font-bold text-purple-700 uppercase block mt-3">Lugar del Servicio</label>
-              <input type="text" name="serviceLocation" value={formData.serviceLocation} onChange={handleChange} disabled={isLoading} className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-purple-200 focus:ring-2 focus:ring-purple-500 outline-none text-sm" required />
+              <input type="text" name="serviceLocation" value={formData.serviceLocation} onChange={handleChange} disabled={isLoading} className="w-full bg-slate-50 text-slate-900 px-4 py-2 rounded-lg border border-purple-200 focus:ring-2 focus:ring-purple-500 outline-none text-sm" required />
             </div>
           )}
 
@@ -237,7 +237,7 @@ const CreateAskModal = ({ isOpen, onClose, askToEdit = null }) => {
                 value={formData.status} 
                 onChange={handleChange} 
                 disabled={isLoading} 
-                className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
+                className="w-full bg-slate-50 text-slate-900 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
               >
                 <option value="CREATED">CREADA (En borrador/revisión)</option>
                 <option value="OPEN">ABIERTA (Buscando voluntarios)</option>
