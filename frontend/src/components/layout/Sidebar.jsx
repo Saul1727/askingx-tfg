@@ -1,23 +1,23 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Building2, 
   FileText, 
   History, 
-  Settings, 
-  Users, 
-  Layers,
+  Settings,
   KanbanSquare,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 import { logout } from '../../services/authService';
+import { useConfig } from '../../context/ConfigContext';
 
 /**
  * Sidebar Component
- * Handles navigation with role-based visibility logic.
+ * Handles navigation with role-based visibility logic. Mobile-friendly.
  */
-const Sidebar = ({ userRole = 'AUTHOR' }) => {
+const Sidebar = ({ userRole = 'AUTHOR', isMobileOpen, setIsMobileOpen }) => {
+  const { config } = useConfig();
   const isAdmin = userRole === 'ADMIN';
   const isConnector = userRole === 'CONNECTOR';
   const isAuthorOrAdmin = userRole === 'AUTHOR' || isAdmin;
@@ -26,62 +26,78 @@ const Sidebar = ({ userRole = 'AUTHOR' }) => {
   const navItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard', show: true },
     { name: 'Tablero (Kanban)', icon: <KanbanSquare size={20} />, path: '/connector/kanban', show: isConnectorOrAdmin },
-    { name: 'Organizaciones (Askers)', icon: <Building2 size={20} />, path: '/askers', show: isAuthorOrAdmin },
-    { name: 'Peticiones (Asks)', icon: <FileText size={20} />, path: '/asks', show: isAuthorOrAdmin },
-    { name: 'Historias de Impacto', icon: <History size={20} />, path: '/stories', show: true },
-    { name: 'Configuración', icon: <Settings size={20} />, path: '/settings', show: true },
+    { name: 'Organizaciones', icon: <Building2 size={20} />, path: '/askers', show: isAuthorOrAdmin },
+    { name: 'Peticiones', icon: <FileText size={20} />, path: '/asks', show: isAuthorOrAdmin },
+    { name: 'Historias', icon: <History size={20} />, path: '/stories', show: true },
+    { name: 'Configuración', icon: <Settings size={20} />, path: '/admin/configuration', show: isAdmin },
   ];
 
-  const adminItems = [
-    { name: 'Usuarios', icon: <Users size={20} />, path: '/admin/users', show: isAdmin },
-    { name: 'Conceptual (concectiva)', icon: <Layers size={20} />, path: '/admin/conceptual', show: isAdmin },
-  ];
+  const handleClose = () => setIsMobileOpen(false);
 
   return (
-    <aside className="w-64 bg-[#1e293b] text-slate-300 flex flex-col min-h-screen">
-      {/* Brand Logo */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold">A</div>
-        <span className="text-xl font-bold text-white tracking-tight">AskingX</span>
-      </div>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={handleClose}
+        />
+      )}
 
-      <nav className="flex-grow px-3 py-4 space-y-1">
-        {navItems.map((item) => item.show && (
-          <SidebarLink key={item.path} item={item} />
-        ))}
-
-        {/* Admin Section */}
-        {isAdmin && (
-          <div className="pt-8 pb-2 px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Admin
+      {/* Sidebar Navigation */}
+      <aside 
+        className={`fixed md:relative z-50 w-64 bg-[#1e293b] text-slate-300 flex flex-col h-full h-screen transition-transform duration-300 ease-in-out shrink-0
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
+        {/* Brand Logo & Mobile Close */}
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3 overflow-hidden">
+            {config?.logoUrl ? (
+              <img src={config.logoUrl} alt="Logo" className="w-8 h-8 object-contain rounded shrink-0" onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
+            ) : null}
+            <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold shrink-0" style={{ display: config?.logoUrl ? 'none' : 'flex' }}>
+              {config?.installationName ? config.installationName.charAt(0).toUpperCase() : 'A'}
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight truncate">{config?.installationName || 'AskingX'}</span>
           </div>
-        )}
-        {adminItems.map((item) => item.show && (
-          <SidebarLink key={item.path} item={item} />
-        ))}
-      </nav>
+          <button 
+            className="md:hidden text-slate-400 hover:text-white"
+            onClick={handleClose}
+          >
+            <X size={24} />
+          </button>
+        </div>
 
-      {/* Logout Button */}
-      <div className="p-4 mt-auto border-t border-slate-700">
-        <button 
-          onClick={() => {
-            if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-              logout();
-            }
-          }}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 w-full text-slate-300 hover:bg-red-500/10 hover:text-red-400 group"
-        >
-          <LogOut size={20} className="opacity-70 group-hover:opacity-100" />
-          <span className="text-sm font-medium">Cerrar Sesión</span>
-        </button>
-      </div>
-    </aside>
+        <nav className="flex-grow px-3 py-4 space-y-1 overflow-y-auto scrollbar-none">
+          {navItems.map((item) => item.show && (
+            <SidebarLink key={item.path} item={item} onClick={handleClose} />
+          ))}
+        </nav>
+
+        {/* Logout Button */}
+        <div className="p-4 mt-auto border-t border-slate-700">
+          <button 
+            onClick={() => {
+              if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                logout();
+              }
+            }}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 w-full text-slate-300 hover:bg-red-500/10 hover:text-red-400 group"
+          >
+            <LogOut size={20} className="opacity-70 group-hover:opacity-100 shrink-0" />
+            <span className="text-sm font-medium truncate">Cerrar Sesión</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };
 
-const SidebarLink = ({ item }) => (
+const SidebarLink = ({ item, onClick }) => (
   <NavLink
     to={item.path}
+    onClick={onClick}
     className={({ isActive }) =>
       `flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group ${
         isActive 
@@ -90,8 +106,8 @@ const SidebarLink = ({ item }) => (
       }`
     }
   >
-    <span className="opacity-70 group-hover:opacity-100">{item.icon}</span>
-    <span className="text-sm font-medium">{item.name}</span>
+    <span className="opacity-70 group-hover:opacity-100 shrink-0">{item.icon}</span>
+    <span className="text-sm font-medium truncate">{item.name}</span>
   </NavLink>
 );
 

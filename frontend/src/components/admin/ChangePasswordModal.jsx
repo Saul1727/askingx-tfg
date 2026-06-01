@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
-import { updateUser } from '../../services/userService';
+import { resetUserPassword } from '../../services/userService';
 
 const ChangePasswordModal = ({ isOpen, onClose, user }) => {
   const [newPassword, setNewPassword] = useState('');
@@ -29,8 +29,8 @@ const ChangePasswordModal = ({ isOpen, onClose, user }) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Usamos el servicio de updateUser enviando solo la password
-      await updateUser(user.id, { password: newPassword });
+      // Usamos el servicio de resetUserPassword enviando solo la password
+      await resetUserPassword(user.id, newPassword);
       setSuccess(true);
       // Cerramos tras un breve delay para que vean el éxito
       setTimeout(handleClose, 2000);
@@ -72,7 +72,7 @@ const ChangePasswordModal = ({ isOpen, onClose, user }) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Nueva Contraseña Temporal</label>
+              <label className="text-sm font-semibold text-slate-700">Nueva Contraseña Temporal <span className="text-red-500">*</span></label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -94,21 +94,24 @@ const ChangePasswordModal = ({ isOpen, onClose, user }) => {
 
             {error && <p className="text-sm text-red-600 font-medium bg-red-50 p-2 rounded border border-red-100">{error}</p>}
 
-            <div className="flex gap-3">
-              <button 
-                type="button" 
-                onClick={handleClose} 
-                className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                disabled={isLoading || !newPassword}
-                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
-              >
-                {isLoading ? <Loader2 size={18} className="animate-spin" /> : 'Actualizar'}
-              </button>
+            <div>
+              <p className="text-xs text-slate-500 mb-3"><span className="text-red-500">*</span> Campos obligatorios</p>
+              <div className="flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={handleClose} 
+                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isLoading || !newPassword}
+                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+                >
+                  {isLoading ? <Loader2 size={18} className="animate-spin" /> : 'Actualizar'}
+                </button>
+              </div>
             </div>
           </form>
         )}

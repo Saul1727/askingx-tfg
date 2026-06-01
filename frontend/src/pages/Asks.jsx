@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Eye, Loader2, ClipboardList } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Edit, Eye, Loader2, ClipboardList, Search } from 'lucide-react';
 import CreateAskModal from '../components/asks/CreateAskModal';
 import ViewAskModal from '../components/asks/ViewAskModal';
-import { getAllAsks, getAskers } from '../services/askService';
+import { getAllAsks } from '../services/askService';
 
 const Asks = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,32 +13,52 @@ const Asks = () => {
   const [asksList, setAsksList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchAsks = useCallback(() => {
+    setIsLoading(true);
+    getAllAsks()
+      .then(setAsksList)
+      .catch((err) => console.error("Error cargando peticiones:", err))
+      .finally(() => {
+        setIsLoading(false);
+        setAskToEdit(null); 
+      });
+  }, []);
 
   useEffect(() => {
     if (!isModalOpen) {
-      setIsLoading(true);
-      getAllAsks()
-        .then(setAsksList)
-        .catch((err) => console.error("Error cargando peticiones:", err))
-        .finally(() => {
-          setIsLoading(false);
-          setAskToEdit(null); 
-        });
+      fetchAsks();
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, fetchAsks]);
 
   const handleEdit = (ask) => { setAskToEdit(ask); setIsModalOpen(true); };
   const handleView = (ask) => { setAskToView(ask); setIsViewModalOpen(true); };
   const toggleFilter = (status) => setActiveFilter(prev => prev === status ? null : status);
 
-  const filteredAsks = activeFilter ? asksList.filter(ask => ask.status === activeFilter) : asksList;
+  const filteredAsks = asksList.filter(ask => {
+    const matchesFilter = activeFilter ? ask.status === activeFilter : true;
+    const term = searchTerm.toLowerCase();
+    
+    // Búsqueda extendida: Título, Descripción, Organización, Contacto, Tipo, Dominio y Estado
+    const matchesSearch = 
+      (ask.title && ask.title.toLowerCase().includes(term)) ||
+      (ask.description && ask.description.toLowerCase().includes(term)) ||
+      (ask.asker?.organizationName && ask.asker.organizationName.toLowerCase().includes(term)) ||
+      (ask.asker?.contactPerson && ask.asker.contactPerson.toLowerCase().includes(term)) ||
+      (ask.type && ask.type.toLowerCase().includes(term)) ||
+      (ask.domain?.name && ask.domain.name.toLowerCase().includes(term)) ||
+      (ask.status && ask.status.toLowerCase().includes(term));
+      
+    return matchesFilter && matchesSearch;
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Mis Peticiones</h1>
-          <p className="text-slate-500 text-sm mt-1">Gestiona y monitoriza las necesidades de ayuda creadas.</p>
+          <h1 className="text-3xl font-bold text-slate-800">Peticiones de Ayuda</h1>
+          <p className="text-slate-500 text-sm mt-1">Gestiona y monitoriza las necesidades creadas en el sistema.</p>
         </div>
         <button 
           onClick={() => { setAskToEdit(null); setIsModalOpen(true); }}
@@ -49,12 +69,28 @@ const Asks = () => {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><ClipboardList size={20} className="text-slate-500"/> Historial de Necesidades</h2>
-          <div className="flex gap-2">
-            {['CREATED', 'OPEN', 'FULFILLED', 'CANCELLED'].map((status) => (
-              <StatusFilter key={status} status={status} isActive={activeFilter === status} onClick={() => toggleFilter(status)} />
-            ))}
+        <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:justify-between md:items-center gap-4 bg-slate-50/50">
+          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <ClipboardList size={20} className="text-slate-500"/> Listado de Peticiones
+          </h2>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text" 
+                placeholder="Buscar por título, ONG, tipo, dominio..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full sm:w-72 bg-white text-slate-900 border border-slate-300 rounded-md py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-400"
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              {['CREATED', 'OPEN', 'MATCHED', 'FULFILLED', 'CANCELLED'].map((status) => (
+                <StatusFilter key={status} status={status} isActive={activeFilter === status} onClick={() => toggleFilter(status)} />
+              ))}
+            </div>
           </div>
         </div>
 
@@ -102,6 +138,7 @@ const Asks = () => {
 const STATUS_CONFIG = {
   'CREATED': { label: 'CREADAS', color: 'bg-blue-500' },
   'OPEN': { label: 'ABIERTAS', color: 'bg-yellow-500' },
+  'MATCHED': { label: 'ASIGNADAS', color: 'bg-teal-500' },
   'FULFILLED': { label: 'COMPLETADAS', color: 'bg-green-500' },
   'CANCELLED': { label: 'CANCELADAS', color: 'bg-red-500' }
 };

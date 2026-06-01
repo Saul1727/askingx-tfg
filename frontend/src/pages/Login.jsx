@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { loginUser } from '../services/authService';
+import { useConfig } from '../context/ConfigContext';
 
 /**
  * Login Page Component
@@ -9,6 +10,7 @@ import { loginUser } from '../services/authService';
  */
 const Login = () => {
   const navigate = useNavigate();
+  const { config } = useConfig();
 
   // State Management
   const [email, setEmail] = useState('');
@@ -23,7 +25,7 @@ const Login = () => {
 
   const handleForgotPassword = (e) => {
     e.preventDefault();
-    alert("Por favor, contacte con el Administrador de AskingX para restablecer sus credenciales.");
+    alert(`Por favor, contacte con el Administrador de ${config?.installationName || 'AskingX'} para restablecer sus credenciales.`);
   };
 
   /**
@@ -54,10 +56,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-100 flex flex-col font-sans">
-      <Header />
+      <Header config={config} />
 
       <main className="flex-grow flex items-center justify-center p-4">
         <LoginFormCard
+          config={config}
           email={email}
           setEmail={setEmail}
           password={password}
@@ -76,10 +79,10 @@ const Login = () => {
 
 /* --- Visual Sub-components --- */
 
-const Header = () => (
+const Header = ({ config }) => (
   <header className="w-full max-w-7xl mx-auto px-8 py-6 flex justify-between items-center">
     <div className="flex-grow flex justify-center translate-x-12">
-      <h1 className="text-3xl font-bold text-slate-800 tracking-tight">AskingX</h1>
+      <h1 className="text-3xl font-bold text-slate-800 tracking-tight">{config?.installationName || 'AskingX'}</h1>
     </div>
     <div className="text-sm text-gray-500 font-medium">
       <button className="hover:text-blue-600 transition-colors">ES</button>
@@ -92,6 +95,7 @@ const Header = () => (
 );
 
 const LoginFormCard = ({
+  config,
   email,
   setEmail,
   password,
@@ -105,7 +109,7 @@ const LoginFormCard = ({
 }) => (
   <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
     <h2 className="text-xl font-bold text-center text-slate-800 mb-8">
-      Acceso al Sistema AskingX
+      Acceso al Sistema {config?.installationName || 'AskingX'}
     </h2>
 
     {error && (

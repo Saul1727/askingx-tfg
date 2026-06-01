@@ -170,7 +170,7 @@ const ConnectorKanban = () => {
       {/* Título Principal */}
       <div className="mb-8 pl-4">
         <h1 className="text-[28px] font-bold text-slate-900 tracking-tight">
-          Kanban de Dominios - Connector
+          Gestión de Peticiones
         </h1>
       </div>
 
@@ -283,9 +283,9 @@ const ConnectorKanban = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMatchModalOpen(false)} />
           <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl p-6 animate-in zoom-in flex flex-col max-h-[90vh]">
-            <h2 className="text-xl font-bold text-slate-800 mb-2">Gestionar Voluntarios</h2>
+            <h2 className="text-xl font-bold text-slate-800 mb-2">Gestionar Donantes</h2>
             <p className="text-sm text-slate-500 mb-6">
-              Selecciona los Givers que se encargarán de: <strong>{selectedAskForMatch?.title}</strong>
+              Selecciona los Donantes que se encargarán de: <strong>{selectedAskForMatch?.title}</strong>
             </p>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2 mb-6">

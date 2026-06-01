@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Trash2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Trash2, Search } from 'lucide-react';
 import { getDomains, createDomain, deleteDomain } from '../../services/askService';
 
 /**
@@ -18,6 +18,8 @@ const DomainManagementPanel = () => {
     const [error, setError] = useState(null);
     // State to manage the input for creating a new domain
     const [newDomain, setNewDomain] = useState({ name: '', description: '' });
+    // State for search filter
+    const [searchTerm, setSearchTerm] = useState('');
 
     /**
      * Fetches all domains from the server.
@@ -40,6 +42,12 @@ const DomainManagementPanel = () => {
     useEffect(() => {
         fetchDomains();
     }, [fetchDomains]);
+
+    const filteredDomains = domains.filter(domain => {
+        const term = searchTerm.toLowerCase();
+        return (domain.name && domain.name.toLowerCase().includes(term)) ||
+               (domain.description && domain.description.toLowerCase().includes(term));
+    });
 
     /**
      * Handles the form submission for creating a new domain.
@@ -94,7 +102,7 @@ const DomainManagementPanel = () => {
                 <form onSubmit={handleCreateDomain} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Nombre</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Nombre <span className="text-red-500">*</span></label>
                             <input 
                                 type="text"
                                 value={newDomain.name}
@@ -115,7 +123,8 @@ const DomainManagementPanel = () => {
                             />
                         </div>
                     </div>
-                    <div className="flex justify-end">
+                    <div className="flex justify-between items-center">
+                        <p className="text-xs text-slate-500"><span className="text-red-500">*</span> Campos obligatorios</p>
                         <button type="submit" className="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition-all active:scale-95 shadow-md">
                             Guardar Dominio
                         </button>
@@ -125,8 +134,18 @@ const DomainManagementPanel = () => {
 
             {/* List of existing domains */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4">
                     <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Dominios Activos</h3>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input 
+                            type="text" 
+                            placeholder="Buscar dominio..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full sm:w-64 bg-white text-slate-900 border border-slate-300 rounded-md py-1.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        />
+                    </div>
                 </div>
                 {isLoading && <p className="text-center py-10 text-slate-500">Cargando dominios...</p>}
                 {error && <p className="text-red-500 text-center py-10">Error: {error}</p>}
@@ -141,15 +160,15 @@ const DomainManagementPanel = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {domains.length > 0 ? domains.map(domain => (
+                                {filteredDomains.length > 0 ? filteredDomains.map(domain => (
                                     <tr key={domain.id} className="hover:bg-slate-50/50 transition-colors group">
                                         <td className="py-4 px-6 font-bold text-slate-800">{domain.name}</td>
                                         <td className="py-4 px-6 text-slate-600">{domain.description || '—'}</td>
                                         <td className="py-4 px-6 text-right">
                                             <button
                                                 onClick={() => handleDeleteDomain(domain.id)}
-                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100"
-                                                title="Eliminar dominio"
+                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
+                                                title="Eliminar dominio (No se puede eliminar si hay peticiones asociadas)"
                                             >
                                                 <Trash2 size={18} />
                                             </button>

@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const { sendEmail } = require('../utils/emailService');
 
 const createAsk = async (askData) => {
     // 1. Verificamos que el Asker existe
@@ -131,11 +132,35 @@ const updateAskStatus = async (askId, newStatus, user) => {
         throw error;
     }
 
-    // Un AUTHOR solo puede actualizar el estado de sus propias Asks
+    // Seguridad 1: Un AUTHOR solo puede actualizar el estado de sus propias Asks
     if (user.role === 'AUTHOR' && existingAsk.askAuthorId !== user.userId) {
         const error = new Error('No tienes permisos para actualizar el estado de esta petición');
         error.statusCode = 403;
         throw error;
+    }
+
+    // Seguridad 2: Máquina de estados estricta (State Machine)
+    // El ADMIN puede hacer by-pass de la máquina de estados si es necesario para arreglar cosas,
+    // pero AUTHOR y CONNECTOR deben seguir el flujo.
+    if (user.role !== 'ADMIN') {
+        const current = existingAsk.status;
+        const target = newStatus;
+        
+        const validTransitions = {
+            'CREATED': ['OPEN', 'CANCELLED'],
+            'OPEN': ['MATCHED', 'CANCELLED', 'CREATED'], // CREATED in case they want to revert to draft
+            'MATCHED': ['FULFILLED', 'OPEN', 'CANCELLED'], // OPEN if givers are unassigned
+            'FULFILLED': [], // Estado final
+            'CANCELLED': [], // Estado final
+            'EXPIRED': []    // Estado final
+        };
+
+        const allowed = validTransitions[current] || [];
+        if (!allowed.includes(target) && current !== target) {
+            const error = new Error(`Transición de estado no permitida: No se puede pasar de ${current} a ${target}.`);
+            error.statusCode = 400; // Bad Request
+            throw error;
+        }
     }
 
     // Actualizamos el estado de la Ask
@@ -150,7 +175,8 @@ const updateAskStatus = async (askId, newStatus, user) => {
 const matchAsk = async (askId, connectorId, giverIds) => {
     // Verificamos que la petición existe
     const ask = await prisma.ask.findUnique({
-        where: { id: askId }
+        where: { id: askId },
+        include: { asker: true } // Incluimos al asker para obtener su email
     });
 
     if (!ask) {
@@ -179,9 +205,30 @@ const matchAsk = async (askId, connectorId, giverIds) => {
         },
         include: {
             connector: { select: { id: true, fullName: true } }, // Para verlo en la respuesta
-            givers: { select: { id: true, fullName: true } }
+            givers: { select: { id: true, fullName: true, email: true } } // Añadido email
         }
     });
+
+    // === ENVÍO DE CORREOS (Si se han asignado Givers) ===
+    if (newStatus === 'MATCHED' && updatedAsk.givers.length > 0) {
+        // 1. Email a la ONG / Solicitante
+        if (ask.asker && ask.asker.email) {
+            const orgName = ask.asker.organizationName || 'Particular';
+            const subject = `¡Voluntarios asignados a tu petición! - AskingX`;
+            const text = `Hola ${ask.asker.contactPerson} (${orgName}),\n\nTe informamos que nuestra plataforma ha asignado voluntarios a tu petición "${ask.title}".\nPronto se pondrán en contacto contigo.\n\nGracias por confiar en AskingX.`;
+            // Enviamos el correo sin usar 'await' para no bloquear la respuesta HTTP
+            sendEmail(ask.asker.email, subject, text).catch(console.error);
+        }
+
+        // 2. Email a los Givers (Voluntarios) asignados
+        for (const giver of updatedAsk.givers) {
+            if (giver.email) {
+                const subject = `¡Nueva misión asignada! - AskingX`;
+                const text = `Hola ${giver.fullName},\n\nSe te ha asignado una nueva petición de ayuda: "${ask.title}".\nPor favor, revisa tu panel para más detalles y ponte en contacto con la organización lo antes posible.\n\n¡Gracias por tu labor!`;
+                sendEmail(giver.email, subject, text).catch(console.error);
+            }
+        }
+    }
 
     return updatedAsk;
 };

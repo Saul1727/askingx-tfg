@@ -1,27 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getDashboardStats } from '../../services/statsService';
 import { Award, CheckCircle, Clock, AlertTriangle, Loader2 } from 'lucide-react';
-
-/**
- * StatCard Component
- * @param {object} props - The component props.
- * @param {string} props.title - The title of the statistic.
- * @param {number | string} props.value - The value of the statistic.
- * @param {JSX.Element} props.icon - The icon to display.
- * @param {string} props.color - The background color class for the icon container.
- * @returns {JSX.Element} A card displaying a single statistic.
- */
-const StatCard = ({ title, value, icon, color }) => (
-  <div className="p-6 bg-white rounded-xl shadow-sm border border-slate-200/80 flex items-start gap-4">
-    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${color}`}>
-      {icon}
-    </div>
-    <div>
-      <p className="text-3xl font-bold text-slate-900">{value}</p>
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-    </div>
-  </div>
-);
+import MetricCard from '../../components/common/MetricCard';
 
 /**
  * ActiveConnectorListItem Component
@@ -87,23 +67,23 @@ const AdminDashboard = () => {
       
       {/* Grid of main statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard 
-          title="Peticiones Completadas (Mes)" 
+        <MetricCard 
+          label="Peticiones Completadas (Mes)" 
           value={stats?.completedThisMonth ?? 0}
           icon={<CheckCircle size={24} className="text-green-600"/>}
-          color="bg-green-100"
+          bgColor="bg-green-100 text-green-900"
         />
-        <StatCard 
-          title="Peticiones Pendientes" 
+        <MetricCard 
+          label="Peticiones Pendientes" 
           value={stats?.pendingAsks ?? 0}
           icon={<Clock size={24} className="text-amber-600"/>}
-          color="bg-amber-100"
+          bgColor="bg-amber-100 text-amber-900"
         />
-        <StatCard 
-          title="Peticiones Caducadas" 
+        <MetricCard 
+          label="Peticiones Caducadas" 
           value={stats?.expiredAsks ?? 0}
           icon={<AlertTriangle size={24} className="text-red-600"/>}
-          color="bg-red-100"
+          bgColor="bg-red-100 text-red-900"
         />
       </div>
 

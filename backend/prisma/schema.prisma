@@ -51,6 +51,7 @@ enum AskType {
 model User {
   id                String    @id @default(uuid())
   fullName          String
+  avatarUrl         String?
   email             String    @unique
   passwordHash      String
   role              RoleType
@@ -80,7 +81,7 @@ model Asker {
   organizationName String?
   contactPerson    String
   phone            String?
-  email            String?
+  email            String
   address          String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -177,4 +178,13 @@ model Story {
   // Relaciones
   askId            String   @unique
   ask              Ask      @relation(fields: [askId], references: [id])
+}
+
+// Configuración Global de la Aplicación
+model AppConfig {
+  id               String   @id @default("global")
+  installationName String   @default("AskingX")
+  platformUrl      String   @default("http://localhost:5173")
+  logoUrl          String   @default("/favicon.svg")
+  updatedAt        DateTime @updatedAt
 }

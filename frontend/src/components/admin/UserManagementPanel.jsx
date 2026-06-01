@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Search } from 'lucide-react';
 import { getAllUsers } from '../../services/userService';
 import UserTable from './UserTable';
 import CreateUserModal from './CreateUserModal';
@@ -20,6 +21,7 @@ const UserManagementPanel = () => {
   const [error, setError] = useState(null);
   // State to control the visibility of the "Create User" modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   /**
    * Fetches all users from the server and updates the component's state.
@@ -45,19 +47,36 @@ const UserManagementPanel = () => {
     fetchUsers();
   }, [fetchUsers]);
 
+  const filteredUsers = users.filter(user => {
+    const term = searchTerm.toLowerCase();
+    return (user.fullName && user.fullName.toLowerCase().includes(term)) ||
+           (user.email && user.email.toLowerCase().includes(term)) ||
+           (user.role && user.role.toLowerCase().includes(term));
+  });
+
   return (
     <>
       <div>
         {/* Header section for the panel */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Gestión Integral de Usuarios y Givers</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Gestión Integral de Usuarios y Donantes</h1>
             <p className="text-slate-500 mt-1">Crea, edita y gestiona los roles de los miembros del equipo.</p>
           </div>
-          <div>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text" 
+                placeholder="Buscar usuario, email o rol..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full sm:w-64 bg-white text-slate-900 border border-slate-300 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
             <button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
             >
               + Crear Nuevo Usuario
             </button>
@@ -67,7 +86,7 @@ const UserManagementPanel = () => {
         {/* Main content area for the user table */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
           {error && <p className="text-red-500 text-center py-4">Error: {error}</p>}
-          <UserTable users={users} isLoading={isLoading} onUserUpdate={fetchUsers} />
+          <UserTable users={filteredUsers} isLoading={isLoading} onUserUpdate={fetchUsers} />
         </div>
       </div>
 

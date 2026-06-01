@@ -19,8 +19,7 @@ export const getGivers = async () => {
         throw error;
     }
     };
-
-    export const updateUser = async (userId, userData) => {
+export const updateUser = async (userId, updateData) => {
     try {
         const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
             method: 'PATCH',
@@ -28,16 +27,77 @@ export const getGivers = async () => {
                 'Content-Type': 'application/json',
                 ...getAuthHeader()
             },
-            body: JSON.stringify(userData),
+            body: JSON.stringify(updateData),
         });
+
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Error actualizando el usuario');
-        return data.data;
+        if (!response.ok) throw new Error(data.message || 'Error al actualizar el usuario');
+        return data;
     } catch (error) {
         console.error('updateUser service error:', error);
         throw error;
     }
-    };
+};
+
+export const updateUserProfile = async (profileData) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/profile`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(profileData),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Error al actualizar el perfil');
+        return data.data;
+    } catch (error) {
+        console.error('updateUserProfile service error:', error);
+        throw error;
+    }
+};
+
+export const changePassword = async (passwordData) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/password`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(passwordData),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Error al cambiar la contraseña');
+        return data;
+    } catch (error) {
+        console.error('changePassword service error:', error);
+        throw error;
+    }
+};
+
+export const resetUserPassword = async (userId, newPassword) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/${userId}/reset-password`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader()
+            },
+            body: JSON.stringify({ newPassword }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Error al restablecer la contraseña');
+        return data;
+    } catch (error) {
+        console.error('resetUserPassword service error:', error);
+        throw error;
+    }
+};
     export const createUser = async (userData) => {
     try {
         const response = await fetch(`${API_BASE_URL}/users/register`, {

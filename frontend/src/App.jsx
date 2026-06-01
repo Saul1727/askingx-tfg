@@ -8,7 +8,6 @@ import Askers from './pages/Askers';
 import Asks from './pages/Asks'; 
 import ConnectorKanban from './pages/ConnectorKanban';
 import AdminConfiguration from './pages/Admin/Configuration';
-import AdminDashboard from './pages/Admin/Dashboard';
 import UserManagementPanel from './components/admin/UserManagementPanel';
 import DomainManagementPanel from './components/admin/DomainManagementPanel';
 
@@ -38,7 +37,6 @@ function App() {
           {/* ROLE-BASED ROUTES (Pending specific views)*/}
           
           {/* Admin Routes */}
-          <Route path="admin/dashboard" element={<AdminDashboard />} />
           <Route path="admin/configuration" element={<AdminConfiguration />} />
           
           {/* Admin Management Pages */}

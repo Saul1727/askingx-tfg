@@ -6,7 +6,10 @@ const {
     loginUserController, 
     getGiversController,
     getAllUsersController,
-    updateUserController
+    updateUserController,
+    updateUserProfileController,
+    changePasswordController,
+    resetPasswordController
 } = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
@@ -19,6 +22,28 @@ router.get(
     authMiddleware,
     roleMiddleware(['ADMIN']),
     getAllUsersController
+);
+
+// PATCH /api/users/profile -> Protegido para cualquier usuario logueado
+router.patch(
+    '/profile',
+    authMiddleware,
+    updateUserProfileController
+);
+
+// PATCH /api/users/password -> Protegido para cualquier usuario logueado
+router.patch(
+    '/password',
+    authMiddleware,
+    changePasswordController
+);
+
+// PATCH /api/users/:id/reset-password -> Protegido para que solo ADMIN pueda resetear
+router.patch(
+    '/:id/reset-password',
+    authMiddleware,
+    roleMiddleware(['ADMIN']),
+    resetPasswordController
 );
 
 // PATCH /api/users/:id -> Protegido para que solo los ADMIN puedan actualizar usuarios

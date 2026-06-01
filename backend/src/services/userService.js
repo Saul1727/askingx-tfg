@@ -216,6 +216,68 @@ const updateUser = async (userId, dataToUpdate) => {
     return updatedUser;
 };
 
+const updateUserProfile = async (userId, dataToUpdate) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        const error = new Error('Usuario no encontrado');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            fullName: dataToUpdate.fullName,
+            avatarUrl: dataToUpdate.avatarUrl
+        },
+        select: { id: true, fullName: true, email: true, avatarUrl: true, role: true }
+    });
+    return updatedUser;
+};
+
+const changePassword = async (userId, oldPassword, newPassword) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        const error = new Error('Usuario no encontrado');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!isPasswordValid) {
+        const error = new Error('La contraseña actual es incorrecta.');
+        error.statusCode = 401;
+        throw error;
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { passwordHash: hashedPassword }
+    });
+
+    return true;
+};
+
+const resetUserPassword = async (userId, newTemporaryPassword) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        const error = new Error('Usuario no encontrado');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const hashedPassword = await hashPassword(newTemporaryPassword);
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { passwordHash: hashedPassword }
+    });
+
+    return true;
+};
+
 module.exports = {
   createAdmin,
   createAskAuthor,
@@ -223,6 +285,9 @@ module.exports = {
   createUser,
   getGivers,
   getAllUsers,
-  updateUser
+  updateUser,
+  updateUserProfile,
+  changePassword,
+  resetUserPassword
 };
   

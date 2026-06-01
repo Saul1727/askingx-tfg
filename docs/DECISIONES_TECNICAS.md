@@ -49,7 +49,7 @@ Justificación: Dado que la ayuda es física (bienes o servicios reales), el sis
 7. Privacidad y Visibilidad de Datos
    Se ha implementado una lógica de filtrado dinámico (Query-level filtering) en la función `getAllAsks` del servicio para proteger la privacidad de los solicitantes vulnerables y segmentar el trabajo:
 
-ADMIN: Acceso global a todas las peticiones.
+ADMIN: Acceso global a todas las peticiones ("Modo Dios"). No se aplica ningún filtro restrictivo por autor o dominio, permitiendo una visión de 360 grados del sistema.
 
 CONNECTOR: Visibilidad segmentada dinámicamente y protección contra saturación visual. 
 - **La Bolsa de Trabajo:** El sistema hace una pre-consulta de las especialidades (Domains) del usuario y le muestra únicamente las peticiones que están en estado `OPEN` y que coinciden con sus áreas de pericia. No puede ver peticiones recién creadas (`CREATED`) que aún no han sido aprobadas para publicación.
@@ -82,20 +82,29 @@ Decisión: Se ha implementado una validación estricta en el registro de usuario
 
 Justificación: Para cumplir fielmente con el diagrama de clases (UML), los roles CONNECTOR y GIVER no pueden existir sin al menos un dominio asignado. El backend ahora bloquea (400 Bad Request) cualquier intento de crear estos perfiles con el array de specialties vacío.
 
-12. Lógica de Negocio: Match vs Status Update vs Edición Completa
+12. Máquina de Estados Estricta (State Machine) y Update Levels
 
 Decisión: Se han diferenciado tres niveles de actualización para una Petición (Ask):
-- **PATCH /api/asks/:id/status**: Para transiciones rápidas de estado (flujo HITL).
-- **PATCH /api/asks/:id/match**: Para la vinculación relacional con un donante.
+- **PATCH /api/asks/:id/status**: Para transiciones rápidas de estado (flujo HITL). **Implementa una Máquina de Estados estricta**:
+  - `CREATED` solo puede pasar a `OPEN` o `CANCELLED`.
+  - `OPEN` solo puede pasar a `MATCHED`, `CANCELLED` o volver a `CREATED`.
+  - `MATCHED` solo puede pasar a `FULFILLED`, `OPEN` o `CANCELLED`.
+  - El rol `ADMIN` hace "by-pass" de esta máquina de estados por seguridad técnica.
+- **PATCH /api/asks/:id/match**: Para la vinculación relacional con un donante. Cambia el estado a `MATCHED` automáticamente si hay donantes.
 - **PUT /api/asks/:id**: Para la edición completa de los campos de la petición (título, descripción, fechas, etc.).
 
-Justificación: Separar la edición completa del cambio de estado permite aplicar reglas de validación distintas y garantiza que una edición accidental no altere el flujo de vida de la petición de forma imprevista. El uso de PUT sigue los estándares REST para reemplazo/actualización completa del recurso.
+Justificación: La máquina de estados estricta evita que el flujo se rompa por errores humanos en el frontend (ej. pasar de CREATED a FULFILLED directamente). Separar la edición completa del cambio de estado permite aplicar reglas de validación distintas y garantiza que una edición accidental no altere el flujo de vida de la petición de forma imprevista. 
 
 13. Protección contra Sobredonación (Agregación en Caliente)
 
 Decisión: La creación de un Fulfillment ahora incluye una etapa de agregación (\_sum) en la base de datos.
 
 Justificación: Para peticiones de tipo THINGS, el sistema suma todas las entregas previas y las compara con el quantityRequested. Si una nueva entrega supera lo que falta para completar la petición, el sistema la rechaza. Esto garantiza la integridad de los recursos y evita errores logísticos.
+
+14. Estándar de Cliente HTTP (Frontend)
+
+Decisión: Se ha unificado todo el frontend para utilizar la API nativa `fetch` en lugar de librerías de terceros (como Axios) o envoltorios personalizados (`api.js`).
+Justificación: Reduce las dependencias del proyecto (`bundle size`), previene errores de "missing imports" y se adhiere a los estándares web modernos, simplificando la inyección dinámica del token JWT en cada petición.
 
 # Registro de Decisiones Arquitectónicas (ADR) - Proyecto AskingX
 

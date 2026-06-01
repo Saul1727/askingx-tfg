@@ -110,7 +110,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-slate-700">Nombre Completo</label>
+              <label htmlFor="fullName" className="block text-sm font-medium text-slate-700">Nombre Completo <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 id="fullName"
@@ -122,7 +122,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
             </div>
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email <span className="text-red-500">*</span></label>
               <input
                 type="email"
                 id="email"
@@ -134,7 +134,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700">Contraseña Temporal</label>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700">Contraseña Temporal <span className="text-red-500">*</span></label>
               <input
                 type="password"
                 id="password"
@@ -147,7 +147,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
             </div>
             
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-slate-700">Rol</label>
+              <label htmlFor="role" className="block text-sm font-medium text-slate-700">Rol <span className="text-red-500">*</span></label>
               <select
                 id="role"
                 value={role}
@@ -159,7 +159,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
                 }}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base bg-slate-50 border border-slate-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md text-slate-900"
               >
-                <option value="GIVER">GIVER (Voluntario)</option>
+                <option value="GIVER">GIVER (Donante)</option>
                 <option value="AUTHOR">AUTHOR (Gestor de peticiones)</option>
                 <option value="CONNECTOR">CONNECTOR (Validador)</option>
                 <option value="ADMIN">ADMIN</option>
@@ -170,7 +170,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
             {needsDomain && (
               <div className="pt-2 border-t border-slate-100">
                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Especialidades / Dominios
+                  Especialidades / Dominios <span className="text-red-500">*</span>
                 </label>
                 {isLoadingDomains ? (
                   <div className="flex items-center gap-2 text-slate-500 text-sm py-2">
@@ -203,14 +203,17 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
           
           {error && <p className="mt-4 text-sm text-red-600 font-medium bg-red-50 p-2 rounded border border-red-100">{error}</p>}
           
-          <div className="flex gap-3 mt-8">
-            <button type="button" onClick={handleClose} className="flex-1 bg-slate-100 text-slate-700 py-2.5 rounded-lg font-bold hover:bg-slate-200 transition-colors">
-              Cancelar
-            </button>
-            <button type="submit" disabled={isLoading} className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-              {isLoading && <Loader2 size={18} className="animate-spin" />}
-              {isLoading ? 'Creando...' : 'Crear Usuario'}
-            </button>
+          <div className="mt-6">
+            <p className="text-xs text-slate-500 mb-3"><span className="text-red-500">*</span> Campos obligatorios</p>
+            <div className="flex gap-3">
+              <button type="button" onClick={handleClose} className="flex-1 bg-slate-100 text-slate-700 py-2.5 rounded-lg font-bold hover:bg-slate-200 transition-colors">
+                Cancelar
+              </button>
+              <button type="submit" disabled={isLoading} className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                {isLoading && <Loader2 size={18} className="animate-spin" />}
+                {isLoading ? 'Creando...' : 'Crear Usuario'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

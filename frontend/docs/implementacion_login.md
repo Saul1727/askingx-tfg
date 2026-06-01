@@ -55,22 +55,24 @@ Se ha implementado un sistema de **Layouts y Outlets** para separar la estructur
 
 Vista centralizada que actúa como centro de mando:
 
-- **KPI Cards:** Tarjetas visuales de métricas clave.
-- **Gestión de Datos:** Tabla interactiva con estados de peticiones.
+- **Refactorización Mobile-First:** El dashboard fue reconstruido utilizando CSS Grid (`grid-cols-1 md:grid-cols-3` o `grid-cols-5` para Admin), garantizando que las métricas y gráficas se apilen en dispositivos móviles, eliminando por completo cualquier scroll horizontal no deseado.
+- **MetricCard (DRY):** Las tarjetas visuales de métricas clave fueron extraídas a un componente reutilizable (`src/components/common/MetricCard.jsx`) para limpiar el código principal.
+- **Gestión de Datos:** Tabla interactiva con estados de peticiones y gráficas interactivas (`Chart.js`).
 - **Acciones:** Control de estado para la apertura del modal `CreateAskModal`.
 
 ---
 
-## 4. Gestión Integral de Peticiones (CU-01: Creación y Edición)
+## 4. Gestión Integral de Peticiones ("Peticiones de Ayuda")
 
-Se ha implementado el flujo completo (Frontend-Backend) para el registro y modificación de peticiones de ayuda, utilizando un componente modal avanzado y polimórfico.
+Se ha implementado el flujo completo (Frontend-Backend) para el registro, búsqueda multi-dimensional y modificación de peticiones de ayuda, utilizando componentes modales avanzados.
 
-### 4.1. Componente `CreateAskModal.jsx` (Polimorfismo)
+### 4.1. Componente `CreateAskModal.jsx` (Polimorfismo y Máquina de Estados)
 
 - **Ubicación:** `src/components/asks/CreateAskModal.jsx`.
-- **Modos de Operación:** Mediante la prop `askToEdit`, el componente cambia dinámicamente entre modo **Registro** (POST) y modo **Edición** (PUT). Si se recibe una petición existente, el formulario se auto-hidrata con los valores actuales.
-- **Carga Dinámica de Datos:** Mediante el hook `useEffect`, el componente consume las APIs de `Askers` y `Domains` al montarse, hidratando los campos `select` del formulario con datos reales de la base de datos de PostgreSQL.
-- **Patrón STI (Single Table Inheritance):** El formulario muta y adapta sus campos dinámicamente según el tipo de recurso seleccionado (`THINGS`, `TIME`, `EXPERTISE`, `SERVICES`), formateando y "limpiando" el payload antes del envío.
+- **Modos de Operación:** Mediante la prop `askToEdit`, el componente cambia dinámicamente entre modo **Registro** (POST) y modo **Edición** (PUT).
+- **Máquina de Estados en UI:** El selector de "Estado" solo aparece en modo Edición e incluye transiciones explícitas (`CREATED`, `OPEN`, `MATCHED`, `FULFILLED`, `CANCELLED`), apoyándose en la estricta validación del backend que rechaza saltos de estado no permitidos.
+- **Carga Dinámica de Datos:** Mediante el hook `useEffect`, el componente consume las APIs de `Askers` y `Domains` al montarse.
+- **Patrón STI (Single Table Inheritance):** El formulario muta y adapta sus campos dinámicamente según el tipo de recurso seleccionado (`THINGS`, `TIME`, `EXPERTISE`, `SERVICES`).
 - **Gestión de Fechas (Timezones):** Incorporación del campo opcional `dueDate`. Se ha implementado un cálculo en tiempo real de la zona horaria local del navegador para bloquear la selección de fechas pasadas en el HTML5, garantizando posteriormente la transformación a ISO 8601 (`toISOString()`) para su inserción en Prisma.
 - **Protección UX (Programación Defensiva):** El renderizado de listas y mapeo de datos incluye validadores estructurales (`Array.isArray`) que evitan interrupciones fatales ("crashes") en la interfaz en caso de recibir payloads inesperados del backend.
 

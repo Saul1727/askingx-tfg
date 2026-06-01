@@ -31,6 +31,7 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 ### 2.3. `src/services/` (Capa de Infraestructura)
 
 - **`authService.js` y `askService.js`**: Contienen la lógica de comunicación HTTP con el backend.
+- **Decisión Estándar (`fetch` nativo)**: Se decidió unificar todas las llamadas HTTP bajo la API nativa `fetch`, prescindiendo de librerías externas como `axios` o wrappers personalizados. Esto reduce el peso del bundle, estandariza el código y simplifica la inyección del token JWT.
 - **¿Por qué?**: **Principio de Separación de Concernimientos (SoC)**. Si el endpoint de la API cambia mañana, solo modificas este archivo, no todos los componentes visuales de React.
 
 ### 2.4. `src/pages/` (Componentes de Página)
@@ -38,14 +39,14 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 - **`Login.jsx`**: Gestiona el acceso.
   - **Técnica:** Uso de `useNavigate` para redirección y `localStorage` para persistencia del token.
 - **`Dashboard.jsx`**: El panel principal.
-  - **Técnica:** Descomposición en sub-componentes internos (StatCard, TableRow). Gestiona el estado de visibilidad (apertura/cierre) del modal de creación de peticiones.
+  - **Técnica:** Componentización avanzada. Para evitar código monolítico, las tarjetas de métricas se extrajeron a un componente común reutilizable `MetricCard.jsx`, limpiando significativamente la vista principal.
 
 ### 2.5. `src/components/layout/` (Componentes Estructurales)
 
-- **`MainLayout.jsx`**: Contenedor maestro. Usa `<Outlet />`, una característica de React Router que permite inyectar diferentes páginas manteniendo el Sidebar y Topbar fijos.
+- **`MainLayout.jsx`**: Contenedor maestro. Usa `<Outlet />`, bloquea el desbordamiento horizontal (`overflow-x-hidden`) y gestiona el estado móvil de los menús.
 - **`Sidebar.jsx`**: El cerebro de la navegación.
-  - **Decisión de Diseño:** Uso de un **Mapa de Roles**. La visibilidad de los elementos es condicional (`isAdmin`, `isAuthor`). Esto es Clean Code: evitamos una maraña de `if/else` dentro del HTML (JSX).
-- **`Topbar.jsx`**: Gestión de utilidades globales (idioma, perfil, búsqueda).
+  - **Decisión de Diseño:** Uso de un **Mapa de Roles**. La visibilidad de los elementos es condicional (`isAdmin`, `isAuthor`). Implementa lógica Mobile-First para ocultarse lateralmente en pantallas pequeñas.
+- **`Topbar.jsx`**: Gestión de utilidades globales (idioma, perfil, búsqueda y botón hamburguesa en móviles).
 
 ---
 
@@ -53,7 +54,7 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 
 ### A. Gestión de Estados y Efectos (Hooks)
 
-- **`useState`**: Usado para datos interactivos (formularios, loadings, modales).
+- **`useState`**: Usado para datos interactivos (formularios, loadings, modales, menú móvil).
 - **`useEffect`**: Fundamental en modales como `CreateAskModal` para lanzar peticiones asíncronas a la API (GET de Organizaciones y Dominios) exactamente en el momento en que el componente se monta/abre en pantalla.
 - **`useNavigate`**: Usado para enrutamiento SPA (Single Page Application).
 
@@ -66,6 +67,11 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 
 - **El reto de la UX:** Se implementó una lógica de zona horaria local (`Date.getFullYear()`, etc.) para bloquear fechas pasadas en los inputs de HTML, evitando el clásico bug de desfase UTC vs Hora Local. Finalmente, se formatea a ISO 8601 (`toISOString()`) para asegurar la compatibilidad con el ORM (Prisma) y PostgreSQL.
 
+### D. Diseño Mobile-First y Responsive
+
+- **El Reto:** Los paneles de administración tienden a colapsar en pantallas pequeñas.
+- **La Solución:** Todo el layout de AskingX fue refactorizado con una mentalidad *Mobile-First*. Usando CSS Grid (`grid-cols-1 md:grid-cols-4`), en móviles todos los paneles (`MetricCard`, gráficas) se apilan en una sola columna verticalmente sin generar scrolls horizontales molestos. El Sidebar pasa a ser un menú oculto "off-canvas", y la barra de búsqueda cede su espacio para mantener la legibilidad.
+
 ---
 
 ## 4. Principios Clean Code y Fiabilidad (El "Sello de Calidad")
@@ -73,6 +79,7 @@ Si te preguntan **"¿Por qué estas tecnologías?"**, aquí tienes los argumento
 Si te preguntan por la **calidad del código y la tolerancia a fallos**:
 
 1.  **Programación Defensiva (Fail-Safe):** En lugar de confiar ciegamente en el backend, el código frontend previene "crasheos" críticos. Por ejemplo, se utiliza `Array.isArray(data)` antes de ejecutar un `.map()` en los desplegables. Si el backend devuelve un error o un formato inesperado, la aplicación maneja el error sin romperse (pantalla en blanco/negro).
-2.  **DRY (Don't Repeat Yourself):** Creación de componentes reutilizables como `InputField`.
+2.  **DRY (Don't Repeat Yourself):** Creación de componentes reutilizables como `InputField` y `MetricCard`.
 3.  **Single Responsibility Principle (SRP):** Clara separación entre UI (Componentes) y Lógica de Datos (Servicios).
-4.  **Extracción Dinámica de JWT:** Uso de decodificación segura del Token (Base64) en el cliente para extraer información del usuario (ej. `authorId`) sin depender de peticiones extra al servidor, optimizando la red.
+4.  **Búsqueda Compleja Centralizada:** En la pantalla de `Asks.jsx`, el filtrado de búsqueda es multi-dimensional, buscando en tiempo real por título, descripción, tipo, estado, dominio y nombre de la ONG simultáneamente sin ralentizar la UI.
+5.  **Extracción Dinámica de JWT:** Uso de decodificación segura del Token (Base64) en el cliente para extraer información del usuario (ej. `authorId`) sin depender de peticiones extra al servidor, optimizando la red.

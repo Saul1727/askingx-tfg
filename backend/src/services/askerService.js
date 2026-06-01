@@ -25,11 +25,12 @@ const createAsker = async (askerData) => {
     return newAsker;
 };
 
-const getAskersByAuthor = async (authorId) => {
+const getAskersByAuthor = async (authorId, userRole) => {
+    // Si el usuario es ADMIN, devolvemos todos los Askers sin filtrar por autor
+    const whereClause = userRole === 'ADMIN' ? {} : { askAuthorId: authorId };
+
     const askers = await prisma.asker.findMany({
-        where: {  
-            askAuthorId: authorId 
-        },
+        where: whereClause,
         include: {
             asks: {
                 select: {

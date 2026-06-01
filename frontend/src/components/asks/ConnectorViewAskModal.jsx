@@ -32,7 +32,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
 
   const statusConfig = getStatusConfig(ask.status);
 
-  // TODO: Replace with real data from backend when available
+  
   const statusHistory = [
     { status: 'Creada', user: 'AskAuthor', date: '10/04/2026', icon: <Circle size={12} className="text-slate-400"/> },
     { status: 'Revisada y Urgente', user: 'Connector', date: '12/04/2026', icon: <Circle size={12} className="text-yellow-500"/> },
@@ -101,8 +101,8 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
 
           {/* Asignación de Givers */}
           <section>
-            <h3 className="text-base font-bold text-slate-800 mb-4">Asignación de Givers</h3>
-            <h4 className="text-sm font-semibold text-slate-700 mb-2">Givers Asignados:</h4>
+            <h3 className="text-base font-bold text-slate-800 mb-4">Asignación de Donantes</h3>
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">Donantes Asignados:</h4>
              {ask.givers && ask.givers.length > 0 ? (
                 <div className="space-y-2">
                     {ask.givers.map(giver => (
@@ -147,7 +147,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
               onClick={() => onReassignGivers(ask)}
               className="bg-slate-100 text-slate-700 py-2 px-4 rounded-lg font-bold hover:bg-slate-200 transition-colors"
             >
-              Reasignar Givers
+              Reasignar Donantes
             </button>
             <button 
               onClick={() => onCancelAsk(ask.id)}

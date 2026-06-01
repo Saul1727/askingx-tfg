@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
@@ -11,19 +12,20 @@ const MainLayout = () => {
   // Get user info from localStorage
   const user = getUser();
   const userRole = user?.role || 'AUTHOR'; // Fallback to AUTHOR if not found
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-[#f8fafc] overflow-hidden">
-      {/* Fixed Sidebar */}
-      <Sidebar userRole={userRole} />
+      {/* Sidebar Container - Handled inside Sidebar component using isMobileMenuOpen */}
+      <Sidebar userRole={userRole} isMobileOpen={isMobileMenuOpen} setIsMobileOpen={setIsMobileMenuOpen} />
 
       {/* Main Container */}
-      <div className="flex-grow flex flex-col h-full overflow-hidden">
+      <div className="flex-grow flex flex-col h-full overflow-x-hidden relative w-full">
         {/* Fixed Topbar */}
-        <Topbar />
+        <Topbar onMenuClick={() => setIsMobileMenuOpen(true)} />
 
         {/* Dynamic Content Scrollable */}
-        <main className="flex-grow overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-slate-200">
+        <main className="flex-grow overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-slate-200">
           <Outlet />
         </main>
       </div>

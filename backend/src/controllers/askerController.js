@@ -4,14 +4,11 @@ const askerService = require('../services/askerService');
 //Esquema de validacion para el Solicitante (Asker)
 const createAskerSchema = z.object({
   contactPerson: z.string().min(2, "El nombre de contacto es obligatorio"),
-  organizationName: z.string().optional(),
+  organizationName: z.string().min(1, "El nombre de la organización es obligatorio"),
   phone: z.string().regex(/^\+?\d{9,15}$/, "El teléfono debe contener entre 9 y 15 dígitos").optional(),
-  email: z.string().email("Formato de email inválido").optional().or(z.literal('')),
+  email: z.string().email("Formato de email inválido"),
   address: z.string().optional(),
   askAuthorId: z.string().uuid("El ID del autor debe ser un UUID válido")
-}).refine((data) => data.phone || data.email || data.address, {
-  message: "Debe proporcionar al menos un método de contacto válido (teléfono, email o dirección).",
-  path: ["contactInfo"] // Etiqueta genérica para el error
 });
 
 const createAskerController = async (req, res, next) => {
@@ -41,7 +38,8 @@ const getAskersByAuthorController = async (req, res, next) => {
         // Validamos que el ID del autor es un UUID válido
         z.string().uuid("El ID del autor debe ser un UUID válido").parse(authorId);
 
-        const askers = await askerService.getAskersByAuthor(authorId);
+        // Pasamos también el rol del usuario que hace la petición
+        const askers = await askerService.getAskersByAuthor(authorId, req.user.role);
 
         res.status(200).json({
             success: true,

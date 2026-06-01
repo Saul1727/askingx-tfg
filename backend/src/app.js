@@ -7,6 +7,7 @@ const askRoutes = require('./routes/askRoutes');
 const fulfillmentRoutes = require('./routes/fulfillmentRoutes');
 const domainRoutes = require('./routes/domainRoutes');
 const statsRoutes = require('./routes/statsRoutes');
+const configRoutes = require('./routes/configRoutes');
 const cors = require('cors');
 
 const app = express();
@@ -32,6 +33,8 @@ app.use('/api/fulfillments', fulfillmentRoutes);
 app.use('/api/domains', domainRoutes);
 // Rutas de estadísticas
 app.use('/api/stats', statsRoutes);
+// Rutas de configuración global
+app.use('/api/config', configRoutes);
 
 // Middleware global de errores (DEBE ir al final de todo)
 app.use(errorHandler);

@@ -173,6 +173,66 @@ const updateUserController = async (req, res, next) => {
 };
 
 
+const updateUserProfileController = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const profileSchema = z.object({
+            fullName: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+            avatarUrl: z.string().url("URL inválida").optional().or(z.literal(''))
+        });
+        const validatedData = profileSchema.parse(req.body);
+
+        const updatedUser = await userService.updateUserProfile(userId, validatedData);
+        
+        res.status(200).json({
+            success: true,
+            message: 'Perfil actualizado con éxito',
+            data: updatedUser
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const changePasswordController = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const passwordSchema = z.object({
+            oldPassword: z.string().min(1, "La contraseña actual es obligatoria"),
+            newPassword: z.string().min(8, "La nueva contraseña debe tener al menos 8 caracteres")
+        });
+        const { oldPassword, newPassword } = passwordSchema.parse(req.body);
+
+        await userService.changePassword(userId, oldPassword, newPassword);
+        
+        res.status(200).json({
+            success: true,
+            message: 'Contraseña cambiada con éxito'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const resetPasswordController = async (req, res, next) => {
+    try {
+        const userId = req.params.id; // Admin is resetting for this user
+        const resetSchema = z.object({
+            newPassword: z.string().min(8, "La nueva contraseña debe tener al menos 8 caracteres")
+        });
+        const { newPassword } = resetSchema.parse(req.body);
+
+        await userService.resetUserPassword(userId, newPassword);
+        
+        res.status(200).json({
+            success: true,
+            message: 'Contraseña restablecida con éxito'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
   createAdminController,
   createAskAuthorController,
@@ -180,5 +240,8 @@ module.exports = {
   loginUserController,
   getGiversController,
   getAllUsersController,
-  updateUserController
+  updateUserController,
+  updateUserProfileController,
+  changePasswordController,
+  resetPasswordController
 };

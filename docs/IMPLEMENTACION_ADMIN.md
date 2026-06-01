@@ -131,7 +131,11 @@ Se creó un conjunto completo de servicio, controlador y ruta para las estadíst
     3.  **Caducadas**: Cuenta las peticiones con estado `EXPIRED`.
     4.  **Connectors más activos**: Utiliza una consulta avanzada de Prisma para encontrar los 5 usuarios con rol `CONNECTOR`, ordenándolos de forma descendente por el número de peticiones que tienen asociadas (`asksConnected`).
 
-#### **Controlador y Ruta (`statsController.js`, `statsRoutes.js`)**
+#### **Servicio (`/backend/src/services/askerService.js`)**
+Se implementó una política de "Modo Dios" (God Mode) en la obtención de organizaciones:
+- **`getAskersByAuthor(authorId, userRole)`**: Si el `userRole` es `ADMIN`, Prisma ignora el filtro de `askAuthorId` y devuelve el 100% de las organizaciones y particulares de la base de datos, garantizando que el administrador tenga visibilidad global sin alterar la ruta base.
+
+#### **Controlador y Ruta (`askerController.js`, `askerRoutes.js`)**
 - Se creó `getDashboardStatsController` para llamar al servicio.
 - Se creó la ruta `GET /api/stats/summary`, protegida para administradores, que expone este controlador.
 - Se registró el `statsRoutes` en el fichero principal `app.js`.
