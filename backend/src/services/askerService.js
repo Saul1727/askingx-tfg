@@ -5,8 +5,8 @@ const createAsker = async (askerData) => {
         where: { id: askerData.askAuthorId }
     });
 
-    if (!author || author.role !== 'AUTHOR') {
-        const error = new Error('El AskAuthor especificado no existe');
+    if (!author || (author.role !== 'AUTHOR' && author.role !== 'ADMIN')) {
+        const error = new Error('El AskAuthor especificado no existe o no tiene permisos de creación (AUTHOR/ADMIN)');
         error.statusCode = 404; // Not Found
         throw error;
     }

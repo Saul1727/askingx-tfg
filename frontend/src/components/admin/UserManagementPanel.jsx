@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import { getAllUsers } from '../../services/userService';
+import { useLanguage } from '../../context/LanguageContext';
 import UserTable from './UserTable';
 import CreateUserModal from './CreateUserModal';
 
@@ -13,6 +14,7 @@ import CreateUserModal from './CreateUserModal';
  * the creation of new users via a modal.
  */
 const UserManagementPanel = () => {
+  const { t } = useLanguage();
   // State for storing the list of users
   const [users, setUsers] = useState([]);
   // State to handle loading status during data fetching
@@ -60,15 +62,15 @@ const UserManagementPanel = () => {
         {/* Header section for the panel */}
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Gestión Integral de Usuarios y Donantes</h1>
-            <p className="text-slate-500 mt-1">Crea, edita y gestiona los roles de los miembros del equipo.</p>
+            <h1 className="text-2xl font-bold text-slate-900">{t('admin.usersTitle')}</h1>
+            <p className="text-slate-500 mt-1">{t('admin.usersSubtitle')}</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="text" 
-                placeholder="Buscar usuario, email o rol..."
+              <input
+                type="text"
+                placeholder={t('admin.searchUser')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full sm:w-64 bg-white text-slate-900 border border-slate-300 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -78,7 +80,7 @@ const UserManagementPanel = () => {
               onClick={() => setIsCreateModalOpen(true)}
               className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
             >
-              + Crear Nuevo Usuario
+              {t('admin.createUser')}
             </button>
           </div>
         </div>

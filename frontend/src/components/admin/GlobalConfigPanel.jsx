@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Save, Paperclip } from 'lucide-react';
 import { getAppConfig, updateAppConfig } from '../../services/configService';
 import { useConfig } from '../../context/ConfigContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const GlobalConfigPanel = () => {
   const { refreshConfig } = useConfig();
+  const { t } = useLanguage();
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     installationName: '',
@@ -53,7 +55,7 @@ const GlobalConfigPanel = () => {
     try {
       await updateAppConfig(formData);
       await refreshConfig(); // Actualiza el contexto global
-      setMessage({ type: 'success', text: 'Configuración guardada correctamente.' });
+      setMessage({ type: 'success', text: t('admin.configSaved') });
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Error al guardar.' });
     } finally {
@@ -65,7 +67,7 @@ const GlobalConfigPanel = () => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80 max-w-2xl">
-      <h2 className="text-xl font-bold text-slate-800 mb-4">Configuración de la Instalación</h2>
+      <h2 className="text-xl font-bold text-slate-800 mb-4">{t('admin.configInstall')}</h2>
       <p className="text-sm text-slate-500 mb-6">Modifica los datos globales de la plataforma. Estos cambios afectarán a todos los usuarios.</p>
 
       {message.text && (
@@ -76,7 +78,7 @@ const GlobalConfigPanel = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-1">Nombre de la Instalación <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-bold text-slate-700 mb-1">{t('admin.installName')} <span className="text-red-500">*</span></label>
           <input 
             type="text" 
             name="installationName" 
@@ -86,11 +88,11 @@ const GlobalConfigPanel = () => {
             placeholder="Ej: AskingValencia"
             className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-900"
           />
-          <p className="text-xs text-slate-500 mt-1">Se mostrará en la cabecera y en los correos.</p>
+          <p className="text-xs text-slate-500 mt-1">{t('admin.installHint')}</p>
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-1">URL de la Plataforma <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-bold text-slate-700 mb-1">{t('admin.platformUrl')} <span className="text-red-500">*</span></label>
           <input 
             type="url" 
             name="platformUrl" 
@@ -103,13 +105,13 @@ const GlobalConfigPanel = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-1">Logo de la Instalación (Icono) <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-bold text-slate-700 mb-1">{t('admin.logo')} <span className="text-red-500">*</span></label>
           <div className="flex gap-4 items-center">
             <div className="w-12 h-12 border border-slate-200 rounded-lg flex items-center justify-center bg-slate-50 overflow-hidden shrink-0">
               {formData.logoUrl ? (
                 <img src={formData.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" onError={(e) => e.target.style.display = 'none'} />
               ) : (
-                <span className="text-xs text-slate-400">Sin logo</span>
+                <span className="text-xs text-slate-400">{t('admin.noLogo')}</span>
               )}
             </div>
             
@@ -150,7 +152,7 @@ const GlobalConfigPanel = () => {
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2"
           >
             {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-            {isSaving ? 'Guardando...' : 'Guardar Configuración'}
+            {isSaving ? t('common.saving') : t('admin.saveConfig')}
           </button>
         </div>
       </form>

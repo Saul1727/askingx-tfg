@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, CheckCircle2, MoreVertical, Users, Edit } from 'lucide-react';
+import { Loader2, CheckCircle2, MoreVertical, Users, Edit, UserPlus } from 'lucide-react';
 import { getAllAsks, matchAsk, updateAskStatus } from '../services/askService';
 import { getGivers } from '../services/userService';
 import { getUser } from '../services/authService';
+import { useLanguage } from '../context/LanguageContext';
 import ConnectorViewAskModal from '../components/asks/ConnectorViewAskModal';
 import CreateAskModal from '../components/asks/CreateAskModal';
+import StoryModal from '../components/stories/StoryModal';
 
 const ConnectorKanban = () => {
+  const { t } = useLanguage();
   const [asks, setAsks] = useState([]);
   const [givers, setGivers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,15 +29,25 @@ const ConnectorKanban = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [askToEdit, setAskToEdit] = useState(null);
 
-  const fetchData = () => {
-    setIsLoading(true);
-    Promise.all([getAllAsks(), getGivers()])
+  // Estados para el Modal de Historia de Impacto (CU-05)
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
+  const [askForStory, setAskForStory] = useState(null);
+
+  // silent=true refresca los datos sin mostrar el spinner a pantalla completa
+  // (evita el "parpadeo" que borra el tablero en cada guardado).
+  const fetchData = (silent = false) => {
+    if (!silent) setIsLoading(true);
+    return Promise.all([getAllAsks(), getGivers()])
       .then(([asksData, giversData]) => {
         setAsks(asksData);
         setGivers(giversData);
+        return asksData;
       })
-      .catch(err => console.error("Error cargando Kanban:", err))
-      .finally(() => setIsLoading(false));
+      .catch(err => {
+        console.error("Error cargando Kanban:", err);
+        return null;
+      })
+      .finally(() => { if (!silent) setIsLoading(false); });
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -61,19 +74,24 @@ const ConnectorKanban = () => {
   const processStatusChange = async (ask, newStatus) => {
     try {
       if (newStatus === 'MATCHED') {
+        // No se pueden asignar donantes a una petición que aún no ha sido aprobada (OPEN).
+        if (ask.status !== 'OPEN' && ask.status !== 'MATCHED') {
+          alert(t('kanban.cannotAssign'));
+          return;
+        }
         setSelectedAskForMatch(ask);
         setSelectedGiverIds(ask.givers?.map(g => g.id) || []);
         setIsMatchModalOpen(true);
-      } 
+      }
       else if (ask.status === 'MATCHED' && newStatus === 'OPEN') {
-        if (window.confirm("¿Seguro que quieres deshacer la asignación y devolverla a Abierta?")) {
+        if (window.confirm(t('kanban.confirmUnmatch'))) {
           await matchAsk(ask.id, []);
-          fetchData();
+          fetchData(true);
         }
-      } 
+      }
       else if (newStatus === 'OPEN' || newStatus === 'CREATED' || newStatus === 'FULFILLED') {
          await updateAskStatus(ask.id, newStatus);
-         fetchData();
+         fetchData(true);
       }
       else {
         alert("Transición no permitida directamente.");
@@ -95,20 +113,37 @@ const ConnectorKanban = () => {
   };
 
   const handleCancelAsk = async (askId) => {
-    if (window.confirm("¿Seguro que quieres cancelar esta petición? Esta acción no se puede deshacer.")) {
+    if (window.confirm(t('kanban.confirmCancel'))) {
       try {
         await updateAskStatus(askId, 'CANCELLED');
-        fetchData(); // Recargar datos
-        setIsViewModalOpen(false); // Cerrar modal
+        fetchData(true); // Recargar datos sin parpadeo
+        setIsViewModalOpen(false); // Acción terminal: cerramos el modal
       } catch (error) {
         alert("Error al cancelar la petición: " + error.message);
       }
     }
   };
 
+  const handleForceComplete = async (askId) => {
+    try {
+      await updateAskStatus(askId, 'FULFILLED');
+      fetchData(true); // Recargar datos sin parpadeo
+      setIsViewModalOpen(false); // Acción terminal: cerramos el modal
+    } catch (error) {
+      alert("Error al completar la petición: " + error.message);
+    }
+  };
+
   const handleReassignGivers = (ask) => {
     setIsViewModalOpen(false);
     handleEditGivers(ask);
+  };
+
+  // Abre el modal de Historia de Impacto (cierra antes el de detalle para no solaparlos).
+  const handleGenerateStory = (ask) => {
+    setIsViewModalOpen(false);
+    setAskForStory(ask);
+    setIsStoryModalOpen(true);
   };
 
   // EJECUCIÓN DEL MATCH 
@@ -124,7 +159,7 @@ const ConnectorKanban = () => {
       setIsMatchModalOpen(false);
       setSelectedGiverIds([]);
       setSelectedAskForMatch(null);
-      fetchData(); 
+      fetchData(true);
     } catch (error) {
       alert(error.message);
     }
@@ -170,7 +205,7 @@ const ConnectorKanban = () => {
       {/* Título Principal */}
       <div className="mb-8 pl-4">
         <h1 className="text-[28px] font-bold text-slate-900 tracking-tight">
-          Gestión de Peticiones
+          {t('kanban.title')}
         </h1>
       </div>
 
@@ -181,9 +216,9 @@ const ConnectorKanban = () => {
           
           {/* COLUMNA 0: NUEVAS (Solo Admin) */}
           {isAdmin && (
-            <KanbanColumn 
-              title="NUEVAS" 
-              dotColor="bg-blue-500" 
+            <KanbanColumn
+              title={t('kanban.colNew')}
+              dotColor="bg-blue-500"
               onDragOver={handleDragOver} 
               onDrop={(e) => handleDrop(e, 'CREATED')}
             >
@@ -202,36 +237,37 @@ const ConnectorKanban = () => {
           )}
 
           {/* COLUMNA 1: ABIERTA */}
-          <KanbanColumn 
-            title="ABIERTA" 
-            dotColor="bg-[#F5D033]" 
+          <KanbanColumn
+            title={t('kanban.colOpen')}
+            dotColor="bg-[#F5D033]"
             onDragOver={handleDragOver} 
             onDrop={(e) => handleDrop(e, 'OPEN')}
           >
             {openAsks.map(ask => (
-              <AskCard 
-                key={ask.id} 
-                ask={ask} 
+              <AskCard
+                key={ask.id}
+                ask={ask}
                 dotColor="bg-[#F5D033]"
-                onDragStart={handleDragStart} 
+                onDragStart={handleDragStart}
                 getInitials={getInitials}
                 onViewDetails={() => handleViewAskDetails(ask)}
                 onEditAsk={isAdmin ? () => handleEditAsk(ask) : null}
+                onStartMatch={() => handleEditGivers(ask)}
               />
             ))}
           </KanbanColumn>
 
           {/* COLUMNA 2: ASIGNADA */}
-          <KanbanColumn 
-            title="ASIGNADA" 
-            dotColor="bg-[#41942A]" 
+          <KanbanColumn
+            title={t('kanban.colMatched')}
+            dotColor="bg-[#41942A]"
             onDragOver={handleDragOver} 
             onDrop={(e) => handleDrop(e, 'MATCHED')}
             isCenterColumn={true}
           >
             {/* Header Givers Asignados */}
             <div className="flex justify-between items-center mb-3 px-1">
-              <span className="text-sm font-medium text-slate-700">Givers Asignados</span>
+              <span className="text-sm font-medium text-slate-700">{t('kanban.assignedGivers')}</span>
               <div className="flex -space-x-2">
                 {uniqueMatchedGivers.map((giver, idx) => (
                   <div key={idx} title={giver.fullName} className="w-7 h-7 rounded-full bg-slate-500 border-2 border-slate-100 flex items-center justify-center text-[10px] font-bold text-white z-10">
@@ -256,9 +292,9 @@ const ConnectorKanban = () => {
           </KanbanColumn>
 
           {/* COLUMNA 3: COMPLETADA */}
-          <KanbanColumn 
-            title="COMPLETADA" 
-            dotColor="bg-[#A4D8A4]" 
+          <KanbanColumn
+            title={t('kanban.colDone')}
+            dotColor="bg-[#A4D8A4]"
             onDragOver={handleDragOver} 
             onDrop={(e) => handleDrop(e, 'FULFILLED')}
           >
@@ -283,9 +319,9 @@ const ConnectorKanban = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMatchModalOpen(false)} />
           <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl p-6 animate-in zoom-in flex flex-col max-h-[90vh]">
-            <h2 className="text-xl font-bold text-slate-800 mb-2">Gestionar Donantes</h2>
+            <h2 className="text-xl font-bold text-slate-800 mb-2">{t('kanban.manageGivers')}</h2>
             <p className="text-sm text-slate-500 mb-6">
-              Selecciona los Donantes que se encargarán de: <strong>{selectedAskForMatch?.title}</strong>
+              {t('kanban.selectGivers')} <strong>{selectedAskForMatch?.title}</strong>
             </p>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2 mb-6">
@@ -310,14 +346,14 @@ const ConnectorKanban = () => {
                 )
               })}
               {givers.length === 0 && (
-                 <p className="text-sm text-slate-500 text-center py-4">No hay voluntarios disponibles.</p>
+                 <p className="text-sm text-slate-500 text-center py-4">{t('kanban.noGivers')}</p>
               )}
             </div>
-            
+
             <div className="flex gap-3 mt-auto pt-4 border-t border-slate-100">
-              <button onClick={() => setIsMatchModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-lg font-bold hover:bg-slate-200">Cancelar</button>
+              <button onClick={() => setIsMatchModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-lg font-bold hover:bg-slate-200">{t('common.cancel')}</button>
               <button onClick={handleConfirmMatch} className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 flex justify-center items-center gap-2">
-                Confirmar <CheckCircle2 size={18}/>
+                {t('common.confirm')} <CheckCircle2 size={18}/>
               </button>
             </div>
           </div>
@@ -325,23 +361,44 @@ const ConnectorKanban = () => {
       )}
 
       {/* MODAL PARA VER DETALLES DE LA PETICIÓN */}
-      <ConnectorViewAskModal 
+      <ConnectorViewAskModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         ask={selectedAskForView}
         onCancelAsk={handleCancelAsk}
+        onForceComplete={handleForceComplete}
         onReassignGivers={handleReassignGivers}
+        onFulfillmentAdded={async () => {
+            // Refresco silencioso manteniendo el modal abierto en la misma petición.
+            const updatedAsks = await fetchData(true);
+            if (updatedAsks && selectedAskForView) {
+              const refreshed = updatedAsks.find(a => a.id === selectedAskForView.id);
+              if (refreshed) setSelectedAskForView(refreshed); // re-sincroniza barra de progreso e historial
+              else setIsViewModalOpen(false); // la petición ya no existe en la lista
+            }
+        }}
+        // El botón de generar historia solo se ofrece al ADMIN dentro del Kanban (CU-05).
+        onGenerateStory={isAdmin ? handleGenerateStory : undefined}
+      />
+
+      {/* MODAL DE HISTORIA DE IMPACTO (CU-05) */}
+      <StoryModal
+        isOpen={isStoryModalOpen}
+        onClose={() => { setIsStoryModalOpen(false); setAskForStory(null); }}
+        ask={askForStory}
+        onSaved={() => fetchData(true)}
       />
 
       {/* MODAL PARA EDITAR LA PETICIÓN (ADMIN/CONNECTOR) */}
-      <CreateAskModal 
+      <CreateAskModal
         isOpen={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
           setAskToEdit(null);
-          fetchData(); // Recargar datos tras editar
+          fetchData();
         }}
         askToEdit={askToEdit}
+        onAskCreated={fetchData}
       />
     </div>
   );
@@ -367,9 +424,12 @@ const KanbanColumn = ({ title, dotColor, children, onDragOver, onDrop, isCenterC
   </div>
 );
 
-const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGivers, onViewDetails, onEditAsk }) => {
+const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGivers, onViewDetails, onEditAsk, onStartMatch }) => {
+  const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  // Si no hay ninguna acción disponible, no mostramos el botón de menú "⋮".
+  const hasMenuActions = Boolean(onEditAsk || onEditGivers || onStartMatch);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -381,8 +441,10 @@ const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGive
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Lógica de Urgencia (Si vence en menos de 7 días o ya venció)
+  // Lógica de Urgencia (Si vence en menos de 7 días o ya venció).
+  // Una petición en estado final (resuelta/cerrada) nunca es urgente.
   const isUrgent = () => {
+    if (['FULFILLED', 'CANCELLED', 'EXPIRED'].includes(ask.status)) return false;
     if (!ask.dueDate) return false;
     const due = new Date(ask.dueDate);
     const today = new Date();
@@ -406,45 +468,57 @@ const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGive
           <h4 className="font-bold text-slate-900 text-base leading-tight">{ask.title}</h4>
           {isUrgent() && (
             <span className="bg-[#cc4b37] text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
-              Urgente
+              {t('kanban.urgent')}
             </span>
           )}
         </div>
         
-        {/* Menú de 3 puntos */}
-        {!isStatic && (
+        {/* Menú de 3 puntos — solo si la tarjeta tiene acciones disponibles */}
+        {!isStatic && hasMenuActions && (
           <div className="absolute right-0 top-0" ref={menuRef}>
-            <button 
+            <button
               onClick={(e) => { e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }}
               className="text-slate-400 hover:text-slate-600 transition-colors p-1"
             >
               <MoreVertical size={18} />
             </button>
-            
+
             {isMenuOpen && (
               <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-md shadow-lg py-1 z-20">
                 {onEditAsk && (
-                  <button 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setIsMenuOpen(false); 
-                      onEditAsk(); 
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMenuOpen(false);
+                      onEditAsk();
                     }}
                     className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                   >
-                    <Edit size={14} /> Editar Detalles
+                    <Edit size={14} /> {t('kanban.editDetails')}
+                  </button>
+                )}
+                {onStartMatch && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMenuOpen(false);
+                      onStartMatch();
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <UserPlus size={14} /> {t('kanban.assignGiver')}
                   </button>
                 )}
                 {onEditGivers && (
-                  <button 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setIsMenuOpen(false); 
-                      onEditGivers(); 
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMenuOpen(false);
+                      onEditGivers();
                     }}
                     className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                   >
-                    <Users size={14} /> Gestionar Voluntarios
+                    <Users size={14} /> {t('kanban.manageVolunteers')}
                   </button>
                 )}
               </div>
@@ -456,16 +530,16 @@ const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGive
       {/* Detalles Apilados */}
       <div className="space-y-1.5 text-[13px] text-slate-800">
         <p>
-          Organización: <span className="font-medium">{ask.asker?.organizationName || ask.asker?.contactPerson || 'ONG Local'}</span>
+          {t('kanban.org')}: <span className="font-medium">{ask.asker?.organizationName || ask.asker?.contactPerson || 'ONG Local'}</span>
         </p>
         <p>
-          Tipo: <span className="font-medium">{ask.type}</span>
+          {t('kanban.type')}: <span className="font-medium">{ask.type}</span>
         </p>
         <p>
-          Dominio: <span className="font-medium">{ask.domain?.name || 'General'}</span>
+          {t('kanban.domain')}: <span className="font-medium">{ask.domain?.name || 'General'}</span>
         </p>
         <p>
-          Vencimiento: <span className="font-medium">{ask.dueDate ? new Date(ask.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Sin fecha'}</span>
+          {t('kanban.due')}: <span className="font-medium">{ask.dueDate ? new Date(ask.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : t('kanban.noDate')}</span>
         </p>
       </div>
 

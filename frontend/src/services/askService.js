@@ -91,14 +91,17 @@ export const updateAsk = async (id, askData) => {
 /**
  * Updates the status of an Ask (PATCH)
  */
-export const updateAskStatus = async (id, status) => {
+export const updateAskStatus = async (id, status, cancellationReason) => {
+  const body = { status };
+  if (cancellationReason) body.cancellationReason = cancellationReason;
+
   const response = await fetch(`${API_BASE_URL}/asks/${id}/status`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader()
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify(body),
   });
 
   const data = await response.json();
@@ -122,6 +125,24 @@ export const matchAsk = async (id, giverIds) => {
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Error al actualizar voluntarios');
   return data;
+};
+
+/**
+ * Registra una donación parcial (Fulfillment)
+ */
+export const createFulfillment = async (payload) => {
+  const response = await fetch(`${API_BASE_URL}/fulfillments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader()
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Error al registrar la donación parcial');
+  return data.data;
 };
 
 /**
@@ -217,6 +238,42 @@ export const deleteDomain = async (domainId) => {
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || 'Error al eliminar el dominio');
     return data;
+};
+
+/**
+ * Descartar una petición expirada
+ */
+export const discardAsk = async (id, cancellationReason = 'Descartada tras expiración') => {
+  const response = await fetch(`${API_BASE_URL}/asks/${id}/discard`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader()
+    },
+    body: JSON.stringify({ cancellationReason }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Error al descartar la petición');
+  return data.data;
+};
+
+/**
+ * Republicar una petición expirada
+ */
+export const republishAsk = async (id, newDueDate) => {
+  const response = await fetch(`${API_BASE_URL}/asks/${id}/republish`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader()
+    },
+    body: JSON.stringify({ newDueDate }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Error al republicar la petición');
+  return data.data;
 };
 
 

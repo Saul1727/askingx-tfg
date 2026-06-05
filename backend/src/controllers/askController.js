@@ -28,7 +28,9 @@ const updateAskStatusSchema = z.object({
     status: z.enum(
         ['CREATED', 'OPEN', 'MATCHED', 'FULFILLED', 'CANCELLED', 'EXPIRED'],
         { errorMap: () => ({ message: "El estado proporcionado no es válido para el sistema." }) }
-    )
+    ),
+    // Motivo opcional, solo se persiste cuando el estado destino es CANCELLED
+    cancellationReason: z.string().optional()
 });
 
 const createAskController = async (req, res, next) => {
@@ -89,11 +91,11 @@ const updateAskController = async (req, res, next) => {
 const updateAskStatusController = async (req, res, next) => {
     try {
         const { id } = req.params;
-        
+
         z.string().uuid("El ID de la petición debe ser un UUID válido").parse(id);
         const validatedData = updateAskStatusSchema.parse(req.body);
 
-        const updatedAsk = await askService.updateAskStatus(id, validatedData.status, req.user);
+        const updatedAsk = await askService.updateAskStatus(id, validatedData.status, req.user, validatedData.cancellationReason);
 
         res.status(200).json({
             success: true,
@@ -130,10 +132,60 @@ const matchAskController = async (req, res, next) => {
     }
 };
 
+// --- NUEVAS RUTAS CU-10: GESTIÓN DE EXPIRACIÓN ---
+
+const discardAskSchema = z.object({
+    cancellationReason: z.string().min(5, "El motivo debe tener al menos 5 caracteres").optional()
+});
+
+const republishAskSchema = z.object({
+    newDueDate: z.string()
+        .datetime({ message: "La fecha debe estar en formato ISO 8601 (ej. 2026-12-31T23:59:59Z)" })
+        .refine((date) => new Date(date) > new Date(), { message: "La nueva fecha límite debe ser futura" })
+});
+
+const discardAskController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        z.string().uuid("El ID de la petición debe ser un UUID válido").parse(id);
+        const { cancellationReason } = discardAskSchema.parse(req.body);
+
+        const updatedAsk = await askService.discardAsk(id, req.user, cancellationReason);
+
+        res.status(200).json({
+            success: true,
+            message: 'Petición descartada con éxito',
+            data: updatedAsk
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const republishAskController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        z.string().uuid("El ID de la petición debe ser un UUID válido").parse(id);
+        const { newDueDate } = republishAskSchema.parse(req.body);
+
+        const newAsk = await askService.republishAsk(id, newDueDate, req.user);
+
+        res.status(201).json({
+            success: true,
+            message: 'Petición republicada con éxito',
+            data: newAsk
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createAskController,
     getAllAsksController,
     updateAskController, 
     updateAskStatusController,
-    matchAskController
+    matchAskController,
+    discardAskController,
+    republishAskController
 };

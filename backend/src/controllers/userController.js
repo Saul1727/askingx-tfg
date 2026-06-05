@@ -178,7 +178,8 @@ const updateUserProfileController = async (req, res, next) => {
         const userId = req.user.userId;
         const profileSchema = z.object({
             fullName: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
-            avatarUrl: z.string().url("URL inválida").optional().or(z.literal(''))
+            avatarUrl: z.string().url("URL inválida").optional().or(z.literal('')),
+            preferredLanguage: z.enum(['ES', 'CAT', 'EN']).optional()
         });
         const validatedData = profileSchema.parse(req.body);
 

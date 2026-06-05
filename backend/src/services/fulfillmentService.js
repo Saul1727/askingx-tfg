@@ -12,22 +12,32 @@ const createFulfillment = async (data) => {
     throw error;
   }
 
-  // Si es de tipo "THINGS" calculamos lo que queda
-  if (ask.type === 'THINGS' && ask.quantityRequested) {
+  let totalDeliveredSoFar = 0;
+  let remaining = 0;
+  let isComplete = false;
+
+  // Si es de tipo "THINGS" o "TIME" calculamos lo que queda
+  if ((ask.type === 'THINGS' && ask.quantityRequested) || (ask.type === 'TIME' && ask.estimatedHours)) {
     // Sumamos todo lo que ya se ha entregado en Fulfillments anteriores
     const previousFulfillments = await prisma.fulfillment.aggregate({
       where: { askId: data.askId },
       _sum: { quantityDelivered: true } // Prisma hace la suma por nosotros
     });
 
-    const totalDeliveredSoFar = previousFulfillments._sum.quantityDelivered || 0;
-    const remaining = ask.quantityRequested - totalDeliveredSoFar;
+    totalDeliveredSoFar = previousFulfillments._sum.quantityDelivered || 0;
+    const target = ask.type === 'THINGS' ? ask.quantityRequested : ask.estimatedHours;
+    remaining = target - totalDeliveredSoFar;
 
     // Si la nueva donación supera lo que falta, bloqueamos con un Error 400
     if (data.quantityDelivered > remaining) {
-      const error = new Error(`Donación excesiva. Solo faltan ${remaining} unidades para completar esta petición.`);
+      const error = new Error(`Donación excesiva. Solo faltan ${remaining} para completar esta petición.`);
       error.statusCode = 400;
       throw error;
+    }
+
+    // Verificamos si con esta entrega se alcanza exactamente el 100%
+    if (data.quantityDelivered === remaining) {
+      isComplete = true;
     }
   }
 
@@ -42,14 +52,26 @@ const createFulfillment = async (data) => {
     throw error;
   }
 
-  //Registramos la entrega (Fulfillment)
-  const newFulfillment = await prisma.fulfillment.create({
-    data: {
-      askId: data.askId,
-      giverId: data.giverId,
-      quantityDelivered: data.quantityDelivered,
-      expertNotes: data.expertNotes,
+  // Registramos la entrega (Fulfillment) y actualizamos estado si se completa (Transacción atómica)
+  const newFulfillment = await prisma.$transaction(async (tx) => {
+    const fulfillment = await tx.fulfillment.create({
+      data: {
+        askId: data.askId,
+        giverId: data.giverId,
+        quantityDelivered: data.quantityDelivered,
+        expertNotes: data.expertNotes,
+      }
+    });
+
+    // Si alcanzamos el 100%, o si es un servicio/expertise (que es unitario), la marcamos completada
+    if (isComplete || ask.type === 'EXPERTISE' || ask.type === 'SERVICES') {
+      await tx.ask.update({
+        where: { id: data.askId },
+        data: { status: 'FULFILLED' }
+      });
     }
+
+    return fulfillment;
   });
 
   return newFulfillment;

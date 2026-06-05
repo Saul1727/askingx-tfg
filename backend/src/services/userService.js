@@ -228,9 +228,10 @@ const updateUserProfile = async (userId, dataToUpdate) => {
         where: { id: userId },
         data: {
             fullName: dataToUpdate.fullName,
-            avatarUrl: dataToUpdate.avatarUrl
+            avatarUrl: dataToUpdate.avatarUrl,
+            preferredLanguage: dataToUpdate.preferredLanguage
         },
-        select: { id: true, fullName: true, email: true, avatarUrl: true, role: true }
+        select: { id: true, fullName: true, email: true, avatarUrl: true, role: true, preferredLanguage: true }
     });
     return updatedUser;
 };

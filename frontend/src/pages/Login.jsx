@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { loginUser } from '../services/authService';
 import { useConfig } from '../context/ConfigContext';
+import { useLanguage } from '../context/LanguageContext';
 
 /**
  * Login Page Component
@@ -11,6 +12,7 @@ import { useConfig } from '../context/ConfigContext';
 const Login = () => {
   const navigate = useNavigate();
   const { config } = useConfig();
+  const { setLang } = useLanguage();
 
   // State Management
   const [email, setEmail] = useState('');
@@ -43,6 +45,9 @@ const Login = () => {
       const { token, user } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+
+      // Aplicamos el idioma preferido del usuario a toda la interfaz.
+      if (user.preferredLanguage) setLang(user.preferredLanguage);
 
       // Redirection to Dashboard
       navigate('/dashboard');
@@ -79,20 +84,30 @@ const Login = () => {
 
 /* --- Visual Sub-components --- */
 
-const Header = ({ config }) => (
-  <header className="w-full max-w-7xl mx-auto px-8 py-6 flex justify-between items-center">
-    <div className="flex-grow flex justify-center translate-x-12">
-      <h1 className="text-3xl font-bold text-slate-800 tracking-tight">{config?.installationName || 'AskingX'}</h1>
-    </div>
-    <div className="text-sm text-gray-500 font-medium">
-      <button className="hover:text-blue-600 transition-colors">ES</button>
-      <span className="mx-2">|</span>
-      <button className="hover:text-blue-600 transition-colors">CAT</button>
-      <span className="mx-2">|</span>
-      <button className="hover:text-blue-600 transition-colors">EN</button>
-    </div>
-  </header>
-);
+const Header = ({ config }) => {
+  // Antes de iniciar sesión el cambio de idioma es directo (no hay perfil que guardar).
+  const { lang, setLang } = useLanguage();
+  return (
+    <header className="w-full max-w-7xl mx-auto px-8 py-6 flex justify-between items-center">
+      <div className="flex-grow flex justify-center translate-x-12">
+        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">{config?.installationName || 'AskingX'}</h1>
+      </div>
+      <div className="text-sm text-gray-500 font-medium">
+        {['ES', 'CAT', 'EN'].map((code, idx) => (
+          <span key={code}>
+            {idx > 0 && <span className="mx-2">|</span>}
+            <button
+              onClick={() => setLang(code)}
+              className={lang === code ? 'text-blue-600 font-bold' : 'hover:text-blue-600 transition-colors'}
+            >
+              {code}
+            </button>
+          </span>
+        ))}
+      </div>
+    </header>
+  );
+};
 
 const LoginFormCard = ({
   config,
@@ -106,10 +121,12 @@ const LoginFormCard = ({
   onForgotPassword,
   error,
   isLoading,
-}) => (
+}) => {
+  const { t } = useLanguage();
+  return (
   <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
     <h2 className="text-xl font-bold text-center text-slate-800 mb-8">
-      Acceso al Sistema {config?.installationName || 'AskingX'}
+      {t('login.submit')} · {config?.installationName || 'AskingX'}
     </h2>
 
     {error && (
@@ -120,7 +137,7 @@ const LoginFormCard = ({
 
     <form onSubmit={onLogin} className="space-y-6">
       <InputField
-        label="Correo Electrónico"
+        label={t('login.emailLabel')}
         type="email"
         id="email"
         value={email}
@@ -130,7 +147,7 @@ const LoginFormCard = ({
       />
 
       <PasswordField
-        label="Contraseña"
+        label={t('login.passwordLabel')}
         id="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
@@ -138,10 +155,6 @@ const LoginFormCard = ({
         onToggleVisibility={onTogglePassword}
         disabled={isLoading}
       />
-
-      <p className="text-xs text-gray-500 leading-relaxed">
-        El sistema le redirigirá a su panel específico según sus credenciales
-      </p>
 
       <button
         type="submit"
@@ -156,14 +169,14 @@ const LoginFormCard = ({
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Iniciando sesión...
+            {t('login.loading')}
           </>
-        ) : 'Iniciar Sesión'}
+        ) : t('login.submit')}
       </button>
     </form>
 
     <div className="mt-6 text-center">
-      <button 
+      <button
         onClick={onForgotPassword}
         type="button"
         className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
@@ -172,7 +185,8 @@ const LoginFormCard = ({
       </button>
     </div>
   </div>
-);
+  );
+};
 
 const InputField = ({ label, type, id, value, onChange, placeholder, disabled }) => (
   <div className="space-y-2">

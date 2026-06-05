@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Building2, Plus, Loader2, Mail, Phone, MapPin, X, Trash2, Search } from 'lucide-react';
 import { getAskers, createAsker, deleteAsker } from '../services/askService';
+import { useLanguage } from '../context/LanguageContext';
 
 const Askers = () => {
+  const { t } = useLanguage();
   const [askersList, setAskersList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,11 +24,11 @@ const Askers = () => {
 
   const handleDelete = async (id, name, hasAsks) => {
     if (hasAsks > 0) {
-      alert("No puedes borrar una organización que ya tiene peticiones asociadas.");
+      alert(t('askers.hasAsksError'));
       return;
     }
 
-    if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente a ${name}?`)) {
+    if (window.confirm(t('askers.confirmDelete').replace('{name}', name))) {
       try {
         await deleteAsker(id);
         fetchAskers(); // Recargar la tabla automáticamente tras borrar
@@ -40,7 +42,9 @@ const Askers = () => {
     const term = searchTerm.toLowerCase();
     return (
       (asker.organizationName && asker.organizationName.toLowerCase().includes(term)) ||
-      (asker.contactPerson && asker.contactPerson.toLowerCase().includes(term))
+      (asker.contactPerson && asker.contactPerson.toLowerCase().includes(term)) ||
+      (asker.email && asker.email.toLowerCase().includes(term)) ||
+      (asker.phone && asker.phone.toLowerCase().includes(term))
     );
   });
 
@@ -48,30 +52,30 @@ const Askers = () => {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Gestión de Entidades</h1>
-          <p className="text-slate-500 text-sm mt-1">Gestiona las ONGs, entidades o personas vulnerables a las que representas.</p>
+          <h1 className="text-3xl font-bold text-slate-800">{t('askers.title')}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t('askers.subtitle')}</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-all shadow-md active:scale-95"
         >
-          <Plus size={18} /> Añadir Organización
+          <Plus size={18} /> {t('askers.add')}
         </button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4">
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <Building2 size={20} className="text-slate-500"/> Entidades Registradas
+            <Building2 size={20} className="text-slate-500"/> {t('askers.registered')}
           </h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Buscar organización o contacto..."
+            <input
+              type="text"
+              placeholder={t('askers.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-80 bg-white border border-slate-300 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full sm:w-80 bg-white text-slate-900 border border-slate-300 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -80,11 +84,11 @@ const Askers = () => {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
               <tr>
-                <th className="py-4 px-6">Organización / Particular</th>
-                <th className="py-4 px-6">Persona de Contacto</th>
-                <th className="py-4 px-6">Contacto</th>
-                <th className="py-4 px-6 text-center">Peticiones</th>
-                <th className="py-4 px-6 text-right">Acciones</th>
+                <th className="py-4 px-6">{t('askers.colOrg')}</th>
+                <th className="py-4 px-6">{t('askers.colContact')}</th>
+                <th className="py-4 px-6">{t('askers.colContactInfo')}</th>
+                <th className="py-4 px-6 text-center">{t('askers.colAsks')}</th>
+                <th className="py-4 px-6 text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -99,7 +103,7 @@ const Askers = () => {
               ) : filteredAskers.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="py-12 text-center text-slate-500 font-medium bg-slate-50/50">
-                    {searchTerm ? 'No se encontraron resultados para tu búsqueda.' : 'Aún no has registrado ninguna organización o particular.'}
+                    {searchTerm ? t('askers.noSearch') : t('askers.empty')}
                   </td>
                 </tr>
               ) : (
@@ -110,14 +114,15 @@ const Askers = () => {
                   return (
                     <tr key={asker.id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="py-4 px-6 font-medium text-slate-800">
-                        {asker.organizationName ? asker.organizationName : <span className="text-slate-400 italic px-2 py-1 bg-slate-100 rounded text-xs">Particular</span>}
+                        {asker.organizationName ? asker.organizationName : <span className="text-slate-400 italic px-2 py-1 bg-slate-100 rounded text-xs">{t('askers.individual')}</span>}
                       </td>
                       <td className="py-4 px-6 text-slate-700 font-medium">{asker.contactPerson}</td>
                       <td className="py-4 px-6 text-slate-600">
                         <div className="flex flex-col gap-1">
                           {asker.email && <span className="flex items-center gap-1.5"><Mail size={12} className="text-slate-400"/> {asker.email}</span>}
                           {asker.phone && <span className="flex items-center gap-1.5"><Phone size={12} className="text-slate-400"/> {asker.phone}</span>}
-                          {!asker.email && !asker.phone && <span className="text-slate-300">-</span>}
+                          {asker.address && <span className="flex items-center gap-1.5"><MapPin size={12} className="text-slate-400"/> {asker.address}</span>}
+                          {!asker.email && !asker.phone && !asker.address && <span className="text-slate-300">-</span>}
                         </div>
                       </td>
                       <td className="py-4 px-6 text-center">
@@ -158,6 +163,7 @@ const Askers = () => {
 
 // --- SUB-COMPONENTE: MODAL DE CREACIÓN ---
 const CreateAskerModal = ({ onClose, onSuccess }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({ contactPerson: '', organizationName: '', phone: '', email: '', address: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -170,12 +176,12 @@ const CreateAskerModal = ({ onClose, onSuccess }) => {
     
     // Validación básica del email
     if (!formData.email) {
-      setError("El correo electrónico es obligatorio.");
+      setError(t('askers.emailRequired'));
       return;
     }
 
     if (formData.phone && !/^\+?\d{9,15}$/.test(formData.phone)) {
-      setError("El teléfono debe contener entre 9 y 15 dígitos.");
+      setError(t('askers.phoneInvalid'));
       return;
     }
 
@@ -201,47 +207,45 @@ const CreateAskerModal = ({ onClose, onSuccess }) => {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={!isLoading ? onClose : null} />
       <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl animate-in zoom-in duration-300">
         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">Nuevo Solicitante</h2>
+          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">{t('askers.modalTitle')}</h2>
           <button onClick={onClose} disabled={isLoading} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm border border-red-100">{error}</div>}
           
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700">Organización (ONG o Particular) <span className="text-red-500">*</span></label>
-            <input type="text" name="organizationName" value={formData.organizationName} onChange={handleChange} required disabled={isLoading} placeholder="Ej: ONG Local o 'Familia García'" className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm" />
-            <p className="text-[10px] text-slate-500 mt-1 leading-tight">
-              * Si es un particular, introduce un nombre descriptivo inventado.
-            </p>
+            <label className="text-sm font-semibold text-slate-700">{t('askers.orgField')} <span className="text-red-500">*</span></label>
+            <input type="text" name="organizationName" value={formData.organizationName} onChange={handleChange} required disabled={isLoading} placeholder={t('askers.orgPlaceholder')} className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm" />
+            <p className="text-[10px] text-slate-500 mt-1 leading-tight">{t('askers.orgHint')}</p>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700">Persona de Contacto <span className="text-red-500">*</span></label>
-            <input type="text" name="contactPerson" value={formData.contactPerson} onChange={handleChange} required disabled={isLoading} placeholder="Nombre y apellidos" className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm" />
+            <label className="text-sm font-semibold text-slate-700">{t('askers.contactField')} <span className="text-red-500">*</span></label>
+            <input type="text" name="contactPerson" value={formData.contactPerson} onChange={handleChange} required disabled={isLoading} placeholder={t('askers.contactPlaceholder')} className="w-full bg-white text-slate-900 px-4 py-2 rounded-lg border border-slate-300 outline-none text-sm" />
           </div>
           
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-4 mt-2">
             <div className="flex items-center gap-3">
               <Mail size={18} className="text-slate-400" />
               <div className="flex-1">
-                <input type="email" name="email" value={formData.email} onChange={handleChange} required disabled={isLoading} placeholder="Correo electrónico *" className="w-full bg-white text-slate-900 px-3 py-2 rounded-md border border-slate-300 text-sm" />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} required disabled={isLoading} placeholder={t('askers.emailPlaceholder')} className="w-full bg-white text-slate-900 px-3 py-2 rounded-md border border-slate-300 text-sm" />
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Phone size={18} className="text-slate-400" />
-              <input type="tel" name="phone" maxLength="15" value={formData.phone} onChange={handleChange} disabled={isLoading} placeholder="Teléfono" className="w-full bg-white text-slate-900 px-3 py-2 rounded-md border border-slate-300 text-sm" />
+              <input type="tel" name="phone" maxLength="15" value={formData.phone} onChange={handleChange} disabled={isLoading} placeholder={t('askers.phonePlaceholder')} className="w-full bg-white text-slate-900 px-3 py-2 rounded-md border border-slate-300 text-sm" />
             </div>
             <div className="flex items-center gap-3">
               <MapPin size={18} className="text-slate-400" />
-              <input type="text" name="address" value={formData.address} onChange={handleChange} disabled={isLoading} placeholder="Dirección" className="w-full bg-white text-slate-900 px-3 py-2 rounded-md border border-slate-300 text-sm" />
+              <input type="text" name="address" value={formData.address} onChange={handleChange} disabled={isLoading} placeholder={t('askers.addressPlaceholder')} className="w-full bg-white text-slate-900 px-3 py-2 rounded-md border border-slate-300 text-sm" />
             </div>
           </div>
 
           <div className="pt-2">
-            <p className="text-xs text-slate-500 mb-3"><span className="text-red-500">*</span> Campos obligatorios</p>
+            <p className="text-xs text-slate-500 mb-3"><span className="text-red-500">*</span> {t('common.required')}</p>
             <button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
               {isLoading && <Loader2 size={18} className="animate-spin" />}
-              {isLoading ? 'Guardando...' : 'Registrar Solicitante'}
+              {isLoading ? t('common.saving') : t('askers.register')}
             </button>
           </div>
         </form>

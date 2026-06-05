@@ -18,8 +18,8 @@ const createAsk = async (askData) => {
         where: { id: askData.askAuthorId }
     });
 
-    if (!author || author.role !== 'AUTHOR') {
-        const error = new Error('El autor especificado no existe o no es un AUTHOR');
+    if (!author || (author.role !== 'AUTHOR' && author.role !== 'ADMIN')) {
+        const error = new Error('El autor especificado no existe o no tiene permisos de creación (AUTHOR/ADMIN)');
         error.statusCode = 404;
         throw error;
     }
@@ -53,8 +53,12 @@ const getAllAsks = async (user, filters = {}) => {
         include: {
             asker: true, // Incluimos datos del Asker
             domain: true, // Incluimos los dominio asociado
-            fulfillments: true, // Para que el front veas las donaciones
-            givers: { select: { id: true, fullName: true } } // Incluimos los givers asignados
+            fulfillments: {
+                include: { giver: { select: { id: true, fullName: true } } },
+                orderBy: { deliveryDate: 'asc' }
+            },
+            givers: { select: { id: true, fullName: true } }, // Incluimos los givers asignados
+            story: { select: { id: true, isPublished: true } } // Para saber si ya tiene historia (CU-05)
         },
         where: {}
     };
@@ -120,7 +124,7 @@ const getAllAsks = async (user, filters = {}) => {
     return asks;
 };
 
-const updateAskStatus = async (askId, newStatus, user) => {
+const updateAskStatus = async (askId, newStatus, user, cancellationReason) => {
     // Verificamos que la Ask existe
     const existingAsk = await prisma.ask.findUnique({
         where: { id: askId }
@@ -163,10 +167,20 @@ const updateAskStatus = async (askId, newStatus, user) => {
         }
     }
 
-    // Actualizamos el estado de la Ask
+    // Al volver a CREATED se deshace la asignación: limpiamos givers y connector
+    const updateData = { status: newStatus };
+    if (newStatus === 'CREATED') {
+        updateData.givers = { set: [] };
+        updateData.connectorId = null;
+    }
+    // Al cancelar (soft-delete) guardamos el motivo para trazabilidad
+    if (newStatus === 'CANCELLED') {
+        updateData.cancellationReason = cancellationReason || 'Cancelada manualmente';
+    }
+
     const updatedAsk = await prisma.ask.update({
         where: { id: askId },
-        data: { status: newStatus }
+        data: updateData
     });
 
     return updatedAsk;
@@ -187,8 +201,19 @@ const matchAsk = async (askId, connectorId, giverIds) => {
 
     // Verificamos que esté en estado OPEN o MATCHED (ya que ahora podemos editar matches existentes)
     if (ask.status !== 'OPEN' && ask.status !== 'MATCHED') {
-        const error = new Error('La petición no está disponible para editar sus Givers.');
-        error.statusCode = 400; // Bad Request
+        const statusLabels = {
+            CREATED: 'NUEVA (pendiente de aprobación)',
+            FULFILLED: 'COMPLETADA',
+            CANCELLED: 'CANCELADA',
+            EXPIRED: 'CADUCADA',
+        };
+        const currentLabel = statusLabels[ask.status] || ask.status;
+        const error = new Error(
+            `No se pueden asignar donantes a esta petición porque está en estado "${currentLabel}". ` +
+            `Solo se pueden asignar donantes a peticiones en estado ABIERTA o ASIGNADA. ` +
+            (ask.status === 'CREATED' ? `Un administrador debe aprobar la petición primero para que pase a estado ABIERTA.` : '')
+        );
+        error.statusCode = 400;
         throw error;
     }
 
@@ -276,4 +301,97 @@ const updateAsk = async (askId, updateData, user) => {
     return updatedAsk;
 };
 
-module.exports = { createAsk, getAllAsks, updateAsk, updateAskStatus, matchAsk };
+const discardAsk = async (askId, user, cancellationReason) => {
+    const ask = await prisma.ask.findUnique({ where: { id: askId } });
+
+    if (!ask) {
+        const error = new Error('La petición no existe');
+        error.statusCode = 404;
+        throw error;
+    }
+    
+    // Seguridad: Un AUTHOR solo puede modificar sus propias Asks
+    if (user.role === 'AUTHOR' && ask.askAuthorId !== user.userId) {
+        const error = new Error('No tienes permisos sobre esta petición');
+        error.statusCode = 403;
+        throw error;
+    }
+    
+    // Solo podemos descartar si está caducada
+    if (ask.status !== 'EXPIRED') {
+        const error = new Error('Solo se pueden descartar peticiones en estado EXPIRED');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    return await prisma.ask.update({
+        where: { id: askId },
+        data: {
+            status: 'CANCELLED',
+            cancellationReason: cancellationReason || "Descartada tras expiración"
+        }
+    });
+};
+
+const republishAsk = async (askId, newDueDate, user) => {
+    const oldAsk = await prisma.ask.findUnique({ 
+        where: { id: askId },
+        include: { fulfillments: true } // Incluimos los fulfillments para el cálculo
+    });
+
+    if (!oldAsk) {
+        const error = new Error('La petición original no existe');
+        error.statusCode = 404;
+        throw error;
+    }
+    
+    if (user.role === 'AUTHOR' && oldAsk.askAuthorId !== user.userId) {
+        const error = new Error('No tienes permisos sobre esta petición');
+        error.statusCode = 403;
+        throw error;
+    }
+    
+    if (oldAsk.status !== 'EXPIRED') {
+        const error = new Error('Solo se pueden republicar peticiones en estado EXPIRED');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // Cálculo de cantidades pendientes (Edge Case: Peticiones a medias)
+    let remainingQuantity = oldAsk.quantityRequested;
+    let remainingHours = oldAsk.estimatedHours;
+
+    if (oldAsk.fulfillments && oldAsk.fulfillments.length > 0) {
+        const totalDelivered = oldAsk.fulfillments.reduce((sum, f) => sum + (f.quantityDelivered || 0), 0);
+        
+        if (oldAsk.type === 'THINGS' && oldAsk.quantityRequested) {
+            remainingQuantity = Math.max(1, oldAsk.quantityRequested - totalDelivered);
+        } else if (oldAsk.type === 'TIME' && oldAsk.estimatedHours) {
+            remainingHours = Math.max(1, oldAsk.estimatedHours - totalDelivered);
+        }
+    }
+
+    // Creamos la nueva petición copiando los datos, pero con estado CREATED y nueva fecha
+    const newAsk = await prisma.ask.create({
+        data: {
+            title: oldAsk.title,
+            description: oldAsk.description,
+            type: oldAsk.type,
+            status: 'CREATED',
+            dueDate: new Date(newDueDate),
+            askerId: oldAsk.askerId,
+            askAuthorId: oldAsk.askAuthorId,
+            domainId: oldAsk.domainId,
+            
+            // Campos especializados con el remanente
+            quantityRequested: remainingQuantity,
+            estimatedHours: remainingHours,
+            requiredSkill: oldAsk.requiredSkill,
+            serviceLocation: oldAsk.serviceLocation,
+        }
+    });
+
+    return newAsk;
+};
+
+module.exports = { createAsk, getAllAsks, updateAsk, updateAskStatus, matchAsk, discardAsk, republishAsk };

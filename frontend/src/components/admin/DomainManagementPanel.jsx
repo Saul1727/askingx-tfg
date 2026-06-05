@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Trash2, Search } from 'lucide-react';
 import { getDomains, createDomain, deleteDomain } from '../../services/askService';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * DomainManagementPanel Component
@@ -10,6 +11,7 @@ import { getDomains, createDomain, deleteDomain } from '../../services/askServic
  * It allows for viewing, creating, and deleting domains.
  */
 const DomainManagementPanel = () => {
+    const { t } = useLanguage();
     // State for storing the list of domains
     const [domains, setDomains] = useState([]);
     // State to handle loading status during data fetching
@@ -98,11 +100,11 @@ const DomainManagementPanel = () => {
             
             {/* Form to add a new domain */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80 mb-8">
-                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Añadir Nuevo Dominio</h3>
+                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">{t('admin.addDomain')}</h3>
                 <form onSubmit={handleCreateDomain} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Nombre <span className="text-red-500">*</span></label>
+                            <label className="text-xs font-bold text-slate-500 uppercase">{t('admin.domainName')} <span className="text-red-500">*</span></label>
                             <input 
                                 type="text"
                                 value={newDomain.name}
@@ -113,7 +115,7 @@ const DomainManagementPanel = () => {
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Descripción (Opcional)</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase">{t('admin.domainDesc')}</label>
                             <input 
                                 type="text"
                                 value={newDomain.description}
@@ -124,9 +126,9 @@ const DomainManagementPanel = () => {
                         </div>
                     </div>
                     <div className="flex justify-between items-center">
-                        <p className="text-xs text-slate-500"><span className="text-red-500">*</span> Campos obligatorios</p>
+                        <p className="text-xs text-slate-500"><span className="text-red-500">*</span> {t('common.required')}</p>
                         <button type="submit" className="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition-all active:scale-95 shadow-md">
-                            Guardar Dominio
+                            {t('admin.saveDomain')}
                         </button>
                     </div>
                 </form>
@@ -135,12 +137,12 @@ const DomainManagementPanel = () => {
             {/* List of existing domains */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4">
-                    <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Dominios Activos</h3>
+                    <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">{t('admin.domainsTitle')}</h3>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                         <input 
                             type="text" 
-                            placeholder="Buscar dominio..."
+                            placeholder={t('admin.searchDomain')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full sm:w-64 bg-white text-slate-900 border border-slate-300 rounded-md py-1.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"

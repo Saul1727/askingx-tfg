@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Loader2, Save, User, KeyRound, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { updateUserProfile, changePassword } from '../../services/userService';
 import { getUser } from '../../services/authService';
+import { useLanguage } from '../../context/LanguageContext';
 
 const ProfileModal = ({ isOpen, onClose }) => {
   const user = getUser();
+  const { t, setLang } = useLanguage();
   
   const [activeTab, setActiveTab] = useState('profile');
   const fileInputRef = useRef(null);
@@ -12,7 +14,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
   // Profile State
   const [profileData, setProfileData] = useState({
     fullName: user?.fullName || '',
-    avatarUrl: user?.avatarUrl || ''
+    avatarUrl: user?.avatarUrl || '',
+    preferredLanguage: user?.preferredLanguage || 'ES'
   });
   
   // Password State
@@ -29,13 +32,18 @@ const ProfileModal = ({ isOpen, onClose }) => {
     if (isOpen && user) {
       setProfileData({
         fullName: user.fullName || '',
-        avatarUrl: user.avatarUrl || ''
+        avatarUrl: user.avatarUrl || '',
+        preferredLanguage: user.preferredLanguage || 'ES'
       });
       setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setMessage({ type: '', text: '' });
       setActiveTab('profile');
     }
-  }, [isOpen, user]);
+    // OJO: dependemos SOLO de isOpen. getUser() devuelve un objeto nuevo en cada
+    // render, así que incluir 'user' aquí relanzaría el efecto continuamente y
+    // resetearía los campos y la pestaña mientras el usuario escribe.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -73,8 +81,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
       // Update local storage user data
       const storedUser = JSON.parse(localStorage.getItem('user'));
       localStorage.setItem('user', JSON.stringify({ ...storedUser, ...updatedUser }));
-      
-      setMessage({ type: 'success', text: 'Perfil actualizado con éxito. Los cambios se verán reflejados en breve.' });
+
+      // Aplicamos el idioma elegido a toda la interfaz (CU de internacionalización).
+      setLang(profileData.preferredLanguage);
+
+      setMessage({ type: 'success', text: t('profile.profileUpdated') });
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Error al actualizar el perfil.' });
     } finally {
@@ -88,7 +99,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
     setMessage({ type: '', text: '' });
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage({ type: 'error', text: 'Las nuevas contraseñas no coinciden.' });
+      setMessage({ type: 'error', text: t('profile.passwordsNoMatch') });
       setIsLoading(false);
       return;
     }
@@ -98,7 +109,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
         oldPassword: passwordData.oldPassword,
         newPassword: passwordData.newPassword
       });
-      setMessage({ type: 'success', text: 'Contraseña cambiada con éxito.' });
+      setMessage({ type: 'success', text: t('profile.passwordChanged') });
       setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Error al cambiar la contraseña.' });
@@ -115,7 +126,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
         <div className="bg-slate-50 border-b border-gray-100 p-6 flex justify-between items-center z-10">
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <User size={24} className="text-blue-600" />
-            Mi Perfil
+            {t('profile.title')}
           </h2>
           <button onClick={onClose} disabled={isLoading} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-700 disabled:opacity-30">
             <X size={20} />
@@ -128,14 +139,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
             className={`flex-1 py-3 text-sm font-bold flex justify-center items-center gap-2 transition-colors ${activeTab === 'profile' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
             onClick={() => { setActiveTab('profile'); setMessage({ type: '', text: '' }); }}
           >
-            <ImageIcon size={16} /> Datos
+            <ImageIcon size={16} /> {t('profile.tabData')}
           </button>
           <button 
             type="button"
             className={`flex-1 py-3 text-sm font-bold flex justify-center items-center gap-2 transition-colors ${activeTab === 'password' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
             onClick={() => { setActiveTab('password'); setMessage({ type: '', text: '' }); }}
           >
-            <KeyRound size={16} /> Contraseña
+            <KeyRound size={16} /> {t('profile.tabPassword')}
           </button>
         </div>
 
@@ -149,20 +160,35 @@ const ProfileModal = ({ isOpen, onClose }) => {
           {activeTab === 'profile' ? (
             <form onSubmit={handleProfileSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700">Nombre de Visualización <span className="text-red-500">*</span></label>
-                <input 
-                  type="text" 
-                  name="fullName" 
-                  value={profileData.fullName} 
-                  onChange={handleProfileChange} 
-                  disabled={isLoading} 
-                  className="w-full bg-slate-50 text-slate-900 px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all" 
-                  required 
+                <label className="text-sm font-semibold text-slate-700">{t('profile.displayName')} <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={profileData.fullName}
+                  onChange={handleProfileChange}
+                  disabled={isLoading}
+                  className="w-full bg-slate-50 text-slate-900 px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all"
+                  required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700">Foto de Perfil</label>
+                <label className="text-sm font-semibold text-slate-700">{t('profile.preferredLanguage')}</label>
+                <select
+                  name="preferredLanguage"
+                  value={profileData.preferredLanguage}
+                  onChange={handleProfileChange}
+                  disabled={isLoading}
+                  className="w-full bg-slate-50 text-slate-900 px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all"
+                >
+                  <option value="ES">Español</option>
+                  <option value="CAT">Català</option>
+                  <option value="EN">English</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-slate-700">{t('profile.avatar')}</label>
                 <div className="flex gap-4 items-center">
                   <div className="w-16 h-16 rounded-full border border-slate-200 overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center">
                     {profileData.avatarUrl ? (
@@ -184,7 +210,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                     disabled={isLoading}
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
                   >
-                    <Paperclip size={16} /> Adjuntar
+                    <Paperclip size={16} /> {t('profile.attach')}
                   </button>
                   {profileData.avatarUrl && (
                     <button 
@@ -192,21 +218,21 @@ const ProfileModal = ({ isOpen, onClose }) => {
                       onClick={() => setProfileData({ ...profileData, avatarUrl: '' })}
                       className="text-xs text-red-500 hover:underline"
                     >
-                      Quitar
+                      {t('profile.remove')}
                     </button>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-500">Soporta JPG, PNG o GIF (Máx. 2MB)</p>
+                <p className="text-[10px] text-slate-500">{t('profile.avatarHint')}</p>
               </div>
 
               <button type="submit" disabled={isLoading} className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} Guardar Perfil
+                {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {t('profile.saveProfile')}
               </button>
             </form>
           ) : (
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700">Contraseña Actual <span className="text-red-500">*</span></label>
+                <label className="text-sm font-semibold text-slate-700">{t('profile.currentPassword')} <span className="text-red-500">*</span></label>
                 <input 
                   type="password" 
                   name="oldPassword" 
@@ -219,7 +245,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700">Nueva Contraseña <span className="text-red-500">*</span></label>
+                <label className="text-sm font-semibold text-slate-700">{t('profile.newPassword')} <span className="text-red-500">*</span></label>
                 <input 
                   type="password" 
                   name="newPassword" 
@@ -233,7 +259,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-700">Confirmar Nueva Contraseña <span className="text-red-500">*</span></label>
+                <label className="text-sm font-semibold text-slate-700">{t('profile.confirmPassword')} <span className="text-red-500">*</span></label>
                 <input 
                   type="password" 
                   name="confirmPassword" 
@@ -247,7 +273,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
               </div>
 
               <button type="submit" disabled={isLoading} className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} Cambiar Contraseña
+                {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {t('profile.changePassword')}
               </button>
             </form>
           )}

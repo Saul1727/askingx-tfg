@@ -1,5 +1,13 @@
 const express = require('express');
-const { createAskController, getAllAsksController, updateAskController, updateAskStatusController, matchAskController } = require('../controllers/askController');
+const { 
+    createAskController, 
+    getAllAsksController, 
+    updateAskController, 
+    updateAskStatusController, 
+    matchAskController,
+    discardAskController,
+    republishAskController 
+} = require('../controllers/askController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 
@@ -22,5 +30,13 @@ router.patch('/:id/match', roleMiddleware(['CONNECTOR']), matchAskController);
 
 // PUT /api/asks/:id - Edición completa de la petición (desde el formulario)
 router.put('/:id', roleMiddleware(['AUTHOR', 'ADMIN']), updateAskController);
+
+// --- RUTAS CU-10: GESTIÓN DE EXPIRACIÓN ---
+
+// PUT /api/asks/:id/discard - Descartar una petición caducada
+router.put('/:id/discard', roleMiddleware(['AUTHOR', 'ADMIN']), discardAskController);
+
+// POST /api/asks/:id/republish - Republicar una petición caducada
+router.post('/:id/republish', roleMiddleware(['AUTHOR', 'ADMIN']), republishAskController);
 
 module.exports = router;

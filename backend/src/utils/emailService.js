@@ -1,33 +1,30 @@
 const nodemailer = require('nodemailer');
 
-// Configuración del transporter (servidor de correo)
-// PARA EL TFG: Puedes usar una cuenta de Gmail real activando "Contraseñas de aplicación"
-// o usar un servicio de pruebas como Ethereal (https://ethereal.email/)
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // O el proveedor que uses (Outlook, Yahoo...)
+    host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
+    port: parseInt(process.env.EMAIL_PORT) || 587,
+    secure: false,
     auth: {
-        user: process.env.EMAIL_USER || 'tu_correo@gmail.com', // Pon tu correo
-        pass: process.env.EMAIL_PASS || 'tu_contraseña_de_aplicacion' // Pon la contraseña de aplicación
-    }
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
 });
 
-/**
- * Envía un correo electrónico al realizar un match.
- * @param {string} to - Email del destinatario
- * @param {string} subject - Asunto del correo
- * @param {string} text - Contenido del correo en texto plano
- */
 const sendEmail = async (to, subject, text) => {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn(`⚠️  [EMAIL] Servicio no configurado. Omitiendo envío a ${to}. Define EMAIL_USER y EMAIL_PASS en .env`);
+        return;
+    }
     try {
         const info = await transporter.sendMail({
-            from: `"AskingX Plataforma" <${process.env.EMAIL_USER || 'tu_correo@gmail.com'}>`,
+            from: `"${process.env.EMAIL_FROM_NAME || 'AskingX Plataforma'}" <${process.env.EMAIL_USER}>`,
             to,
             subject,
             text,
         });
-        console.log(`✅ [EMAIL REAL SIMULADO] Correo enviado a ${to}. MessageId: ${info.messageId}`);
+        console.log(`✅ [EMAIL] Enviado a ${to}. MessageId: ${info.messageId}`);
     } catch (error) {
-        console.error(`❌ [ERROR EMAIL] No se pudo enviar a ${to}. Revisa las credenciales en emailService.js.`, error.message);
+        console.error(`❌ [ERROR EMAIL] No se pudo enviar a ${to}.`, error.message);
     }
 };
 

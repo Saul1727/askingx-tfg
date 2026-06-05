@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, LogOut, User, Menu } from 'lucide-react';
+import { ChevronDown, LogOut, User, Menu } from 'lucide-react';
 import { getUser, logout } from '../../services/authService';
+import { updateUserProfile } from '../../services/userService';
 import { useConfig } from '../../context/ConfigContext';
+import { useLanguage } from '../../context/LanguageContext';
 import ProfileModal from './ProfileModal';
 
 /**
@@ -10,11 +12,29 @@ import ProfileModal from './ProfileModal';
  */
 const Topbar = ({ onMenuClick }) => {
   const { config } = useConfig();
+  const { lang, setLang, t } = useLanguage();
   // Get user info from authService
   const user = getUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Cambio de idioma desde la barra superior: pide confirmación, aplica el idioma
+  // y lo guarda en el perfil del usuario (BD + localStorage).
+  const handleLanguageChange = async (newLang) => {
+    if (newLang === lang) return;
+    if (!window.confirm(t('confirmLanguage'))) return;
+    setLang(newLang);
+    try {
+      if (user) {
+        const updated = await updateUserProfile({ fullName: user.fullName, preferredLanguage: newLang });
+        const stored = JSON.parse(localStorage.getItem('user'));
+        localStorage.setItem('user', JSON.stringify({ ...stored, ...updated }));
+      }
+    } catch (error) {
+      console.error('No se pudo guardar la preferencia de idioma:', error);
+    }
+  };
   
   // Logic for initials (e.g., "Saúl G" -> "SG")
   const getInitials = (name) => {
@@ -25,7 +45,7 @@ const Topbar = ({ onMenuClick }) => {
   };
 
   const handleLogout = () => {
-    if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+    if (window.confirm(t('confirmLogout'))) {
       logout();
     }
   };
@@ -62,12 +82,18 @@ const Topbar = ({ onMenuClick }) => {
 
       {/* Right Side Tools */}
       <div className="flex items-center gap-2 md:gap-6">
-        <div className="hidden sm:flex text-xs font-medium space-x-2 text-slate-400">
-          <button className="text-blue-500 font-bold border-b border-blue-500 pb-0.5">ES</button>
-          <span>|</span>
-          <button className="hover:text-white transition-colors">CAT</button>
-          <span>|</span>
-          <button className="hover:text-white transition-colors">EN</button>
+        <div className="hidden sm:flex text-xs font-medium items-center space-x-2 text-slate-400">
+          {['ES', 'CAT', 'EN'].map((code, idx) => (
+            <span key={code} className="flex items-center space-x-2">
+              {idx > 0 && <span>|</span>}
+              <button
+                onClick={() => handleLanguageChange(code)}
+                className={lang === code ? 'text-blue-500 font-bold border-b border-blue-500 pb-0.5' : 'hover:text-white transition-colors'}
+              >
+                {code}
+              </button>
+            </span>
+          ))}
         </div>
 
         {/* User Profile Dropdown */}
@@ -84,7 +110,7 @@ const Topbar = ({ onMenuClick }) => {
               )}
             </div>
             <span className="hidden md:inline-block text-sm font-medium text-slate-200 group-hover:text-white">
-              {user ? user.fullName : 'Invitado'}
+              {user ? user.fullName : t('topbar.guest')}
             </span>
             <ChevronDown size={14} className={`text-slate-500 transition-transform hidden sm:block ${isDropdownOpen ? 'rotate-180' : ''}`} />
           </div>
@@ -102,15 +128,15 @@ const Topbar = ({ onMenuClick }) => {
                 onClick={() => { setIsDropdownOpen(false); setIsProfileModalOpen(true); }}
               >
                 <User size={16} />
-                Mi Perfil
+                {t('topbar.profile')}
               </button>
-              
-              <button 
+
+              <button
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
               >
                 <LogOut size={16} />
-                Cerrar Sesión
+                {t('topbar.logout')}
               </button>
             </div>
           )}

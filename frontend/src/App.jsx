@@ -5,8 +5,9 @@ import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import './App.css';
 import Askers from './pages/Askers';
-import Asks from './pages/Asks'; 
+import Asks from './pages/Asks';
 import ConnectorKanban from './pages/ConnectorKanban';
+import Stories from './pages/Stories';
 import AdminConfiguration from './pages/Admin/Configuration';
 import UserManagementPanel from './components/admin/UserManagementPanel';
 import DomainManagementPanel from './components/admin/DomainManagementPanel';
@@ -57,7 +58,7 @@ function App() {
           <Route path="askers" element={<Askers />} />
           
           <Route path="asks" element={<Asks />} />
-          <Route path="stories" element={<div className="p-8"><h2>Historias de Impacto</h2><p>Página en construcción...</p></div>} />
+          <Route path="stories" element={<Stories />} />
           <Route path="settings" element={<div className="p-8"><h2>Configuración</h2><p>Página en construcción...</p></div>} />
           
         </Route>

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { createUser } from '../../services/userService';
 import { getDomains } from '../../services/askService';
+import { useLanguage } from '../../context/LanguageContext';
 
 const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -101,7 +103,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
       <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl p-6 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-2">
-          <h2 className="text-xl font-bold text-slate-800">Crear Nuevo Usuario</h2>
+          <h2 className="text-xl font-bold text-slate-800">{t('admin.createUserTitle')}</h2>
           <button onClick={handleClose} className="p-2 hover:bg-slate-100 rounded-full">
             <X size={20} />
           </button>
@@ -110,7 +112,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-slate-700">Nombre Completo <span className="text-red-500">*</span></label>
+              <label htmlFor="fullName" className="block text-sm font-medium text-slate-700">{t('admin.fullName')} <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 id="fullName"
@@ -134,7 +136,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700">Contraseña Temporal <span className="text-red-500">*</span></label>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700">{t('admin.tempPassword')} <span className="text-red-500">*</span></label>
               <input
                 type="password"
                 id="password"
@@ -147,7 +149,7 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
             </div>
             
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-slate-700">Rol <span className="text-red-500">*</span></label>
+              <label htmlFor="role" className="block text-sm font-medium text-slate-700">{t('admin.role')} <span className="text-red-500">*</span></label>
               <select
                 id="role"
                 value={role}
@@ -170,11 +172,11 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
             {needsDomain && (
               <div className="pt-2 border-t border-slate-100">
                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Especialidades / Dominios <span className="text-red-500">*</span>
+                  {t('admin.specialties')} <span className="text-red-500">*</span>
                 </label>
                 {isLoadingDomains ? (
                   <div className="flex items-center gap-2 text-slate-500 text-sm py-2">
-                    <Loader2 size={16} className="animate-spin" /> Cargando dominios...
+                    <Loader2 size={16} className="animate-spin" /> {t('admin.loadingDomains')}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 rounded-md bg-slate-50">
@@ -190,13 +192,11 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
                       </label>
                     ))}
                     {domains.length === 0 && (
-                      <p className="text-xs text-slate-400 italic">No hay dominios disponibles. Créalos primero en la sección Conceptual.</p>
+                      <p className="text-xs text-slate-400 italic">{t('admin.noDomains')}</p>
                     )}
                   </div>
                 )}
-                <p className="text-[10px] text-slate-500 mt-1">
-                  * Selecciona las áreas en las que este usuario puede ayudar o conectar.
-                </p>
+                <p className="text-[10px] text-slate-500 mt-1">{t('admin.specialtiesHint')}</p>
               </div>
             )}
           </div>
@@ -204,14 +204,14 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
           {error && <p className="mt-4 text-sm text-red-600 font-medium bg-red-50 p-2 rounded border border-red-100">{error}</p>}
           
           <div className="mt-6">
-            <p className="text-xs text-slate-500 mb-3"><span className="text-red-500">*</span> Campos obligatorios</p>
+            <p className="text-xs text-slate-500 mb-3"><span className="text-red-500">*</span> {t('common.required')}</p>
             <div className="flex gap-3">
               <button type="button" onClick={handleClose} className="flex-1 bg-slate-100 text-slate-700 py-2.5 rounded-lg font-bold hover:bg-slate-200 transition-colors">
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button type="submit" disabled={isLoading} className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
                 {isLoading && <Loader2 size={18} className="animate-spin" />}
-                {isLoading ? 'Creando...' : 'Crear Usuario'}
+                {isLoading ? t('admin.creating') : t('admin.createUserBtn')}
               </button>
             </div>
           </div>

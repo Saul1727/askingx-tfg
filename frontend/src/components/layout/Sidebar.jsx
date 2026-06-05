@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { logout } from '../../services/authService';
 import { useConfig } from '../../context/ConfigContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * Sidebar Component
@@ -18,18 +19,19 @@ import { useConfig } from '../../context/ConfigContext';
  */
 const Sidebar = ({ userRole = 'AUTHOR', isMobileOpen, setIsMobileOpen }) => {
   const { config } = useConfig();
+  const { t } = useLanguage();
   const isAdmin = userRole === 'ADMIN';
   const isConnector = userRole === 'CONNECTOR';
   const isAuthorOrAdmin = userRole === 'AUTHOR' || isAdmin;
   const isConnectorOrAdmin = isConnector || isAdmin;
 
   const navItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard', show: true },
-    { name: 'Tablero (Kanban)', icon: <KanbanSquare size={20} />, path: '/connector/kanban', show: isConnectorOrAdmin },
-    { name: 'Organizaciones', icon: <Building2 size={20} />, path: '/askers', show: isAuthorOrAdmin },
-    { name: 'Peticiones', icon: <FileText size={20} />, path: '/asks', show: isAuthorOrAdmin },
-    { name: 'Historias', icon: <History size={20} />, path: '/stories', show: true },
-    { name: 'Configuración', icon: <Settings size={20} />, path: '/admin/configuration', show: isAdmin },
+    { name: t('sidebar.dashboard'), icon: <LayoutDashboard size={20} />, path: '/dashboard', show: true },
+    { name: t('sidebar.kanban'), icon: <KanbanSquare size={20} />, path: '/connector/kanban', show: isConnectorOrAdmin },
+    { name: t('sidebar.askers'), icon: <Building2 size={20} />, path: '/askers', show: isAuthorOrAdmin },
+    { name: t('sidebar.asks'), icon: <FileText size={20} />, path: '/asks', show: isAuthorOrAdmin },
+    { name: t('sidebar.stories'), icon: <History size={20} />, path: '/stories', show: true },
+    { name: t('sidebar.settings'), icon: <Settings size={20} />, path: '/admin/configuration', show: isAdmin },
   ];
 
   const handleClose = () => setIsMobileOpen(false);
@@ -77,16 +79,16 @@ const Sidebar = ({ userRole = 'AUTHOR', isMobileOpen, setIsMobileOpen }) => {
 
         {/* Logout Button */}
         <div className="p-4 mt-auto border-t border-slate-700">
-          <button 
+          <button
             onClick={() => {
-              if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+              if (window.confirm(t('confirmLogout'))) {
                 logout();
               }
             }}
             className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 w-full text-slate-300 hover:bg-red-500/10 hover:text-red-400 group"
           >
             <LogOut size={20} className="opacity-70 group-hover:opacity-100 shrink-0" />
-            <span className="text-sm font-medium truncate">Cerrar Sesión</span>
+            <span className="text-sm font-medium truncate">{t('sidebar.logout')}</span>
           </button>
         </div>
       </aside>

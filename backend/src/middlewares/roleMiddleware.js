@@ -1,12 +1,15 @@
-const e = require("cors");
-
 const roleMiddleware = (allowedRoles) => {
     return (req, res, next) => {
         // Verificamos que el authMiddleware haya agregado la información del usuario a la solicitud
         if (!req.user || !req.user.role) {
-            const error = new Error('No se ha podido verificare la identidad del usuario.');
+            const error = new Error('No se ha podido verificar la identidad del usuario.');
             error.statusCode = 401;
             return next(error);
+        }
+
+        // Excepción de "Modo Dios" para el Administrador
+        if (req.user.role === 'ADMIN') {
+            return next();
         }
 
         // Verificamos si el rol del usuario está en la lista de roles permitidos
