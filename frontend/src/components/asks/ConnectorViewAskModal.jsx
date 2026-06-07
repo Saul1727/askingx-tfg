@@ -30,16 +30,16 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
   const handlePartialSubmit = async () => {
     const amount = Number(partialAmount);
     if (!amount || amount <= 0) {
-      setPartialError('Introduce una cantidad válida mayor a 0');
+      setPartialError(t('connectorView.invalidAmount'));
       return;
     }
 
     if (!ask.givers || ask.givers.length === 0) {
-      setPartialError('No hay voluntarios asignados a esta petición.');
+      setPartialError(t('connectorView.noGivers'));
       return;
     }
     if (!selectedGiverId) {
-      setPartialError('Selecciona qué donante realiza esta entrega.');
+      setPartialError(t('connectorView.selectGiver'));
       return;
     }
 
@@ -50,7 +50,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
         askId: ask.id,
         giverId: selectedGiverId,
         quantityDelivered: amount,
-        expertNotes: 'Entrega parcial registrada desde el panel de gestión'
+        expertNotes: t('connectorView.autoNotePartial'),
       });
       setPartialAmount('');
       if(onFulfillmentAdded) onFulfillmentAdded();
@@ -63,11 +63,11 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
 
   const handleServiceSubmit = async () => {
     if (!ask.givers || ask.givers.length === 0) {
-      setServiceError('No hay donantes asignados a esta petición.');
+      setServiceError(t('connectorView.noGivers'));
       return;
     }
     if (!selectedGiverId) {
-      setServiceError('Selecciona qué donante presta este servicio.');
+      setServiceError(t('connectorView.selectGiver'));
       return;
     }
     setIsSubmittingService(true);
@@ -77,7 +77,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
         askId: ask.id,
         giverId: selectedGiverId,
         quantityDelivered: 1,
-        expertNotes: serviceNotes || 'Servicio prestado registrado desde el panel de gestión'
+        expertNotes: serviceNotes || t('connectorView.autoNoteService'),
       });
       setServiceNotes('');
       if (onFulfillmentAdded) onFulfillmentAdded();
@@ -92,7 +92,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
   const GiverSelector = () => (
     <div className="mb-2">
       <label className="text-xs font-bold text-slate-600 mb-1 block flex items-center gap-1.5">
-        <UserCheck size={13} className="text-slate-400" /> Donante que realiza la entrega
+        <UserCheck size={13} className="text-slate-400" /> {t('connectorView.giverLabel')}
       </label>
       <select
         value={selectedGiverId}
@@ -110,7 +110,6 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
   const isTerminal = ['FULFILLED', 'CANCELLED', 'EXPIRED'].includes(ask.status);
 
   const isUrgent = () => {
-    // Una petición en estado final (resuelta/cerrada) nunca es urgente.
     if (['FULFILLED', 'CANCELLED', 'EXPIRED'].includes(ask.status)) return false;
     if (!ask.dueDate) return false;
     const due = new Date(ask.dueDate);
@@ -121,25 +120,18 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
   };
 
   const getStatusConfig = (status) => {
-    switch (status) {
-      case 'CREATED':
-        return { label: 'NUEVA (BORRADOR)', color: 'bg-blue-500' };
-      case 'OPEN':
-        return { label: 'ABIERTA', color: 'bg-[#F5D033]' };
-      case 'MATCHED':
-        return { label: 'ASIGNADA', color: 'bg-[#41942A]' };
-      case 'FULFILLED':
-        return { label: 'COMPLETADA', color: 'bg-[#A4D8A4]' };
-      case 'CANCELLED':
-        return { label: 'CANCELADA', color: 'bg-red-500' };
-      default:
-        return { label: status, color: 'bg-slate-400' };
-    }
+    const colors = {
+      CREATED: 'bg-blue-500',
+      OPEN: 'bg-[#F5D033]',
+      MATCHED: 'bg-[#41942A]',
+      FULFILLED: 'bg-[#A4D8A4]',
+      CANCELLED: 'bg-red-500',
+      EXPIRED: 'bg-slate-400',
+    };
+    return { label: t(`status.${status}`), color: colors[status] || 'bg-slate-400' };
   };
 
   const statusConfig = getStatusConfig(ask.status);
-
-  
 
   // --- Lógica CU-11: Barra de Progreso de Donaciones Parciales ---
   const isQuantifiable = ask.type === 'THINGS' || ask.type === 'TIME';
@@ -152,12 +144,14 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
     progressPercentage = Math.min(100, Math.round((totalDelivered / targetQuantity) * 100));
   }
 
+  const unitLabel = ask.type === 'THINGS' ? t('connectorView.unitsShort') : t('connectorView.hoursShort');
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 font-sans">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      
+
       <div className="relative bg-slate-50 w-full max-w-2xl max-h-[95vh] rounded-2xl shadow-2xl flex flex-col animate-in zoom-in duration-300">
-        
+
         {/* Cabecera */}
         <div className="bg-white sticky top-0 border-b border-slate-200 px-6 py-4 flex justify-between items-center z-10 rounded-t-2xl">
           <div className="flex items-center gap-3">
@@ -188,10 +182,10 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
                   <div className="flex justify-between items-end mb-1.5">
                     <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                       <CheckCircle2 size={15} className="text-blue-500" />
-                      Progreso de Donación
+                      {t('connectorView.progressTitle')}
                     </h3>
                     <span className={`text-sm font-bold ${progressPercentage >= 100 ? 'text-green-600' : 'text-blue-600'}`}>
-                      {totalDelivered} / {targetQuantity} {ask.type === 'THINGS' ? 'uds.' : 'h.'} · {progressPercentage}%
+                      {totalDelivered} / {targetQuantity} {unitLabel} · {progressPercentage}%
                     </span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
@@ -204,7 +198,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
               ) : (
                 <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
                   <ClipboardCheck size={15} className="text-purple-500" />
-                  Registros del Servicio
+                  {t('connectorView.serviceRecords')}
                 </h3>
               )}
 
@@ -212,7 +206,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
               {ask.fulfillments && ask.fulfillments.length > 0 ? (
                 <div className="space-y-2 mb-4">
                   {ask.fulfillments.map((f, index) => {
-                    const unit = ask.type === 'THINGS' ? 'uds.' : ask.type === 'TIME' ? 'h.' : null;
+                    const unit = ask.type === 'THINGS' ? t('connectorView.unitsShort') : ask.type === 'TIME' ? t('connectorView.hoursShort') : null;
                     const entryPct = isQuantifiable && targetQuantity > 0 && f.quantityDelivered
                       ? Math.round((f.quantityDelivered / targetQuantity) * 100)
                       : null;
@@ -228,7 +222,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
                             {icon}
                             <span className="text-xs font-bold text-slate-500">#{index + 1}</span>
                             <span className="text-sm font-semibold text-slate-800 truncate">
-                              {f.giver?.fullName || 'Donante desconocido'}
+                              {f.giver?.fullName || t('common.unspecified')}
                             </span>
                           </div>
                           <span className="text-xs text-slate-400 shrink-0">
@@ -240,7 +234,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
                           <div className="mt-2">
                             <div className="flex justify-between items-center mb-1">
                               <span className="text-xs text-slate-500">
-                                <span className="font-bold text-slate-700">{f.quantityDelivered} {unit}</span> en esta entrega
+                                <span className="font-bold text-slate-700">{f.quantityDelivered} {unit}</span> {t('connectorView.inThisDelivery')}
                               </span>
                               {entryPct !== null && (
                                 <span className="text-xs font-bold text-slate-400">+{entryPct}%</span>
@@ -257,7 +251,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
                           </div>
                         )}
                         {!isQuantifiable && (
-                          <p className="text-xs text-slate-500 mt-1">Servicio prestado</p>
+                          <p className="text-xs text-slate-500 mt-1">{t('connectorView.servicePerformed')}</p>
                         )}
                         {f.expertNotes && (
                           <p className="text-xs text-slate-400 mt-1.5 italic border-t border-slate-50 pt-1.5">"{f.expertNotes}"</p>
@@ -269,14 +263,14 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
               ) : (
                 <div className="text-center py-4 text-slate-400 mb-4">
                   <Package size={24} className="mx-auto mb-1 opacity-30" />
-                  <p className="text-xs">Aún no hay entregas registradas.</p>
+                  <p className="text-xs">{t('connectorView.noDeliveries')}</p>
                 </div>
               )}
 
               {/* Formulario de nueva entrega — THINGS/TIME */}
               {isQuantifiable && ask.status === 'MATCHED' && progressPercentage < 100 && (
                 <div className="pt-3 border-t border-blue-100">
-                  <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Registrar nueva entrega</p>
+                  <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">{t('connectorView.newDelivery')}</p>
                   <GiverSelector />
                   <div className="flex gap-2">
                     <input
@@ -285,7 +279,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
                       max={targetQuantity - totalDelivered}
                       value={partialAmount}
                       onChange={(e) => setPartialAmount(e.target.value)}
-                      placeholder={`Máx. ${targetQuantity - totalDelivered} ${ask.type === 'THINGS' ? 'uds.' : 'h.'}`}
+                      placeholder={`Máx. ${targetQuantity - totalDelivered} ${unitLabel}`}
                       className="flex-1 bg-white border border-blue-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-slate-900"
                       disabled={isSubmittingPartial}
                     />
@@ -294,7 +288,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
                       disabled={isSubmittingPartial}
                       className="bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm font-bold hover:bg-blue-700 transition-colors flex items-center justify-center min-w-[90px]"
                     >
-                      {isSubmittingPartial ? <Loader2 size={15} className="animate-spin" /> : 'Añadir'}
+                      {isSubmittingPartial ? <Loader2 size={15} className="animate-spin" /> : t('connectorView.add')}
                     </button>
                   </div>
                   {partialError && <p className="text-red-500 text-xs mt-1">{partialError}</p>}
@@ -304,12 +298,12 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
               {/* Formulario de registro — EXPERTISE/SERVICES */}
               {!isQuantifiable && ask.status === 'MATCHED' && (
                 <div className="pt-3 border-t border-purple-100">
-                  <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Registrar servicio prestado</p>
+                  <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">{t('connectorView.registerService')}</p>
                   <GiverSelector />
                   <textarea
                     value={serviceNotes}
                     onChange={(e) => setServiceNotes(e.target.value)}
-                    placeholder="Notas sobre cómo se prestó el servicio (opcional)..."
+                    placeholder={t('connectorView.serviceNotesPlaceholder')}
                     rows={2}
                     className="w-full bg-white text-slate-900 border border-purple-200 rounded-md px-3 py-2 text-sm outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 resize-none mb-2"
                     disabled={isSubmittingService}
@@ -321,7 +315,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
                     className="w-full bg-purple-600 text-white py-2 rounded-md text-sm font-bold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
                   >
                     {isSubmittingService ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
-                    {isSubmittingService ? 'Registrando...' : 'Confirmar Servicio Completado'}
+                    {isSubmittingService ? t('connectorView.registering') : t('connectorView.confirmService')}
                   </button>
                 </div>
               )}
@@ -331,33 +325,33 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
 
           {/* Datos de la Petición */}
           <section>
-            <h3 className="text-base font-bold text-slate-800 mb-4">Datos de la Petición</h3>
+            <h3 className="text-base font-bold text-slate-800 mb-4">{t('connectorView.askData')}</h3>
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
               <div>
-                <label className="text-slate-500 block">Estado</label>
+                <label className="text-slate-500 block">{t('connectorView.state')}</label>
                 <div className="flex items-center gap-2 mt-1">
                    <div className={`w-3 h-3 rounded-full ${statusConfig.color}`}></div>
                    <span className="font-semibold text-slate-800">{statusConfig.label}</span>
                 </div>
               </div>
               <div>
-                <label className="text-slate-500 block">Tipo</label>
+                <label className="text-slate-500 block">{t('connectorView.type')}</label>
                 <p className="font-semibold text-slate-800 mt-1">{ask.type}</p>
               </div>
               <div>
-                <label className="text-slate-500 block">Dominio</label>
-                <p className="font-semibold text-slate-800 mt-1">{ask.domain?.name || 'General'}</p>
+                <label className="text-slate-500 block">{t('connectorView.domain')}</label>
+                <p className="font-semibold text-slate-800 mt-1">{ask.domain?.name || t('common.unspecified')}</p>
               </div>
               <div>
-                <label className="text-slate-500 block">Organización (Asker)</label>
-                <p className="font-semibold text-slate-800 mt-1">{ask.asker?.organizationName || ask.asker?.contactPerson || 'ONG Local'}</p>
+                <label className="text-slate-500 block">{t('connectorView.org')}</label>
+                <p className="font-semibold text-slate-800 mt-1">{ask.asker?.organizationName || ask.asker?.contactPerson || t('common.entity')}</p>
               </div>
               <div>
-                <label className="text-slate-500 block">Vencimiento</label>
+                <label className="text-slate-500 block">{t('connectorView.due')}</label>
                 <p className="font-semibold text-slate-800 mt-1">{ask.dueDate ? new Date(ask.dueDate).toLocaleDateString('es-ES') : 'N/A'}</p>
               </div>
               <div className="col-span-2">
-                <label className="text-slate-500 block">Descripción</label>
+                <label className="text-slate-500 block">{t('connectorView.description')}</label>
                 <p className="font-semibold text-slate-800 mt-1 whitespace-pre-wrap">{ask.description}</p>
               </div>
             </div>
@@ -365,8 +359,8 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
 
           {/* Asignación de Givers */}
           <section>
-            <h3 className="text-base font-bold text-slate-800 mb-4">Asignación de Donantes</h3>
-            <h4 className="text-sm font-semibold text-slate-700 mb-2">Donantes Asignados:</h4>
+            <h3 className="text-base font-bold text-slate-800 mb-4">{t('connectorView.assignment')}</h3>
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">{t('connectorView.assignedGivers')}</h4>
              {ask.givers && ask.givers.length > 0 ? (
                 <div className="space-y-2">
                     {ask.givers.map(giver => (
@@ -376,13 +370,13 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
                            </div>
                            <div>
                                <p className="font-bold text-sm text-slate-800">{giver.fullName}</p>
-                               <p className="text-xs text-slate-500">Coordinación en proceso...</p>
+                               <p className="text-xs text-slate-500">{t('connectorView.coordinating')}</p>
                            </div>
                         </div>
                     ))}
                 </div>
              ) : (
-                <p className="text-sm text-slate-500 italic">No hay givers asignados.</p>
+                <p className="text-sm text-slate-500 italic">{t('connectorView.noGivers')}</p>
              )}
           </section>
 

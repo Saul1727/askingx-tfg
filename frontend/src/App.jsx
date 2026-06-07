@@ -7,6 +7,7 @@ import './App.css';
 import Askers from './pages/Askers';
 import Asks from './pages/Asks';
 import ConnectorKanban from './pages/ConnectorKanban';
+import GiverParticipations from './pages/GiverParticipations';
 import Stories from './pages/Stories';
 import AdminConfiguration from './pages/Admin/Configuration';
 import UserManagementPanel from './components/admin/UserManagementPanel';
@@ -53,6 +54,7 @@ function App() {
 
           {/* Giver Routes */}
           <Route path="giver/history" element={<Dashboard />} />
+          <Route path="giver/participations" element={<GiverParticipations />} />
 
           {/*GLOBAL PLACEHOLDERS (Sidebar Navigation) */}
           <Route path="askers" element={<Askers />} />

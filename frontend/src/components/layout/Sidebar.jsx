@@ -6,6 +6,7 @@ import {
   History, 
   Settings,
   KanbanSquare,
+  HeartHandshake,
   LogOut,
   X
 } from 'lucide-react';
@@ -22,12 +23,14 @@ const Sidebar = ({ userRole = 'AUTHOR', isMobileOpen, setIsMobileOpen }) => {
   const { t } = useLanguage();
   const isAdmin = userRole === 'ADMIN';
   const isConnector = userRole === 'CONNECTOR';
+  const isGiver = userRole === 'GIVER';
   const isAuthorOrAdmin = userRole === 'AUTHOR' || isAdmin;
   const isConnectorOrAdmin = isConnector || isAdmin;
 
   const navItems = [
     { name: t('sidebar.dashboard'), icon: <LayoutDashboard size={20} />, path: '/dashboard', show: true },
     { name: t('sidebar.kanban'), icon: <KanbanSquare size={20} />, path: '/connector/kanban', show: isConnectorOrAdmin },
+    { name: t('sidebar.myParticipations'), icon: <HeartHandshake size={20} />, path: '/giver/participations', show: isGiver },
     { name: t('sidebar.askers'), icon: <Building2 size={20} />, path: '/askers', show: isAuthorOrAdmin },
     { name: t('sidebar.asks'), icon: <FileText size={20} />, path: '/asks', show: isAuthorOrAdmin },
     { name: t('sidebar.stories'), icon: <History size={20} />, path: '/stories', show: true },

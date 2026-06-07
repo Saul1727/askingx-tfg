@@ -122,32 +122,32 @@ const CreateAskModal = ({ isOpen, onClose, onAskCreated, askToEdit = null }) => 
   
   const getStatusOptions = () => {
     const currentStatus = askToEdit?.status || 'CREATED';
-    
+
     if (isAdmin) {
       return [
-        { value: 'CREATED', label: 'CREADA (En borrador/revisión)' },
-        { value: 'OPEN', label: 'ABIERTA (Buscando voluntarios)' },
-        { value: 'MATCHED', label: 'ASIGNADA (Coordinando entrega)' },
-        { value: 'FULFILLED', label: 'COMPLETADA (Ayuda entregada)' },
-        { value: 'CANCELLED', label: 'CANCELADA' },
+        { value: 'CREATED', label: t('askModal.optCreatedAdmin') },
+        { value: 'OPEN', label: t('askModal.optOpenAdmin') },
+        { value: 'MATCHED', label: t('askModal.optMatchedAdmin') },
+        { value: 'FULFILLED', label: t('askModal.optFulfilledAdmin') },
+        { value: 'CANCELLED', label: t('askModal.optCancelled') },
       ];
     }
 
     const options = [];
     if (currentStatus === 'CREATED') {
-      options.push({ value: 'CREATED', label: 'CREADA (Borrador)' });
-      options.push({ value: 'OPEN', label: 'ABIERTA (Publicar)' });
-      options.push({ value: 'CANCELLED', label: 'CANCELAR PETICIÓN' });
+      options.push({ value: 'CREATED', label: t('askModal.optCreatedDraft') });
+      options.push({ value: 'OPEN', label: t('askModal.optOpenPublish') });
+      options.push({ value: 'CANCELLED', label: t('askModal.optCancelAction') });
     } else if (currentStatus === 'OPEN') {
-      options.push({ value: 'OPEN', label: 'ABIERTA (Buscando...)' });
-      options.push({ value: 'CREATED', label: 'VOLVER A BORRADOR' });
-      options.push({ value: 'CANCELLED', label: 'CANCELAR PETICIÓN' });
+      options.push({ value: 'OPEN', label: t('askModal.optOpenSearching') });
+      options.push({ value: 'CREATED', label: t('askModal.optReturnDraft') });
+      options.push({ value: 'CANCELLED', label: t('askModal.optCancelAction') });
     } else {
       const labelMap = {
-        'MATCHED': 'ASIGNADA (En gestión por Connector)',
-        'FULFILLED': 'COMPLETADA',
-        'CANCELLED': 'CANCELADA',
-        'EXPIRED': 'CADUCADA'
+        'MATCHED': t('askModal.optMatchedLabel'),
+        'FULFILLED': t('askModal.optFulfilledAdmin'),
+        'CANCELLED': t('askModal.optCancelled'),
+        'EXPIRED': t('askModal.optExpired'),
       };
       options.push({ value: currentStatus, label: labelMap[currentStatus] || currentStatus });
     }

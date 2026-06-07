@@ -144,7 +144,7 @@ const Asks = () => {
                 <tr><td colSpan="7" className="py-10 text-center text-slate-400 font-medium">{t('asks.noAsks')}</td></tr>
               )}
               {!isLoading && filteredAsks.map((ask) => {
-                const askerName = ask.asker?.organizationName || ask.asker?.contactPerson || 'Sin especificar';
+                const askerName = ask.asker?.organizationName || ask.asker?.contactPerson || t('common.unspecified');
                 const formattedDate = ask.dueDate ? new Date(ask.dueDate).toLocaleDateString('es-ES') : '-';
                 return (
                   <TableRow 

@@ -94,7 +94,7 @@ const ConnectorKanban = () => {
          fetchData(true);
       }
       else {
-        alert("Transición no permitida directamente.");
+        alert(t('kanban.invalidTransition'));
       }
     } catch (error) {
       alert(error.message);
@@ -530,7 +530,7 @@ const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGive
       {/* Detalles Apilados */}
       <div className="space-y-1.5 text-[13px] text-slate-800">
         <p>
-          {t('kanban.org')}: <span className="font-medium">{ask.asker?.organizationName || ask.asker?.contactPerson || 'ONG Local'}</span>
+          {t('kanban.org')}: <span className="font-medium">{ask.asker?.organizationName || ask.asker?.contactPerson || t('common.entity')}</span>
         </p>
         <p>
           {t('kanban.type')}: <span className="font-medium">{ask.type}</span>

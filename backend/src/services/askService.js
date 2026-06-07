@@ -109,11 +109,13 @@ const getAllAsks = async (user, filters = {}) => {
         }
     }
 
-    // GIVER (solo su historial FULFILLMENT)
+    // GIVER: peticiones en las que participa actualmente (asignado vía relación givers)
+    // o en las que ha colaborado en el pasado (tiene al menos un Fulfillment suyo).
     else if (user.role === 'GIVER') {
-        query.where.fulfillments = {
-            some: { giverId: user.userId }
-        };
+        query.where.OR = [
+            { givers: { some: { id: user.userId } } },           // Asignado actualmente (MATCHED)
+            { fulfillments: { some: { giverId: user.userId } } }  // Histórico de entregas (CU-11)
+        ];
         if (filters.status) {
             query.where.status = filters.status;
         }

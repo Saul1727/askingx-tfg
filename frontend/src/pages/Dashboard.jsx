@@ -221,6 +221,68 @@ const AdminDashboard = () => {
   );
 };
 
+// --- GIVER DASHBOARD ---
+const GiverDashboard = () => {
+  const { t } = useLanguage();
+  const [asks, setAsks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getAllAsks()
+      .then(setAsks)
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  // El backend ya filtra las Asks del Giver (asignadas + histórico de entregas).
+  // Asignada = MATCHED (en OPEN aún no hay givers vinculados).
+  const assignedAsks = asks.filter(a => a.status === 'MATCHED');
+  const completedAsks = asks.filter(a => a.status === 'FULFILLED');
+
+  if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-slate-400" size={40}/></div>;
+
+  return (
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      <div>
+        <h2 className="text-2xl md:text-3xl font-bold text-slate-800">{t('dashboard.giverTitle')}</h2>
+        <p className="text-slate-500 text-sm mt-1">{t('dashboard.giverSubtitle')}</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+        <MetricCard icon={<Clock size={24} className="md:w-7 md:h-7" />} label={t('dashboard.giverAssigned')} value={assignedAsks.length} bgColor="bg-[#41942A]" />
+        <MetricCard icon={<CheckCircle2 size={24} className="md:w-7 md:h-7" />} label={t('dashboard.giverCompleted')} value={completedAsks.length} bgColor="bg-[#A4D8A4]" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <GiverAskList title={t('dashboard.giverAssigned')} asks={assignedAsks} emptyText={t('giver.noParticipations')} />
+        <GiverAskList title={t('dashboard.giverCompleted')} asks={completedAsks} emptyText={t('dashboard.giverNoCompleted')} />
+      </div>
+    </div>
+  );
+};
+
+// Lista compacta reutilizable para el panel del Giver
+const GiverAskList = ({ title, asks, emptyText }) => (
+  <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200">
+    <h3 className="text-base md:text-lg font-bold text-slate-800 mb-4">{title}</h3>
+    {asks.length === 0 ? (
+      <p className="text-slate-500 italic text-sm">{emptyText}</p>
+    ) : (
+      <ul className="divide-y divide-slate-100">
+        {asks.map(ask => (
+          <li key={ask.id} className="py-3 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-slate-800 truncate">{ask.title}</p>
+              <p className="text-xs text-slate-400 truncate">{ask.asker?.organizationName || ask.asker?.contactPerson || ''}</p>
+            </div>
+            <span className="text-xs font-semibold text-slate-400 uppercase shrink-0">{ask.domain?.name || ''}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+);
+
 // --- MAIN DASHBOARD ROUTER ---
 const Dashboard = () => {
   const currentUser = getUser();
@@ -234,6 +296,8 @@ const Dashboard = () => {
       return <ConnectorDashboard />;
     case 'AUTHOR':
       return <AuthorDashboard />;
+    case 'GIVER':
+      return <GiverDashboard />;
     default:
       return <div className="p-8">Vista no disponible para tu rol.</div>;
   }
