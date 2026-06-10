@@ -1,0 +1,767 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                       CARREGA DE LA CLASSE DE DOCUMENT                      %
+%                                                                             %
+% Les opcions admissibles son:                                                %
+%      12pt / 11pt            (cos dels tipus de lletra; no feu servir 10pt)  %
+%                                                                             %
+% catalan/spanish/english     (llengua principal del treball)                 %
+%                                                                             % 
+% french/italian/german...    (si necessiteu fer servir alguna altra llengua) %
+%                                                                             %
+% listoffigures               (El document inclou un Index de figures)        %
+% listoftables                (El document inclou un Index de taules)         %
+% listofquadres               (El document inclou un Index de quadres)        %
+% listofalgorithms            (El document inclou un Index d'algorismes)      %
+%                                                                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt,spanish,listoffigures,listoftables]{tfgetsinf}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                     CODIFICACIO DEL FITXER FONT                             %
+%                                                                             %
+%    windows fa servir normalment 'ansinew'                                   %
+%    amb linux es possible que siga 'latin1' o 'latin9'                       %
+%    Pero el mes recomanable es fer servir utf8 (unicode 8)                   %
+%                                          (si el vostre editor ho permet)    % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[utf8]{inputenc} 
+\usepackage{hyperref}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Para conseguir que la tabla de contenido no salga en rojo
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hypersetup{ colorlinks=true, linkcolor=black, urlcolor=cyan, }
+
+% Paquetes para diagramas (TikZ) y tablas
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{pgfgantt}
+\usepackage{graphicx}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                        ALTRES PAQUETS I DEFINICIONS                         %
+%                                                                             %
+% Carregueu aci els paquets que necessiteu i declareu les comandes i entorns  %
+%                                          (aquesta seccio pot ser buida)     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                        DADES DEL TREBALL                                    %
+%                                                                             %
+% titol, alumne, tutor i curs academic                                        %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{???? ????????? \\
+         ?????????????? ? ?????}
+\author{Saúl Alcázar López}
+\tutor{José Hilario Canós Cerdá}
+\curs{2025-2026}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                     PARAULES CLAU/PALABRAS CLAVE/KEY WORDS                  %
+%                                                                             %
+% Independentment de la llengua del treball, s'hi han d'incloure              %
+% les paraules clau i el resum en els tres idiomes                            %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\keywords{????, ?????????, ????, ?????????????????} % Paraules clau 
+         {?????, ???, ???????????????}              % Palabras clave
+         {?????, ????? ?????, ?????????????}        % Key words
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                              INICI DEL DOCUMENT                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              RESUMS DEL TFG EN VALENCIA, CASTELLA I ANGLES                  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{abstract}
+????
+\end{abstract}
+\begin{abstract}[spanish]
+????
+\end{abstract}
+\begin{abstract}[english]
+????
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                              CONTINGUT DEL TREBALL                          %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\mainmatter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                  INTRODUCCIO                                %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Introducción}
+\section{Motivación}
+Las ciudades contemporáneas concentran una cantidad enorme de recursos, capacidades y conocimiento técnico que, sin embargo, rara vez llegan donde más se necesitan. Organizaciones del tercer sector, instituciones educativas y ciudadanos conviven en el mismo territorio pero operan de forma aislada, separados por barreras relacionales y organizativas que hacen muy costoso el simple acto de conectar a quien tiene algo que ofrecer con quien lo necesita. El problema, en definitiva, no suele ser la falta de recursos: es el coste de movilizarlos.
+
+AskingX nace precisamente para atacar ese problema. No es una plataforma de voluntariado al uso ni un repositorio de subvenciones, sino un modelo relacional que introduce la figura del \textit{AskAuthor}: un facilitador humano encargado de escuchar a las organizaciones, traducir sus carencias en peticiones concretas (\textit{Asks}) y conectarlas con personas o entidades capaces de cubrirlas (\textit{Givers}) \cite{canos_manley_2024}. La mediación humana no es aquí un defecto del sistema, sino su característica más esencial.
+
+La motivación de este Trabajo de Fin de Grado surge de un problema práctico muy concreto. La iniciativa, aplicada actualmente bajo el nombre de \textit{AskingValència}, ha alcanzado un volumen de actividad en el que gestionar las peticiones de forma manual resulta inviable. Hacer el seguimiento del estado de cada \textit{Ask}, controlar qué perfiles pueden acceder a qué información y documentar las entregas parciales de ayuda consume el tiempo que los facilitadores deberían dedicar a construir relaciones.
+
+Por eso, la plataforma que se desarrolla en este trabajo no pretende reemplazar esa dimensión humana, sino liberarla de la carga operativa que la frena. El objetivo es construir una herramienta técnica —servidor y cliente web— que gestione de forma transparente el ciclo de vida de las peticiones, aplique un control de acceso estricto según el rol de cada usuario (RBAC) y proporcione a la red AskingX la base tecnológica necesaria para crecer y replicarse en otras ciudades.
+
+\section{Objetivos}
+Expuesta la motivación, conviene concretar qué se persigue exactamente con este trabajo. Las metas se han organizado en un objetivo general, que fija el propósito último del proyecto, y un conjunto de objetivos específicos de carácter técnico que articulan el camino para alcanzarlo.
+\subsection{Objetivo general}
+El objetivo de este trabajo es analizar el modelo organizativo de AskingX y desarrollar una plataforma tecnológica que apoye su gestión interna. La solución debe permitir documentar, gestionar y escalar el flujo de interacciones entre los actores de la red en el contexto de \textit{AskingValència}, integrando tanto la lógica de negocio del servidor como una interfaz de usuario adaptada a los distintos perfiles operativos del sistema.
+\subsection{Objetivos específicos}
+Para alcanzar el objetivo general, se han definido los siguientes objetivos de carácter técnico y funcional:
+
+\begin{enumerate}
+    \item \textbf{Analizar el modelo relacional de AskingX.} Comprender las dinámicas operativas y los cuatro roles del sistema (\textit{Asker}, \textit{Giver}, \textit{AskAuthor} y \textit{Connector}) para trasladar sus necesidades a un modelo de requisitos de software.
+
+    \item \textbf{Diseñar e implementar una arquitectura cliente-servidor.} Construir una solución que desacople la capa de presentación de la lógica de negocio, estructurando el servidor en capas independientes (Rutas, Controladores y Servicios) para facilitar el mantenimiento y la evolución del sistema.
+
+    \item \textbf{Modelar la persistencia de datos.} Diseñar y desplegar una base de datos PostgreSQL gestionada a través de Prisma ORM, que dé soporte a la trazabilidad completa de las peticiones y a las entregas parciales de ayuda.
+
+    \item \textbf{Garantizar la seguridad y el control de acceso.} Implementar autenticación basada en el estándar JWT y una política RBAC que asegure que cada perfil opere exclusivamente dentro de sus competencias funcionales.
+
+    \item \textbf{Desarrollar el ciclo de vida de las peticiones como una máquina de estados.} Programar la lógica de negocio para gestionar las transiciones entre estados (desde \textit{CREATED} hasta \textit{FULFILLED}), incluyendo un mecanismo de validación que controle las entregas parciales y bloquee cualquier sobredonación.
+
+    \item \textbf{Integrar servicios de Inteligencia Artificial.} Diseñar un módulo de conexión con un modelo de lenguaje (LLM) que automatice la generación supervisada de Historias de Impacto a partir de las colaboraciones completadas con éxito.
+\end{enumerate}
+\section{Impacto Esperado}
+La plataforma que se desarrolla en este trabajo no aspira a transformar la esencia del modelo AskingX. Lo que se busca es algo más concreto: reducir la fricción operativa que hoy limita su crecimiento. Se espera que su puesta en marcha genere un impacto positivo en cuatro ámbitos:
+
+\begin{itemize}
+    \item \textbf{Optimización operativa.} Al centralizar la gestión de las peticiones en una herramienta común, la carga administrativa de los \textit{AskAuthors} se reduce de forma notable. Que los facilitadores puedan invertir menos tiempo en seguimiento manual y más en construir relaciones es, en definitiva, el argumento central que justifica este desarrollo.
+
+    \item \textbf{Transparencia y trazabilidad del impacto.} Cada entrega de ayuda queda registrada de forma atómica, vinculando a un donante concreto con una necesidad específica. Esto no solo genera confianza entre los \textit{Givers}, sino que permite auditar el impacto real de las intervenciones y detectar qué áreas de la ciudad presentan mayor demanda no cubierta.
+
+    \item \textbf{Escalabilidad y transferencia del modelo.} Una arquitectura \textit{standalone} e independiente facilita que la solución pueda desplegarse en otras ciudades de la red AskingX. Al codificar los procesos en software, se reduce la dependencia de los conocimientos tácitos de los impulsores originales y se facilita que nuevos equipos adopten el modelo con menor fricción.
+
+    \item \textbf{Narrativa de impacto mediante IA.} La integración de un módulo de generación de historias permitirá a \textit{AskingValència} comunicar sus logros de forma más efectiva. Al automatizar la redacción de narrativas a partir de datos reales del sistema, se espera atraer nuevos colaboradores y reforzar la cultura de ayuda mutua que sostiene el proyecto.
+\end{itemize}
+
+\section{Estructura de la memoria}
+Para facilitar la lectura y comprensión de este Trabajo de Fin de Grado, el presente documento se ha organizado en los siguientes capítulos, siguiendo un flujo lógico desde la conceptualización hasta la validación del software:
+
+Capítulo 1. Introducción: Presenta el contexto general del proyecto, la motivación, los objetivos a alcanzar y el impacto esperado de la solución desarrollada.
+
+Capítulo 2. Estado del Arte: Analiza en profundidad el origen del modelo AskingX (basado en AskingBristol), su evolución hacia \textit{AskingValència} y la situación tecnológica actual de las plataformas del tercer sector, justificando la necesidad de una nueva solución.
+
+Capítulo 3. Metodología de Desarrollo: Describe el enfoque ágil e iterativo adoptado, las herramientas de gestión utilizadas y la planificación del trabajo en Sprints, diferenciando las fases de backend y frontend.
+
+Capítulo 4. Análisis del Problema: Detalla la especificación de requisitos del sistema, el modelado conceptual de la información, la evaluación de riesgos y el análisis del marco legal, con especial énfasis en el RGPD y el uso ético de la Inteligencia Artificial.
+
+Capítulo 5. Diseño de la solución: Describe la arquitectura de software propuesta (Backend y Frontend), justifica las decisiones tecnológicas adoptadas y expone el diseño detallado de la base de datos y la interfaz de usuario.
+
+Capítulo 6. Desarrollo de la solución propuesta: Explica el proceso de implementación técnica, abarcando la separación por capas lógicas, la persistencia de datos, la gestión de roles y la integración de la API del modelo de lenguaje (LLM).
+
+Capítulo 7. Implantación: Expone la estrategia de despliegue de la plataforma en un entorno de producción (Cloud / PaaS).
+
+Capítulo 8. Pruebas: Recoge los resultados de las pruebas funcionales, de validación y de seguridad (control de accesos) realizadas para garantizar la robustez del sistema.
+
+Capítulo 9. Conclusiones: Evalúa el grado de cumplimiento de los objetivos planteados inicialmente y reflexiona sobre la relación del proyecto con las competencias adquiridas durante el Grado.
+
+Capítulo 10. Trabajos futuros: Plantea las posibles líneas de evolución y mejora de la plataforma para su expansión a otras AskingCities.
+
+\chapter{Estado del Arte}
+
+\section{Contexto de la iniciativa AskingValència}
+
+El ecosistema de colaboración que hoy conocemos como \textit{AskingValència} no parte de cero, sino que recoge el aprendizaje de un modelo previo desarrollado en el Reino Unido. Por ello, antes de justificar la plataforma tecnológica que se propone en este trabajo, es imprescindible entender de dónde viene esta filosofía y cómo funcionaba el proyecto original: \textit{AskingBristol}.
+
+\textit{AskingBristol} nació a partir de un enfoque puramente experimental y \textit{bottom-up} (de abajo hacia arriba). Su planteamiento partió de una observación empírica fundamental: miles de organizaciones comunitarias poseen necesidades específicas —ya sea de tiempo, experiencia técnica o recursos materiales— que no saben cómo articular ni a quién solicitar. Paralelamente, existe un amplio grupo de empresas, instituciones y ciudadanos dispuestos a ayudar, pero que carecen de canales efectivos para descubrir cómo y dónde su contribución puede ser realmente útil \cite{social_innovation_bristol}.
+
+En lugar de construir un repositorio centralizado de voluntariado, el experimento de Bristol optó por un enfoque relacional. Se introdujo la figura humana del \textit{AskAuthor}, encargada de escuchar a las ONG locales, clarificar su contexto y traducir sus carencias en \textit{asks} (peticiones) claras y aplicables. Una vez planteadas, estas peticiones se inyectaban en las redes existentes de la ciudad, activando lo que los fundadores denominaron la "superconectividad" urbana. Este primer despliegue demostró que las conexiones a pequeña escala (microinteracciones) generaban una gran confianza y validaban la hipótesis de que las ciudades ya disponen de los recursos que necesitan, simplemente carecen de mecanismos ágiles para movilizarlos \cite[págs. 3-5]{canos_manley_2024}. La Figura~\ref{fig:modelo-askingx} resume esta lógica de mediación.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  actor/.style={rectangle, rounded corners, draw=black, thick, fill=blue!8,
+                 minimum width=2.6cm, minimum height=1.2cm, align=center}
+]
+  \node[actor] (asker) {\textbf{Asker}\\[2pt]\small Entidad con\\\small una necesidad};
+  \node[actor, right=3.2cm of asker] (author) {\textbf{AskAuthor}\\[2pt]\small Facilitador\\\small humano};
+  \node[actor, right=3.2cm of author] (giver) {\textbf{Giver}\\[2pt]\small Donante o\\\small experto};
+
+  \draw[-{Stealth}, thick] (asker) -- node[above, align=center]{\small expone su\\\small necesidad} (author);
+  \draw[-{Stealth}, thick] (author) -- node[above, align=center]{\small traduce en un\\\small \textit{Ask} y conecta} (giver);
+  \draw[-{Stealth}, thick] (giver) to[out=-150, in=-30] node[below]{\small aporta la ayuda} (asker);
+\end{tikzpicture}
+\caption[Modelo relacional de AskingX]{Modelo relacional de AskingX. El \textit{AskAuthor} actúa como mediador humano entre la entidad que necesita ayuda (\textit{Asker}) y quien puede aportarla (\textit{Giver}), cerrando el ciclo de la microinteracción.}
+\label{fig:modelo-askingx}
+\end{figure}
+
+A medida que el éxito empírico de Bristol se consolidaba, surgió el reto de la escalabilidad territorial. Para evitar que el sistema dependiera exclusivamente de sus impulsores originales, el proceso se formalizó, dando lugar a \textit{AskingX} como un marco conceptual replicable. Este modelo se estructuró en tres niveles operativos: opciones (adaptaciones locales), estrategias (ejes de transformación) y acciones (prácticas observables). Asimismo, se estableció la división estricta de roles (\textit{Askers}, \textit{Givers} y \textit{AskAuthors}) para minimizar los obstáculos a la hora de replicar el sistema en nuevas ciudades \cite{canos_manley_2024}.
+
+Es a partir de este modelo replicable cuando nace \textit{AskingValència}. Su aplicación local mantiene la esencia ágil y poco jerarquizada del proyecto original, aunque se enfrenta al reto de construir desde cero su propia red de usuarios. La puesta en marcha en Valencia ha servido para confirmar la teoría del modelo original: es imprescindible contar con facilitadores formados, es vital conseguir \textit{quick wins} (victorias tempranas) para que la gente confíe en el sistema y, fundamentalmente, se necesita una buena narrativa. Registrar y compartir las historias de éxito se ha convertido en la herramienta principal para atraer a nuevos participantes y hacer crecer el ecosistema de forma orgánica.
+\section{Situación actual de la tecnología (Plataformas del Tercer Sector)}
+
+La transformación digital ha impactado profundamente en la forma en que las organizaciones operan. Sin embargo, en el ámbito de la innovación social, la adopción tecnológica ha sido fragmentada y, a menudo, ha estado alejada de las dinámicas reales de los ecosistemas cívicos \cite[págs. 54-56]{dsi_europe_report}. Esta brecha no responde únicamente a un desinterés, sino a barreras estructurales bien documentadas: presupuestos ajustados y una capacidad digital interna limitada condicionan qué herramientas pueden permitirse realmente las entidades del tercer sector \cite{godefroid2024barriers}. Con esa salvedad presente, las soluciones de software orientadas a este ámbito pueden categorizarse en tres grandes grupos, todos ellos con limitaciones notables a la hora de implementar un modelo relacional como \textit{AskingX}:
+
+\textbf{1. Plataformas de voluntariado y portales de conexión (\textit{matchmaking}):}
+Este es el modelo predominante en Internet, funcionando esencialmente como un repositorio estático donde las ONG publican ``ofertas'' o necesidades y los ciudadanos se inscriben. Si bien son herramientas útiles para movilizaciones masivas, operan bajo una lógica puramente transaccional ---muy similar a un portal de empleo corporativo---. Al delegar el emparejamiento a simples bases de datos, se debilita la labor de intermediación. Esta despersonalización dificulta la construcción del compromiso a largo plazo: la evidencia empírica muestra que los voluntarios que no perciben apoyo organizativo ni una relación directa con el impacto de su contribución presentan menor vinculación con la organización \cite{boezeman_volunteer_retention}. En contextos de innovación cívica, este modelo transaccional resulta ineficaz.
+
+\textbf{2. Sistemas de gestión institucional (ERPs y CRMs para ONG):}
+Si bien los sistemas de gestión institucional actuales pueden considerarse técnicamente maduros, presentan barreras críticas de comunicación y carecen de una visión arquitectónica compartida, lo que deriva en escenarios de integración complejos que terminan aislando a las organizaciones entre sí.
+
+\textbf{3. Redes sociales genéricas y mensajería instantánea:}
+Resulta habitual que las organizaciones acaben coordinando su actividad a través de aplicaciones de mensajería o redes sociales generalistas, por ser las herramientas que ya tienen a su alcance. Apoyar la coordinación cívica sobre infraestructuras comerciales conlleva, sin embargo, un coste poco visible: estas plataformas no se diseñaron para el bien común, sino para captar la atención del usuario, y dejan la actividad social sin trazabilidad ni control real sobre los datos \cite{civic_engagement_platforms}. En la práctica, esto expone a personas vulnerables a riesgos de vigilancia, demostrando que el marco del RGPD a menudo falla en protegerlas equitativamente en entornos digitales informales \cite{vanzoonen2022data}.
+
+La Tabla~\ref{tab:comparativa-plataformas} sintetiza las diferencias entre estos tres enfoques y el modelo que se propone en este trabajo.
+
+\begin{table}[ht]
+\centering
+\caption[Comparativa de soluciones del tercer sector]{Comparativa de los principales enfoques tecnológicos del tercer sector frente al modelo AskingX.}
+\label{tab:comparativa-plataformas}
+\footnotesize
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\textwidth}{%
+  >{\raggedright\arraybackslash}p{3cm}%
+  >{\raggedright\arraybackslash}X%
+  >{\raggedright\arraybackslash}X%
+  >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Enfoque} & \textbf{Emparejamiento} & \textbf{Mediación humana} & \textbf{Trazabilidad del impacto} \\
+\midrule
+Plataformas de \mbox{\textit{matchmaking}} & Automático, delegado a una base de datos & Mínima; el voluntario se autogestiona & Limitada, orientada a la inscripción \\
+ERPs y CRMs para ONG & Manual e interno a cada organización & Burocrática, centrada en la gestión & Alta, pero aislada en silos \\
+Redes sociales genéricas & Informal y viral, sin criterio & Inexistente & Nula, con riesgos para los datos \\
+\textbf{AskingX (propuesta)} & Relacional, guiado por el \mbox{\textit{AskAuthor}} & Central; es el núcleo del modelo & Atómica, registrada en cada \mbox{\textit{Fulfillment}} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Crítica al estado del arte}
+
+La revisión del panorama tecnológico revela un patrón común a las tres categorías analizadas: la tendencia a que el \textit{software} ocupe el lugar de la mediación humana en vez de apoyarla. Las plataformas de \textit{matchmaking} delegan en un algoritmo una labor de intermediación que exige contexto y criterio; los ERPs resuelven la gestión interna pero no la conexión entre organizaciones; y las redes sociales aportan alcance a costa de la trazabilidad y la privacidad. Son herramientas válidas para los fines para los que se diseñaron, pero ninguna encaja con un modelo donde el valor reside precisamente en la relación de confianza que construye una persona.
+
+Conviene matizar este diagnóstico para no caer en una simplificación. No se trata de que la tecnología sea ajena al tercer sector, ni de que estas plataformas carezcan de utilidad. El desajuste es más sutil: la mayoría de estas soluciones parten de una lógica transaccional —emparejar oferta y demanda— cuando lo que sostiene a un ecosistema como \textit{AskingX} es una lógica relacional. Esa diferencia de fondo es la que explica por qué una herramienta genérica, por buena que sea, rara vez se adapta bien a este contexto. La tecnología, en este ámbito, rinde mejor cuando actúa como una infraestructura discreta al servicio del facilitador, y no como el centro de la acción.
+
+\section{Propuesta}
+
+Ante este vacío, este trabajo plantea desarrollar una solución a medida en lugar de adaptar una herramienta existente. La idea rectora es sencilla: construir una plataforma que empodere al facilitador (\textit{AskAuthor}) en vez de reemplazarlo. En la práctica, esto se traduce en un sistema web ligero que asuma la parte mecánica del trabajo —el seguimiento del estado de cada petición, el control de quién puede hacer qué y el registro de las entregas— y reserve a la persona las tareas que requieren criterio humano: escuchar, interpretar y conectar.
+
+De este planteamiento se derivan tres requisitos que guían el resto de la memoria. Primero, la herramienta debe reducir la carga administrativa en lugar de añadir más: una solución que acabe burocratizando el proceso resultaría contraproducente. Segundo, debe registrar el ciclo de vida de cada petición con la precisión suficiente para que el impacto sea auditable y, a partir de ahí, narrable. Y tercero, ha de ser segura y respetuosa con los datos de unos colectivos a menudo vulnerables. Los capítulos siguientes concretan cómo se aterrizan estas ideas en decisiones de análisis, diseño e implementación.
+\chapter{Metodología de Desarrollo}
+\section{Enfoque ágil e iterativo}
+
+Para el desarrollo de este proyecto se ha optado por una metodología ágil e iterativa. Esta elección se puede ver justificada por la naturaleza del modelo AskingX, el cual, requiere una adaptación constante a las necesidades de los actores sociales y permite recopilar resultados funcionales desde las primeras etapas del desarrollo del proyecto.
+
+Conviene una precisión honesta antes de continuar. Al tratarse de un proyecto individual, no se aplicaron las ceremonias formales de Scrum ni se empleó una herramienta específica de seguimiento de \textit{sprints}; el registro real de la evolución del trabajo lo constituye el historial de \textit{commits} del repositorio. Por ello, cuando en esta memoria se habla de \textit{Sprints} se hace referencia a iteraciones temáticas —de una duración aproximada de dos semanas cada una— organizadas en torno a un dominio concreto del sistema, más que a ciclos cronometrados con plazos rígidos. Las marcas de tiempo de los \textit{commits} ofrecen, de forma implícita, la traza de esa cadencia.
+
+Cada iteración se centró en un área del sistema (gestión de usuarios, ciclo de vida de las peticiones, seguridad y control de acceso, entre otras) y recorrió las fases de análisis, modelado de datos, implementación y prueba antes de pasar a la siguiente. Este enfoque incremental permitió consolidar el núcleo arquitectónico del sistema antes de abordar las funcionalidades de mayor complejidad. El seguimiento se apoyó en reuniones periódicas con el tutor del trabajo, en las que se validaba lo construido y se reorientaban las prioridades de la siguiente iteración.
+
+La naturaleza versátil de la metodología ha resultado fundamental para la evolución del sistema, permitiendo reajustar los requisitos en base a la retroalimentación continua. Un ejemplo representativo de esta adaptación se produjo durante la definición del ciclo de vida de una petición (\textit{Ask}). Inicialmente, se planteó que la asignación de un voluntario (\textit{Match}) desencadenara de forma automatizada el cambio al estado de completado (\textit{Fulfilled}). Sin embargo, tras la validación con los \textit{stakeholders}, se concluyó que el hecho de que la  conexión existiera no garantizaba el éxito de la donación. Por tanto, se redefinió este flujo iterativamente para introducir un patrón de \textit{Human-in-the-loop}, estableciendo que el trabajador social (\textit{AskAuthor}) debe monitorizar y confirmar manualmente la entrega efectiva de la ayuda. Este cambio arquitectónico pudo ser asimilado de forma natural gracias a la ausencia de rigidez de la metodología empleada.
+
+A modo de mapa, la Tabla~\ref{tab:sprints} resume las cinco iteraciones en que se organizó el desarrollo; las secciones posteriores las detallan una a una.
+
+\begin{table}[ht]
+\centering
+\caption[Resumen de las iteraciones de desarrollo]{Resumen de las cinco iteraciones (\textit{Sprints}) en que se organizó el desarrollo.}
+\label{tab:sprints}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{%
+  c l%
+  >{\raggedright\arraybackslash}X%
+  >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Sprint} & \textbf{Fase} & \textbf{Foco principal} & \textbf{Resultado principal} \\
+\midrule
+1 & Backend & Modelado de datos y arquitectura base & Esquema \mbox{\textit{Prisma}} y base de datos relacional \\
+2 & Backend & Seguridad, RBAC y autenticación & Autenticación JWT y \textit{middlewares} de rol \\
+3 & Backend & Lógica relacional y \textit{endpoints} & Máquina de estados y validación con \mbox{\textit{Zod}} \\
+4 & Frontend & Vistas y componentes base & Catálogo de componentes \mbox{\textit{React}} reutilizables \\
+5 & Frontend & Integración con la API y estado & Tablero \textit{Kanban} y capa de servicios \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Herramientas de gestión y desarrollo}
+
+Con el fin de dar soporte a la metodología ágil y garantizar la calidad del ciclo de desarrollo, se ha seleccionado un conjunto de herramientas acordes a los estándares actuales de la industria del \textit{software}. La Tabla~\ref{tab:herramientas} las recoge agrupadas según su función dentro del proyecto.
+
+\begin{table}[ht]
+\centering
+\caption[Herramientas de gestión y desarrollo]{Herramientas empleadas durante el desarrollo, agrupadas por su función.}
+\label{tab:herramientas}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{%
+  >{\raggedright\arraybackslash}p{3.2cm}%
+  >{\raggedright\arraybackslash}p{3.2cm}%
+  >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Herramienta} & \textbf{Categoría} & \textbf{Uso en el proyecto} \\
+\midrule
+\textit{Git} y \textit{GitHub} & Control de versiones & Repositorio central; el historial de \textit{commits} sirve como registro de la evolución del proyecto \\
+\textit{Visual Studio Code} & Entorno de desarrollo & Edición del código de \textit{backend} y \textit{frontend} \\
+\textit{Postman} & Pruebas de API & Validación aislada de los \textit{endpoints} de la API REST \\
+Herramientas de IA generativa & Prototipado & Generación de los \textit{mockups} iniciales de las vistas \\
+\textit{Node.js} y \textit{Express} & \textit{Runtime} y \textit{framework} \textit{backend} & Lógica de servidor y exposición de la API REST \\
+\textit{PostgreSQL} (\textit{Supabase}) & Base de datos & Persistencia relacional gestionada en la nube \\
+\textit{Prisma ORM} & Acceso a datos & Mapeo objeto-relacional y diseño dirigido por modelos (\textit{Model-Driven Design}) \\
+\textit{Zod} & Validación & Validación estricta de los esquemas de datos entrantes \\
+\textit{React} y \textit{Vite} & \textit{Framework} y empaquetador \textit{frontend} & Interfaz SPA con recarga de módulos en caliente (HMR) \\
+\textit{Tailwind CSS} & Estilos & Maquetación \textit{utility-first} basada en componentes \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+
+\section{Ejecución de Sprints: Fase Backend}
+
+El desarrollo de la lógica del servidor (\textit{backend}) se estructuró en tres iteraciones principales. El objetivo de esta fase fue construir una Interfaz de Programación de Aplicaciones (API) RESTful robusta, capaz de gestionar las reglas de negocio propios del modelo AskingX antes de exponer cualquier funcionalidad a la interfaz de usuario.
+
+\subsection{Sprint 1: Modelado de datos y arquitectura base}
+La primera fase se dedicó íntegramente a la adaptación del diseño conceptual (diagramas UML) a un esquema de base de datos relacional físico. Para este propósito, se integró \textit{Prisma ORM} \cite{prisma_docs}, una herramienta de mapeo objeto-relacional. La adopción de esta tecnología supuso uno de los primeros retos técnicos del proyecto debido a la curva de aprendizaje inicial que requiere su lenguaje de definición de esquemas (\textit{schema.prisma}). 
+
+Durante este ciclo, se implementaron decisiones arquitectónicas críticas para la escalabilidad del sistema. Por ejemplo, se estableció una relación de uno a muchos (1:N) entre las peticiones (\textit{Asks}) y los dominios de conocimiento (\textit{Domains}), garantizando una categorización estricta. Paralelamente, se modeló una relación de muchos a muchos (N:M) para gestionar las especialidades de los usuarios con rol de \textit{Connector} y \textit{Giver}, lo que permite al sistema reflejar la realidad multidisciplinar de los voluntarios. La sincronización de este esquema generó los artefactos necesarios para dotar al entorno de desarrollo de un tipado estricto.
+
+\subsection{Sprint 2: Seguridad, RBAC y autenticación}
+Una vez consolidada la capa de persistencia, el segundo \textit{Sprint} se centró en blindar el acceso a los recursos. Se diseñó un sistema de autenticación sin estado (\textit{stateless}) basado en el estándar JSON Web Tokens (JWT) \cite{jwt_rfc}, delegando el cifrado unidireccional de las contraseñas a la biblioteca \textit{Bcrypt} \cite{bcrypt_docs}.
+
+El mayor esfuerzo de esta iteración recayó en la implementación de un Control de Acceso Basado en Roles (RBAC). Dado que el ecosistema AskingX interactúa con cuatro perfiles altamente diferenciados (\textit{Admin}, \textit{Author}, \textit{Connector} y \textit{Giver}), se desarrollaron \textit{middlewares} de interceptación al sistema de rutas de (\textit{Express}). Estos filtros no solo verifican la validez criptográfica del token, sino que evalúan los privilegios de la petición antes de ceder el control a la capa de servicios. De este modo, se garantizó estructuralmente que acciones críticas, como la creación de una petición de ayuda, quedaran restringidas exclusivamente al personal autorizado (\textit{AskAuthor}).
+
+\subsection{Sprint 3: Lógica relacional y endpoints de negocio}
+Este ciclo representó el núcleo de la complejidad del servidor. El reto principal fue doble: por un lado, asimilar y programar el intrincado flujo de estados de una petición (\textit{Ask}) entre los diferentes actores sociales; y por otro, dominar la librería \textit{Zod} \cite{zod_doc} para la validación estricta de esquemas de entrada. 
+
+El uso conjunto de \textit{Zod} y \textit{Express} exigió la refactorización del manejo de errores globales del servidor, ya que inicialmente los fallos de validación en la estructura de los datos entrantes provocaban la caída del proceso de \textit{Node.js}. Se implementó una capa de control (\textit{Fail-Safe}) capaz de capturar estas excepciones y devolver códigos de estado HTTP 400 (\textit{Bad Request}) con descripciones semánticas.
+
+En el ámbito del negocio, se programaron los controladores encargados de las transiciones de estado de las peticiones (desde \textit{CREATED} hasta \textit{FULFILLED}). Se implementaron medidas de seguridad avanzadas como el mecanismo \textit{Anti-Spoofing}, mediante el cual la API ignora cualquier identificador de autoría enviado en el cuerpo de la petición y lo sustituye por el identificador real extraído de la firma del token JWT. Finalmente, se consolidó el filtro de privacidad a nivel de consulta (\textit{Query-level filtering}), asegurando que, al solicitar el listado de peticiones, el motor de base de datos solo devuelva los registros que correspondan a la especialidad o propiedad de cada usuario.
+
+\section{Planificación de Sprints: Fase Frontend}
+
+Completado y documentado el \textit{backend}, el esfuerzo de desarrollo se trasladó a la construcción del cliente web (\textit{frontend}). Esta fase se planificó en dos ciclos de trabajo orientados a ofrecer una experiencia de usuario (UX) fluida, reactiva y tolerante a fallos.
+
+\subsection{Sprint 4: Diseño de vistas (Mockups) y componentes base}
+La cuarta iteración abordó la maquetación y estructura de la interfaz. Se seleccionó la librería \textit{React} (en su versión 19) \cite{react_doc} junto con el empaquetador \textit{Vite} \cite{vite_docs}, priorizando el rendimiento en el entorno de desarrollo mediante el reemplazo de módulos en caliente (HMR). El apartado visual se resolvió empleando \textit{Tailwind CSS} \cite{tailwind_docs}, un marco de trabajo de utilidades que permitió evitar la saturación de archivos de estilos globales y aplicar principios de responsabilidad única a nivel de presentación.
+
+Durante este \textit{Sprint}, se construyó un catálogo de componentes reutilizables (formularios dinámicos, modales, barras de navegación y tarjetas de estadística) respetando el principio DRY (\textit{Don't Repeat Yourself}). Uno de los desafíos técnicos destacables en la creación de los formularios fue la gestión algorítmica de zonas horarias (\textit{Timezones}). Para evitar la introducción de fechas inconsistentes en el campo de vencimiento (\textit{dueDate}), se programó una lógica de cálculo en tiempo real basada en la zona horaria local del navegador del cliente, bloqueando la selección de fechas pasadas nativamente en HTML5 y transformando posteriormente el dato al estándar ISO 8601 para su correcto almacenamiento.
+
+\subsection{Sprint 5: Integración con la API y gestión del estado}
+El último ciclo de desarrollo se dedicó a la interconexión asíncrona entre la interfaz construida y los \textit{endpoints} del servidor mediante la API \textit{Fetch} \cite{mdn_fetch}. Se extrajo toda la lógica de comunicación HTTP a una capa de servicios independiente (\textit{authService}, \textit{askService}, etc.), aislando a los componentes de la vista de la responsabilidad de gestionar peticiones de red.
+
+La dificultad central de esta fase radicó en la programación defensiva de la aplicación. Se instruyó al código cliente para validar exhaustivamente las respuestas del servidor antes de renderizarlas en el Modelo de Objetos del Documento (DOM), evitando caídas críticas de la aplicación ante potenciales respuestas malformadas. Por último, se desarrolló la funcionalidad estrella para el rol del \textit{Connector}: un tablero interactivo basado en la metodología \textit{Kanban}. Haciendo uso de la API nativa de \textit{Drag and Drop} de HTML5 \cite{mdn_dnd}, se programó un sistema fluido y visual que permite a los coordinadores arrastrar tarjetas de peticiones entre distintas columnas, automatizando las llamadas al \textit{backend} para asignar voluntarios y gestionar las transiciones de estado en tiempo real.
+
+\chapter{Análisis del Problema}
+
+Antes de escribir una sola línea de código hubo que resolver un problema previo: traducir el modelo AskingX —que hasta ese momento vivía en la práctica diaria de los facilitadores— a un conjunto de requisitos concretos y verificables. Este capítulo recoge ese trabajo de análisis, desde la captura de requisitos hasta el estudio de riesgos, el marco legal y la viabilidad económica de la solución.
+
+\section{Especificación de Requisitos}
+
+La especificación parte de una particularidad del modelo que conviene fijar desde el principio, porque condiciona todo el diseño posterior: en AskingX no todos los actores implicados son usuarios del sistema. El \textit{Asker} —la entidad con una necesidad— es un sujeto pasivo, gestionado por el personal interno, que ni inicia sesión ni interactúa con la plataforma. Esta decisión, heredada del modelo relacional original, reduce de forma deliberada la superficie de exposición de datos de colectivos vulnerables.
+
+\subsection{Actores del sistema}
+
+Se distinguen cuatro perfiles con cuenta de usuario y un actor pasivo sin acceso:
+
+\begin{itemize}
+    \item \textbf{Administrador (\textit{Admin}).} Tiene control total. Aprueba o cancela las peticiones recién creadas, gestiona el personal interno y administra los dominios temáticos.
+    \item \textbf{Autor de peticiones (\textit{AskAuthor}).} Trabaja con las entidades: registra \textit{Askers}, redacta sus peticiones y se encarga de las historias de impacto.
+    \item \textbf{Conector (\textit{Connector}).} Es el «solucionador»: empareja donantes con peticiones abiertas y registra las entregas de ayuda.
+    \item \textbf{Donante (\textit{Giver}).} Aporta los recursos. Sus datos y disponibilidad se almacenan en el sistema, pero su interacción directa es mínima.
+    \item \textbf{Solicitante (\textit{Asker}).} Actor pasivo, sin cuenta. Representa a la ONG, colegio o persona vulnerable cuya necesidad se digitaliza.
+\end{itemize}
+
+\subsection{Requisitos funcionales}
+
+La Tabla~\ref{tab:requisitos-funcionales} recoge los requisitos funcionales (RF) que el sistema debe satisfacer. Se han extraído directamente del flujo de trabajo real de la iniciativa.
+
+\begin{table}[ht]
+\centering
+\caption[Requisitos funcionales del sistema]{Requisitos funcionales del sistema.}
+\label{tab:requisitos-funcionales}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{%
+  >{\raggedright\arraybackslash}p{1.4cm}%
+  >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Código} & \textbf{Descripción} \\
+\midrule
+RF-01 & El \textit{AskAuthor} puede crear, consultar y actualizar los perfiles de las entidades solicitantes (\textit{Askers}). \\
+RF-02 & El \textit{AskAuthor} crea peticiones (\textit{Asks}) en nombre de un \textit{Asker}; toda petición nace en estado \textit{CREATED}. \\
+RF-03 & El sistema admite cuatro tipos de petición (\textit{THINGS}, \textit{TIME}, \textit{EXPERTISE} y \textit{SERVICES}), cada uno con sus campos propios. \\
+RF-04 & El \textit{Admin} aprueba una petición —que pasa a \textit{OPEN}— o la cancela antes de hacerla pública. \\
+RF-05 & El \textit{Connector} vincula uno o varios \textit{Givers} a una petición abierta, que pasa a \textit{MATCHED}. \\
+RF-06 & El \textit{Connector} registra entregas parciales (\textit{Fulfillments}) que asocian un \textit{Giver} con la ayuda aportada. \\
+RF-07 & El sistema acumula lo entregado y, al alcanzar o superar lo solicitado, marca la petición como \textit{FULFILLED}; además, impide registrar entregas que excedan lo pedido. \\
+RF-08 & Un proceso programado marca como \textit{EXPIRED} las peticiones \textit{OPEN} o \textit{MATCHED} cuya fecha límite ha vencido. \\
+RF-09 & El \textit{AskAuthor} puede descartar o republicar una petición caducada. \\
+RF-10 & El \textit{AskAuthor} y el \textit{Admin} generan, revisan y publican Historias de Impacto a partir de peticiones completadas, con apoyo de un modelo de lenguaje. \\
+RF-11 & El \textit{Admin} gestiona el personal interno (alta, edición y baja lógica) y los dominios temáticos. \\
+RF-12 & El sistema autentica a los usuarios y restringe cada acción según su rol (RBAC). \\
+RF-13 & Cada usuario puede operar en español, valenciano o inglés. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Requisitos no funcionales}
+
+Más allá de lo que el sistema hace, importa cómo lo hace. La Tabla~\ref{tab:requisitos-no-funcionales} resume los requisitos no funcionales (RNF), que en un proyecto que maneja datos de personas vulnerables tienen un peso especial.
+
+\begin{table}[ht]
+\centering
+\caption[Requisitos no funcionales del sistema]{Requisitos no funcionales del sistema.}
+\label{tab:requisitos-no-funcionales}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{%
+  >{\raggedright\arraybackslash}p{1.4cm}%
+  >{\raggedright\arraybackslash}p{3cm}%
+  >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Código} & \textbf{Categoría} & \textbf{Descripción} \\
+\midrule
+RNF-01 & Seguridad & Autenticación sin estado mediante JWT y contraseñas cifradas con \textit{bcrypt}. \\
+RNF-02 & Privacidad & Baja lógica de usuarios (sin borrado físico) y un modelo en el que el \textit{Asker} no dispone de cuenta, lo que reduce la exposición de datos. \\
+RNF-03 & Integridad & Acceso a datos mediante un ORM fuertemente tipado que previene la inyección SQL. \\
+RNF-04 & Usabilidad & Interfaz \textit{mobile-first} y de página única (SPA), sin recargas entre vistas. \\
+RNF-05 & Mantenibilidad & Arquitectura por capas (Rutas, Controladores y Servicios) con responsabilidades separadas. \\
+RNF-06 & Portabilidad & \textit{Backend} autónomo (\textit{standalone}), desplegable en plataformas \textit{cloud} (PaaS). \\
+RNF-07 & Internacionalización & Soporte de tres idiomas en la interfaz de usuario. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Modelado Conceptual}
+
+Con los requisitos sobre la mesa, el siguiente paso fue modelar la información que el sistema debía manejar. El dominio gira en torno a una entidad central, la petición (\textit{Ask}), a la que se conectan el resto de conceptos. La Figura~\ref{fig:modelo-conceptual} muestra las entidades principales y las relaciones que las unen.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  ent/.style={rectangle, draw=black, thick, fill=gray!6, rounded corners,
+              minimum width=2.4cm, minimum height=0.9cm, align=center, font=\small},
+  rel/.style={font=\scriptsize}
+]
+  \node[ent] (ask) {\textbf{Ask}};
+  \node[ent, left=3.2cm of ask] (asker) {\textbf{Asker}};
+  \node[ent, above=1.8cm of ask] (domain) {\textbf{Domain}};
+  \node[ent, right=3.2cm of ask] (fulfillment) {\textbf{Fulfillment}};
+  \node[ent, below=1.8cm of ask] (story) {\textbf{Story}};
+  \node[ent, below=1.8cm of fulfillment] (user) {\textbf{User}};
+
+  \draw[-{Stealth}] (asker) -- node[rel, above]{1 : N} (ask);
+  \draw[-{Stealth}] (domain) -- node[rel, right]{1 : N} (ask);
+  \draw[-{Stealth}] (ask) -- node[rel, above]{1 : N} (fulfillment);
+  \draw[-{Stealth}] (fulfillment) -- node[rel, right]{N : 1} (user);
+  \draw[-{Stealth}] (ask) -- node[rel, right]{1 : 1} (story);
+  \draw[-{Stealth}] (user) to[bend right=18] node[rel, below]{crea / gestiona} (ask);
+\end{tikzpicture}
+\caption[Modelo conceptual del dominio]{Modelo conceptual del dominio. La petición (\textit{Ask}) es la entidad central; a su alrededor se articulan el solicitante, el dominio temático, las entregas y la historia de impacto.}
+\label{fig:modelo-conceptual}
+\end{figure}
+
+Las relaciones reflejan la lógica del modelo. Un \textit{Asker} puede acumular varias peticiones a lo largo del tiempo, pero cada petición pertenece a un único solicitante y se clasifica en un solo dominio temático (\textit{Domain}). La relación más característica es la que une la petición con sus entregas: un \textit{Ask} se asocia a cero o varios \textit{Fulfillments}, lo que permite registrar la ayuda de forma progresiva en lugar de exigir que se complete de una sola vez. Cada entrega, a su vez, queda vinculada de manera atómica a un \textit{Giver} concreto, garantizando la trazabilidad. Por último, una petición completada puede dar lugar a una única Historia de Impacto (\textit{Story}).
+
+La entidad \textit{User} merece una observación. En lugar de crear una tabla por rol, se ha optado por una única entidad de usuario cualificada por un atributo de rol (\textit{Admin}, \textit{AskAuthor}, \textit{Connector} o \textit{Giver}). Esta decisión simplifica el modelo y se justifica en detalle en el capítulo de diseño; aquí basta señalar que un mismo \textit{User} participa en el dominio de formas distintas según su rol: creando peticiones, gestionándolas o aportando entregas.
+
+\section{Análisis del marco legal y ético (RGPD y uso de IA)}
+
+Trabajar con datos de organizaciones, voluntarios y, sobre todo, de personas en situación de vulnerabilidad obliga a tomarse en serio la protección de datos. En este proyecto no se ha tratado como un trámite final, sino como una restricción de diseño presente desde el modelado.
+
+\subsection{Cumplimiento del RGPD}
+
+El sistema trata datos de carácter personal en tres puntos: los datos de contacto de las entidades solicitantes (persona de contacto, teléfono y correo), los del personal interno con cuenta y las notas de disponibilidad de los donantes. Para ajustarse al Reglamento General de Protección de Datos se han aplicado varios principios de forma concreta.
+
+El primero es la \textbf{minimización}. Solo se almacenan los campos estrictamente necesarios para operar, y aquí el modelo ayuda por sí mismo: como el \textit{Asker} no tiene cuenta ni inicia sesión, su huella de datos en el sistema es mínima. El segundo es la \textbf{limitación del acceso}: la política RBAC, reforzada con un filtrado a nivel de consulta, garantiza que cada perfil solo vea la información que le compete, evitando que un dato circule más allá de quien lo necesita. La seguridad de las credenciales se aborda con el cifrado de contraseñas y la autenticación por token, descritos en el capítulo de diseño.
+
+Hay un punto que conviene reconocer abiertamente, porque tiene matices. La baja de usuarios se realiza de forma lógica (\textit{isActive: false}) y no física, una decisión tomada para preservar la trazabilidad histórica de las intervenciones. Esto convive con el derecho de supresión que reconoce el RGPD: para un borrado completo a petición del interesado sería necesario un procedimiento adicional de eliminación física, que queda señalado como mejora. El énfasis en estas cautelas no es casual; la literatura advierte de que el marco regulatorio a menudo protege de forma desigual a los colectivos más vulnerables en entornos digitales \cite{vanzoonen2022data}, precisamente los que atiende esta plataforma.
+
+\subsection{Uso ético de la Inteligencia Artificial}
+
+El único componente de IA del sistema es el módulo que redacta Historias de Impacto a partir de peticiones ya completadas. Su alcance es deliberadamente limitado, y eso es importante de cara a las implicaciones éticas.
+
+La IA \textbf{no toma decisiones que afecten a las personas}: no decide emparejamientos, no perfila usuarios ni prioriza necesidades. Se limita a generar un texto narrativo. Además, opera bajo un esquema de \textit{Human-in-the-loop}: ninguna historia se publica de forma automática, sino que un \textit{AskAuthor} o el \textit{Admin} la revisan y aprueban antes de hacerla visible. Bajo la clasificación del Reglamento Europeo de Inteligencia Artificial, un uso de este tipo —generación de texto con supervisión humana— se sitúa en la categoría de riesgo mínimo.
+
+Queda, no obstante, una consideración honesta: la generación delega en un modelo de lenguaje externo, lo que implica enviar cierta información a un tercero. La mitigación adoptada es doble: enviar al modelo solo los datos imprescindibles para construir la narrativa y mantener la revisión humana como filtro final. La anonimización sistemática de los datos enviados al modelo se contempla como línea de mejora.
+
+\section{Análisis de Riesgos}
+
+Todo proyecto de software, y más uno desarrollado por una sola persona en un plazo acotado, convive con riesgos. Identificarlos pronto permitió tomar decisiones de diseño que los redujeran en lugar de descubrirlos tarde. La Tabla~\ref{tab:riesgos} recoge los principales, valorados según su probabilidad e impacto, junto con la medida de mitigación adoptada.
+
+\begin{table}[ht]
+\centering
+\caption[Análisis de riesgos del proyecto]{Principales riesgos del proyecto, su valoración y las medidas de mitigación.}
+\label{tab:riesgos}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{%
+  >{\raggedright\arraybackslash}p{0.9cm}%
+  >{\raggedright\arraybackslash}X%
+  >{\raggedright\arraybackslash}p{1.5cm}%
+  >{\raggedright\arraybackslash}p{1.3cm}%
+  >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{ID} & \textbf{Riesgo} & \textbf{Prob.} & \textbf{Impacto} & \textbf{Mitigación} \\
+\midrule
+R1 & Caída o cambio del servicio externo de IA & Media & Medio & Mecanismo de reserva: si el modelo falla, se genera la historia con una plantilla local \\
+R2 & Fuga o exposición de datos personales & Baja & Alto & RBAC, autenticación por token, minimización y filtrado por consulta \\
+R3 & Pérdida de datos & Baja & Alto & Base de datos gestionada en la nube con copias de seguridad \\
+R4 & Baja adopción por parte de los facilitadores & Media & Alto & Diseño centrado en reducir carga y una interfaz sencilla \\
+R5 & Alcance excesivo (\textit{scope creep}) en un proyecto individual & Alta & Medio & Priorización por iteraciones y construcción de un núcleo funcional primero \\
+R6 & Transferencia de datos a un tercero (modelo de lenguaje) & Media & Medio & Envío del mínimo de datos imprescindibles y revisión humana previa \\
+R7 & Curva de aprendizaje de tecnologías nuevas & Media & Bajo & Estudio previo de la documentación y prototipos rápidos \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Identificación y análisis de soluciones posibles}
+
+Definido el problema, quedaba decidir el «cómo» antes de empezar a programar. Se valoraron dos caminos de fondo y un par de decisiones técnicas asociadas.
+
+\subsection{Alternativa A: adaptar una solución existente}
+
+La vía rápida habría sido apoyarse en un CRM para ONG o en una herramienta \textit{no-code} de propósito general. La ventaja es evidente: puesta en marcha casi inmediata. Pero, como ya se argumentó en el Capítulo 2, estas herramientas parten de una lógica transaccional o de gestión interna que no encaja con el flujo relacional de AskingX. Modelar sobre ellas la máquina de estados de las peticiones o el control de sobredonación habría resultado forzado, y además habría introducido dependencia de un proveedor y posibles costes de licencia.
+
+\subsection{Alternativa B: desarrollo a medida}
+
+La segunda opción —la finalmente elegida— era construir una aplicación full-stack propia. Tiene un coste claro: más tiempo de desarrollo. A cambio, ofrece justo lo que el proyecto necesitaba: un ajuste total al modelo, control directo sobre los datos (algo nada menor dado el peso del RGPD en este contexto), ausencia de licencias y libertad para desplegar en cualquier proveedor \textit{cloud}.
+
+\subsection{Decisiones técnicas asociadas}
+
+La elección del desarrollo a medida arrastró dos decisiones de calado. La primera, el tipo de base de datos: frente a un almacén documental (NoSQL), se optó por un modelo relacional (PostgreSQL). El dominio es intensamente relacional —peticiones ligadas a solicitantes, dominios, entregas y donantes—, y la integridad referencial de una base relacional encaja mucho mejor con esa realidad que la flexibilidad de un documento. La segunda, la arquitectura: en lugar de microservicios, se eligió un monolito modular organizado por capas. Para un producto mínimo viable desarrollado por una sola persona, esta opción aporta la mantenibilidad buscada sin la complejidad operativa que implicaría distribuir el sistema.
+
+\section{Solución propuesta}
+
+A la luz de este análisis, la solución que se desarrolla es una aplicación web full-stack a medida. El servidor se construye con Node.js y Express siguiendo una arquitectura en capas; la persistencia recae en PostgreSQL a través de Prisma; y el cliente es una aplicación de página única en React. Sobre esta base se asientan los elementos diferenciales del proyecto: la autenticación con JWT y el control de acceso por roles, la máquina de estados que gobierna el ciclo de vida de las peticiones y el módulo de generación de historias asistido por IA y supervisado. El detalle de cómo se materializa cada una de estas piezas es el objeto del Capítulo 5.
+
+\section{Plan de Trabajo}
+
+El trabajo se organizó en las iteraciones descritas en el Capítulo 3, repartidas a lo largo de algo más de siete semanas de desarrollo efectivo, entre finales de abril y principios de junio de 2026. La Figura~\ref{fig:gantt} representa esa planificación en un diagrama de Gantt, con la particularidad de que la redacción de la memoria avanzó en paralelo al desarrollo, apoyándose en notas técnicas que se iban registrando al cerrar cada iteración.
+
+\begin{figure}[ht]
+\centering
+\begin{ganttchart}[
+  vgrid, hgrid,
+  bar label font=\footnotesize,
+  title label font=\footnotesize,
+  bar/.style={fill=blue!30, draw=blue!50!black},
+  y unit chart=0.55cm,
+  y unit title=0.6cm
+]{1}{8}
+\gantttitle{Abril}{2}\gantttitle{Mayo}{4}\gantttitle{Junio}{2} \\
+\gantttitle{S1}{1}\gantttitle{S2}{1}\gantttitle{S3}{1}\gantttitle{S4}{1}\gantttitle{S5}{1}\gantttitle{S6}{1}\gantttitle{S7}{1}\gantttitle{S8}{1} \\
+\ganttbar{Análisis y diseño}{1}{1} \\
+\ganttbar{Sprint 1: Modelado y BD}{1}{2} \\
+\ganttbar{Sprint 2: Seguridad y RBAC}{3}{3} \\
+\ganttbar{Sprint 3: Lógica y endpoints}{3}{4} \\
+\ganttbar{Sprint 4: Frontend base}{4}{5} \\
+\ganttbar{Sprint 5: Integración y Kanban}{5}{6} \\
+\ganttbar{Ajustes y pruebas}{6}{7} \\
+\ganttbar{Redacción de la memoria}{2}{8}
+\end{ganttchart}
+\caption[Diagrama de Gantt del proyecto]{Planificación temporal del proyecto. Las columnas S1–S8 representan las ocho semanas de desarrollo, agrupadas por mes, y se corresponden con el periodo real registrado en el control de versiones.}
+\label{fig:gantt}
+\end{figure}
+
+\section{Presupuesto}
+
+Aunque se trata de un proyecto académico, resulta ilustrativo estimar cuánto costaría su desarrollo en un contexto profesional. El cálculo se apoya en las horas de trabajo dedicadas, valoradas a la tarifa de un desarrollador junior, y parte de una premisa que abarata notablemente el resultado: todo el software empleado es de código abierto o se ha usado dentro de capas gratuitas, por lo que el coste en licencias es nulo.
+
+El primer paso fue estimar la dedicación real, repartida entre las mismas fases que estructuran el plan de trabajo. La Tabla~\ref{tab:horas} recoge ese desglose, que suma 415 horas. La cifra se sitúa por encima de la carga nominal mínima de un Trabajo de Fin de Grado y refleja el esfuerzo que supuso aprender las tecnologías sobre la marcha, depurar la lógica de negocio y redactar la memoria en paralelo al desarrollo.
+
+\begin{table}[ht]
+\centering
+\caption[Dedicación estimada por fases]{Dedicación estimada en horas, desglosada por fase del proyecto.}
+\label{tab:horas}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{%
+  >{\raggedright\arraybackslash}X%
+  >{\raggedleft\arraybackslash}p{3cm}}
+\toprule
+\textbf{Fase} & \textbf{Dedicación (h)} \\
+\midrule
+Análisis y diseño & 30 \\
+Sprint 1: Modelado de datos y base de datos & 40 \\
+Sprint 2: Seguridad, RBAC y autenticación & 35 \\
+Sprint 3: Lógica de negocio y \textit{endpoints} & 50 \\
+Sprint 4: \textit{Frontend} y componentes base & 45 \\
+Sprint 5: Integración y tablero \textit{Kanban} & 50 \\
+Ajustes y pruebas & 35 \\
+Redacción de la memoria & 130 \\
+\midrule
+\textbf{Total} & \textbf{415} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A partir de esa dedicación, la Tabla~\ref{tab:presupuesto} traslada las horas a coste y añade el resto de partidas.
+
+\begin{table}[ht]
+\centering
+\caption[Presupuesto estimado del proyecto]{Presupuesto estimado del proyecto.}
+\label{tab:presupuesto}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{%
+  >{\raggedright\arraybackslash}X%
+  >{\raggedright\arraybackslash}p{6cm}%
+  >{\raggedleft\arraybackslash}p{2cm}}
+\toprule
+\textbf{Concepto} & \textbf{Detalle} & \textbf{Coste} \\
+\midrule
+Recursos humanos & 415 h de desarrollo a 15 €/h (desarrollador junior) & 6\,225 € \\
+Amortización de equipo & Portátil (\textasciitilde 900 €, 4 años de vida útil, \textasciitilde 3,5 meses de uso) & 65 € \\
+Software y servicios & Herramientas de código abierto y capas gratuitas (Supabase, Gemini, GitHub) & 0 € \\
+\midrule
+\textbf{Total} & & \textbf{6\,290 €} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+El desglose deja claro que el grueso del coste es la mano de obra. La práctica ausencia de gastos en infraestructura y licencias no es casual, sino consecuencia directa de las decisiones tecnológicas tomadas: apostar por un ecosistema de código abierto mantiene el coste de entrada muy bajo, un factor especialmente relevante para una iniciativa del tercer sector con recursos limitados.
+
+\chapter{Diseño de la solución}
+
+Una vez analizado el problema y justificada la opción de un desarrollo a medida, este capítulo aterriza esas decisiones en el diseño concreto de la solución. Se parte de la pila tecnológica elegida y su justificación, se describe a continuación la arquitectura que organiza el sistema y, por último, se detallan los elementos de diseño más característicos: el modelo de datos, el ciclo de vida de las peticiones y las reglas de negocio que lo gobiernan.
+
+\section{Tecnología Utilizada}
+
+La elección de las tecnologías no respondió a una preferencia arbitraria, sino a los requisitos fijados en el capítulo anterior: una solución mantenible, segura, portable y de coste de licencias nulo. Todas las piezas seleccionadas son de código abierto o cuentan con una capa de uso gratuita, lo que resulta coherente con el contexto de una iniciativa del tercer sector. La Figura~\ref{fig:stack} resume la pila tecnológica organizada por capas, desde el cliente hasta la persistencia.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  layer/.style={rectangle, rounded corners, draw=black, thick,
+                minimum width=9.5cm, minimum height=1.05cm, align=center, font=\small},
+  side/.style={rectangle, rounded corners, draw=black!60, dashed, fill=yellow!10,
+               minimum width=2.6cm, minimum height=1.05cm, align=center, font=\scriptsize},
+  flow/.style={-{Stealth}, thick, gray!60!black}
+]
+  \node[layer, fill=blue!10] (cli) {\textbf{Cliente (SPA)}\\\footnotesize React 19 · Vite · Tailwind CSS};
+  \node[layer, fill=green!10, below=0.7cm of cli] (api) {\textbf{API REST --- HTTP/JSON}\\\footnotesize Fetch API};
+  \node[layer, fill=orange!12, below=0.7cm of api] (srv) {\textbf{Servidor}\\\footnotesize Node.js · Express (Rutas · Controladores · Servicios)};
+  \node[layer, fill=red!8, below=0.7cm of srv] (orm) {\textbf{Acceso a datos}\\\footnotesize Prisma ORM};
+  \node[layer, fill=gray!12, below=0.7cm of orm] (db) {\textbf{Persistencia}\\\footnotesize PostgreSQL (Supabase)};
+
+  \draw[flow] (cli) -- (api);
+  \draw[flow] (api) -- (srv);
+  \draw[flow] (srv) -- (orm);
+  \draw[flow] (orm) -- (db);
+
+  \node[side, right=0.5cm of api.east, anchor=west] (sec) {Seguridad\\JWT · bcrypt · Zod};
+  \node[side, right=0.5cm of srv.east, anchor=west] (ia) {Servicio externo\\LLM (Gemini)};
+\end{tikzpicture}
+\caption[Pila tecnológica de la solución]{Pila tecnológica de la solución, organizada por capas. Los bloques laterales representan elementos transversales: la seguridad, que atraviesa el cliente y el servidor, y el servicio externo de IA, invocado desde la capa de servicios.}
+\label{fig:stack}
+\end{figure}
+
+\subsection{Cliente}
+
+La interfaz se ha construido como una aplicación de página única (SPA) con la biblioteca \textit{React} en su versión 19 \cite{react_doc}, empaquetada con \textit{Vite} \cite{vite_docs}. React aporta un modelo declarativo basado en componentes que encaja con la necesidad de reutilizar elementos de interfaz (formularios, modales, tarjetas) y de renderizar la vista de forma condicional según el rol del usuario. \textit{Vite}, por su parte, se eligió frente a empaquetadores más tradicionales por su servidor de desarrollo con recarga de módulos en caliente (HMR), que reduce de forma notable el tiempo del ciclo editar-comprobar. El apartado visual se resuelve con \textit{Tailwind CSS} \cite{tailwind_docs}, un marco de utilidades que mantiene los estilos junto al \textit{markup} de cada componente y evita el crecimiento descontrolado de hojas de estilo globales.
+
+\subsection{Comunicación: API REST}
+
+Cliente y servidor se comunican a través de una API que sigue el estilo arquitectónico REST \cite{fielding_rest}, intercambiando exclusivamente datos en formato JSON sobre HTTP. Este estilo, sin estado y orientado a recursos, encaja de forma natural con el dominio del problema —las entidades del modelo (peticiones, entregas, usuarios) se exponen como recursos identificables— y permite desacoplar por completo la evolución del cliente y la del servidor. Del lado del cliente, las llamadas se realizan con la API nativa \textit{Fetch} \cite{mdn_fetch}, evitando dependencias adicionales.
+
+\subsection{Servidor}
+
+El servidor se ha desarrollado sobre el entorno de ejecución \textit{Node.js} con el marco de trabajo \textit{Express} \cite{express_doc}. La combinación es un estándar de facto para construir APIs REST en JavaScript y permite mantener un único lenguaje en todo el proyecto, lo que reduce la fricción de contexto entre cliente y servidor. \textit{Express} aporta, además, un modelo de \textit{middlewares} que resulta idóneo para implementar de forma transversal la autenticación y el control de acceso por roles, tal como se describe en la sección de arquitectura.
+
+\subsection{Persistencia y acceso a datos}
+
+La persistencia recae en una base de datos relacional \textit{PostgreSQL}, alojada en el servicio gestionado \textit{Supabase} dentro de su capa gratuita. Como ya se justificó en el análisis, la naturaleza intensamente relacional del dominio hace preferible un modelo relacional, con integridad referencial garantizada, frente a un almacén documental. El acceso a los datos no se realiza con SQL directo, sino a través de \textit{Prisma ORM} (versión 5) \cite{prisma_docs}, un mapeador objeto-relacional fuertemente tipado. Prisma aporta dos ventajas decisivas: genera un cliente tipado a partir del esquema, lo que traslada numerosos errores a tiempo de compilación, y parametriza automáticamente las consultas, neutralizando los ataques de inyección SQL.
+
+\subsection{Seguridad}
+
+La seguridad se apoya en tres bibliotecas. La autenticación se resuelve con \textit{JSON Web Tokens} (JWT) \cite{jwt_rfc}, que permiten un esquema de sesión sin estado adecuado para una API REST. Las contraseñas nunca se almacenan en claro: se cifran de forma unidireccional con \textit{bcrypt} \cite{bcrypt_docs}, cuyo factor de coste configurable lo hace resistente a ataques de fuerza bruta. Por último, toda entrada que llega al servidor se valida con \textit{Zod} \cite{zod_doc}, que define esquemas estrictos y rechaza las peticiones malformadas antes de que alcancen la lógica de negocio.
+
+\subsection{Servicio de Inteligencia Artificial}
+
+La generación de las Historias de Impacto delega en un modelo de lenguaje (LLM) accesible mediante API. Se ha integrado a través de la capa de servicios, de modo que el resto del sistema permanece ajeno a los detalles del proveedor concreto y este podría sustituirse sin afectar a la lógica de negocio. Como se detalló en el análisis del marco ético, esta integración opera siempre bajo supervisión humana y enviando al modelo únicamente la información imprescindible.
+
+\section{Arquitectura del Sistema}
+
+El diseño arquitectónico de la plataforma AskingX se fundamenta en el patrón Cliente-Servidor, estableciendo un claro desacoplamiento entre la interfaz de usuario (\textit{Frontend}) y la lógica de negocio y persistencia de datos (\textit{Backend}). 
+
+Se ha optado por desarrollar el sistema de tal manera que opere de forma independiente (\textit{standalone}), garantizando su viabilidad como producto autónomo y facilitando su despliegue en infraestructuras \textit{cloud} estandarizadas (PaaS), dejando así una potencial integración con los sistemas heredados de las ONG como una línea de trabajo futuro.
+
+\subsection{Capa de presentación (\textit{Frontend})}
+
+Para el desarrollo de la interfaz de usuario, se ha adoptado una arquitectura de aplicación de página única (\textit{Single Page Application} o SPA), implementada mediante la biblioteca React y el entorno de construcción Vite. Esta decisión tecnológica responde a la necesidad de optimizar la experiencia del usuario (UX), delegando la carga del renderizado en el navegador del cliente. En este sentido, la comunicación con el servidor se restringe a la transferencia asíncrona de datos en formato JSON, lo que evita recargas completas del documento en las transiciones entre vistas y proporciona una navegación fluida.
+
+Desde una perspectiva funcional, el núcleo operativo para la supervisión y gestión del ciclo de vida de las peticiones (\textit{Asks}) se materializa a través de tableros \textit{Kanban} dinámicos. Esta abstracción visual resulta fundamental para que los distintos actores implicados puedan interaccionar con el estado de cada solicitud de forma ágil e intuitiva a lo largo de todo el proceso.
+
+Asimismo, la arquitectura de la vista incorpora un mecanismo de renderizado condicional estrictamente ligado al rol del usuario autenticado en el sistema. De acuerdo con el modelo de datos, la plataforma distingue cuatro perfiles operativos: administrador (\textit{Admin}), autor de peticiones (\textit{AskAuthor}), conector (\textit{Connector}) y donante (\textit{Giver}). Este enfoque traslada los principios de Control de Acceso Basado en Roles (\textit{RBAC}) a la capa cliente, garantizando que cada perfil visualice y opere exclusivamente sobre la información pertinente a sus competencias funcionales. De este modo, la segmentación de la interfaz reduce la carga cognitiva del usuario y refuerza el aislamiento de los flujos de trabajo definidos en el modelo.
+
+\subsection{Capa de Lógica de Negocio y Enrutamiento (\textit{Backend})}
+El núcleo del sistema se ha desarrollado en un entorno de ejecución \textit{Node.js} utilizando el marco de trabajo \textit{Express.js} \cite{express_doc}. Para asegurar la escalabilidad y mantenibilidad del código, la arquitectura interna obedece a un patrón de diseño en capas lógicas:
+
+\begin{itemize}
+    \item \textbf{Capa de Rutas (\textit{Routes}):} Expone la \textit{API RESTful}, definiendo los puntos de entrada (\textit{endpoints}) y gestionando el enrutamiento de las peticiones \textit{HTTP}.
+    \item \textbf{Capa de Controladores (\textit{Controllers}):} Gestiona los objetos de petición y respuesta, aplicando una estricta validación sobre los Objetos de Transferencia de Datos (\textit{DTO}) de entrada mediante la librería \texttt{zod}. Esta validación resulta esencial para rechazar peticiones malformadas antes de que alcancen la lógica de dominio.
+    \item \textbf{Capa de Servicios (\textit{Services}):} Concentra la lógica de negocio del modelo \textit{AskingX}. Es responsable de las operaciones más complejas, como el motor de agregación de entregas parciales (\textit{Fulfillment}) que previene los excesos de donación o la aplicación del patrón \textit{Human-in-the-Loop} en las transiciones de estado de las peticiones.
+\end{itemize}
+
+\subsection{Gestión de Identidad y Seguridad}
+El control de acceso se basa en un mecanismo de sesión sin estado (\textit{stateless}) mediante \textit{JSON Web Tokens} (JWT). Tras la autenticación, el servidor emite un \textit{token} que el cliente almacena localmente y anexa en la cabecera \textit{HTTP} (\texttt{Authorization: Bearer}) de las sucesivas peticiones. Este enfoque reduce la sobrecarga del servidor y permite a los \textit{middlewares} de \textit{Express.js} validar criptográficamente la identidad y el rol operativo del usuario frente a los recursos protegidos.
+
+Con el objetivo de garantizar la correspondencia exacta entre los datos del sistema y la ayuda real, se ha implementado una política de \textbf{confianza asimétrica} en los puntos de entrada (\textit{endpoints}) de la API. Bajo este enfoque, la plataforma priva al rol del donante (\textit{Giver}) de permisos de escritura para confirmar las entregas. Esta restricción técnica protege la base de datos contra confirmaciones prematuras, erróneas o fraudulentas. De este modo, la responsabilidad de registrar un \textit{Fulfillment} recae exclusivamente en los roles gestores (\textit{Connector} y \textit{AskAuthor}), quienes actúan como auditores encargados de verificar la recepción y calidad de la ayuda en el mundo real antes de consolidar el cambio en el sistema.
+
+\subsection{Capa de Persistencia y Acceso a Datos}
+El modelo de datos relacional se hospeda en una base de datos \textit{PostgreSQL}. La interacción entre el \textit{Backend} y la base de datos se realiza mediante el uso de \textit{Prisma ORM} (versión 5). La elección de esta herramienta se debe a su capacidad para proporcionar un mapeo objeto-relacional fuertemente tipado, lo que garantiza la integridad de los datos y previene errores en tiempo de ejecución. Además, el uso de este \textit{ORM} neutraliza posibles ataques de inyección SQL mediante la configuración automática de consultas. 
+
+Desde el punto de vista del diseño arquitectónico, el sistema emplea una emulación del patrón Herencia de Tabla Única (\textit{Single-Table Inheritance}) para la entidad \textit{Ask}. Esto permite gestionar de forma eficiente el polimorfismo de las peticiones (bienes físicos, tiempo, servicios o conocimiento) en una única estructura relacional, mitigando la fragmentación de consultas (\textit{JOINs} excesivos) y manteniendo una persistencia tipada y consistente.
+
+\section{Diseño Detallado}
+
+\chapter{Desarrollo de la solución propuesta}
+\section{Separación por capas lógicas}
+\section{Desarrollo del Backend y persistencia de datos}
+\section{Desarrollo del Frontend}
+\section{Integración del servicio de Inteligencia Artificial}
+\section{Gestión del flujo relacional (1 a N)}
+
+\chapter{Implantación}
+
+\chapter{Pruebas}
+\section{Pruebas funcionales y de validación} 
+\section{Pruebas de acceso y seguridad}
+\section{Conclusiones de las pruebas}
+
+\chapter{Conclusiones}
+\section{Grado de cumplimiento de los objetivos}
+\section{Relación del trabajo desarrollado con los estudios cursados}
+
+\chapter{Trabajos futuros}
+
+\chapter{Referencias}
+
+\chapter{Anexos}
+\section{Glosario de términos}
+
+
+
+\bibliographystyle{ieeetr}
+\bibliography{bibliografia}
+
+\cleardoublepage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                            APÉNDICES (¡Si los hay!)                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\appendix
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   APÉNDICES (opcionales). Añade aquí, si los necesitas, un manual de        %
+%   instalación, el listado de endpoints de la API, etc. con \chapter{...}    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                              FI DEL DOCUMENT                                %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

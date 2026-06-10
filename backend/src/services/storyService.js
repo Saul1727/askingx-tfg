@@ -187,6 +187,8 @@ const updateStory = async (storyId, data, user) => {
       // Solo actualizamos los campos que llegan (edición parcial).
       generatedContent: data.generatedContent ?? story.generatedContent,
       isPublished: data.isPublished ?? story.isPublished,
+      // imageUrl: si llega cadena vacía, se interpreta como "quitar imagen" (vuelve al logo por defecto).
+      imageUrl: data.imageUrl !== undefined ? (data.imageUrl || null) : story.imageUrl,
     },
   });
 

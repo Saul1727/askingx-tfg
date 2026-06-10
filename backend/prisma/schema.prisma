@@ -172,6 +172,7 @@ model Fulfillment {
 model Story {
   id               String   @id @default(uuid())
   generatedContent String
+  imageUrl         String?   // Imagen de la publicación (data URL). Si es null, la UI muestra el logo por defecto.
   isPublished      Boolean  @default(false)
   generatedAt      DateTime @default(now())
 

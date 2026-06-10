@@ -1,7 +1,8 @@
 const express = require('express');
-const { 
+const {
     getAllDomainsController,
     createDomainController,
+    updateDomainController,
     deleteDomainController
 } = require('../controllers/domainController');
 const authMiddleware = require('../middlewares/authMiddleware');
@@ -18,6 +19,14 @@ router.post(
     authMiddleware,
     roleMiddleware(['ADMIN']),
     createDomainController
+);
+
+// PATCH /api/domains/:id -> Protegido para que solo los ADMIN puedan editar dominios
+router.patch(
+    '/:id',
+    authMiddleware,
+    roleMiddleware(['ADMIN']),
+    updateDomainController
 );
 
 // DELETE /api/domains/:id -> Protegido para que solo los ADMIN puedan eliminar dominios

@@ -55,13 +55,13 @@ router.patch(
 );
 
 // POST /api/users/admin
-router.post('/admin', createAdminController);
+router.post('/admin', authMiddleware, roleMiddleware(['ADMIN']), createAdminController);
 
 // POST /api/users/author
-router.post('/author', createAskAuthorController);
+router.post('/author', authMiddleware, roleMiddleware(['ADMIN']), createAskAuthorController);
 
-// POST /api/users/register
-router.post('/register', registerUserController);
+// POST /api/users/register -> Solo el ADMIN puede dar de alta usuarios (evita auto-registro como ADMIN)
+router.post('/register', authMiddleware, roleMiddleware(['ADMIN']), registerUserController);
 
 // POST /api/users/login
 router.post('/login', loginUserController);

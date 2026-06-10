@@ -11,7 +11,7 @@ import { useLanguage } from '../../context/LanguageContext';
  * It dynamically adapts its fields based on the selected resource type (STI).
  */
 const CreateAskModal = ({ isOpen, onClose, onAskCreated, askToEdit = null }) => {
-  const { t } = useLanguage();
+  const { t, translateDomain } = useLanguage();
   const isEditMode = !!askToEdit;
   const [isLoading, setIsLoading] = useState(false);
   const [askers, setAskers] = useState([]);
@@ -201,7 +201,7 @@ const CreateAskModal = ({ isOpen, onClose, onAskCreated, askToEdit = null }) => 
                 <select name="domainId" value={formData.domainId} onChange={handleChange} disabled={isLoading} className="w-full bg-slate-50 text-slate-900 px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all" required>
                   <option value="">{t('askModal.selectDomain')}</option>
                   {domains.map(domain => (
-                    <option key={domain.id} value={domain.id}>{domain.name}</option>
+                    <option key={domain.id} value={domain.id}>{translateDomain(domain.name)}</option>
                   ))}
                 </select>
               </div>

@@ -33,6 +33,28 @@ const createDomainController = async (req, res, next) => {
     }
 };
 
+const updateDomainController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const schema = z.object({
+            name: z.string().min(3, "El nombre del dominio debe tener al menos 3 caracteres.").optional(),
+            description: z.string().optional()
+        }).refine(
+            (d) => d.name !== undefined || d.description !== undefined,
+            { message: "No se ha proporcionado ningún campo para actualizar." }
+        );
+        const validatedData = schema.parse(req.body);
+        const updated = await domainService.updateDomain(id, validatedData);
+        res.status(200).json({
+            success: true,
+            message: 'Dominio actualizado con éxito',
+            data: updated
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 const deleteDomainController = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -49,5 +71,6 @@ const deleteDomainController = async (req, res, next) => {
 module.exports = {
   getAllDomainsController,
   createDomainController,
+  updateDomainController,
   deleteDomainController
 };

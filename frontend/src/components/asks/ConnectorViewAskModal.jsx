@@ -4,7 +4,7 @@ import { createFulfillment } from '../../services/askService';
 import { useLanguage } from '../../context/LanguageContext';
 
 const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGivers, onForceComplete, onFulfillmentAdded, onGenerateStory }) => {
-  const { t } = useLanguage();
+  const { t, translateDomain } = useLanguage();
   const [partialAmount, setPartialAmount] = useState('');
   const [isSubmittingPartial, setIsSubmittingPartial] = useState(false);
   const [partialError, setPartialError] = useState('');
@@ -340,7 +340,7 @@ const ConnectorViewAskModal = ({ isOpen, onClose, ask, onCancelAsk, onReassignGi
               </div>
               <div>
                 <label className="text-slate-500 block">{t('connectorView.domain')}</label>
-                <p className="font-semibold text-slate-800 mt-1">{ask.domain?.name || t('common.unspecified')}</p>
+                <p className="font-semibold text-slate-800 mt-1">{translateDomain(ask.domain?.name) || t('common.unspecified')}</p>
               </div>
               <div>
                 <label className="text-slate-500 block">{t('connectorView.org')}</label>

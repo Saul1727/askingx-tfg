@@ -199,6 +199,12 @@ const ConnectorKanban = () => {
     }
   });
 
+  // Solo se muestran los Givers cuya especialidad coincide con el dominio de la petición seleccionada
+  const eligibleGivers = givers.filter(g =>
+    !selectedAskForMatch?.domain?.id ||
+    (g.specialties || []).some(s => s.id === selectedAskForMatch.domain.id)
+  );
+
   return (
     <div className="animate-in fade-in duration-500 h-full flex flex-col font-sans">
       
@@ -325,7 +331,7 @@ const ConnectorKanban = () => {
             </p>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2 mb-6">
-              {givers.map(g => {
+              {eligibleGivers.map(g => {
                 const isSelected = selectedGiverIds.includes(g.id);
                 return (
                   <label 
@@ -345,7 +351,7 @@ const ConnectorKanban = () => {
                   </label>
                 )
               })}
-              {givers.length === 0 && (
+              {eligibleGivers.length === 0 && (
                  <p className="text-sm text-slate-500 text-center py-4">{t('kanban.noGivers')}</p>
               )}
             </div>
@@ -425,7 +431,7 @@ const KanbanColumn = ({ title, dotColor, children, onDragOver, onDrop, isCenterC
 );
 
 const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGivers, onViewDetails, onEditAsk, onStartMatch }) => {
-  const { t } = useLanguage();
+  const { t, translateDomain } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   // Si no hay ninguna acción disponible, no mostramos el botón de menú "⋮".
@@ -536,7 +542,7 @@ const AskCard = ({ ask, onDragStart, isStatic, dotColor, getInitials, onEditGive
           {t('kanban.type')}: <span className="font-medium">{ask.type}</span>
         </p>
         <p>
-          {t('kanban.domain')}: <span className="font-medium">{ask.domain?.name || 'General'}</span>
+          {t('kanban.domain')}: <span className="font-medium">{translateDomain(ask.domain?.name) || 'General'}</span>
         </p>
         <p>
           {t('kanban.due')}: <span className="font-medium">{ask.dueDate ? new Date(ask.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : t('kanban.noDate')}</span>

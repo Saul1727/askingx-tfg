@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Trash2, Search } from 'lucide-react';
-import { getDomains, createDomain, deleteDomain } from '../../services/askService';
+import { Trash2, Search, Pencil, Check, X } from 'lucide-react';
+import { getDomains, createDomain, updateDomain, deleteDomain } from '../../services/askService';
 import { useLanguage } from '../../context/LanguageContext';
 
 /**
@@ -22,6 +22,10 @@ const DomainManagementPanel = () => {
     const [newDomain, setNewDomain] = useState({ name: '', description: '' });
     // State for search filter
     const [searchTerm, setSearchTerm] = useState('');
+    // State for inline editing of a domain
+    const [editingId, setEditingId] = useState(null);
+    const [editName, setEditName] = useState('');
+    const [editDescription, setEditDescription] = useState('');
 
     /**
      * Fetches all domains from the server.
@@ -85,6 +89,38 @@ const DomainManagementPanel = () => {
             } catch (err) {
                 alert(`Error al eliminar el dominio: ${err.message}`);
             }
+        }
+    };
+
+    /** Inicia la edición en línea de un dominio. */
+    const handleStartEdit = (domain) => {
+        setEditingId(domain.id);
+        setEditName(domain.name);
+        setEditDescription(domain.description || '');
+    };
+
+    /** Cancela la edición en línea. */
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setEditName('');
+        setEditDescription('');
+    };
+
+    /** Guarda los cambios del dominio en edición. */
+    const handleSaveEdit = async (domainId) => {
+        if (!editName.trim()) {
+            alert('El nombre del dominio no puede estar vacío.');
+            return;
+        }
+        try {
+            await updateDomain(domainId, {
+                name: editName.trim(),
+                description: editDescription.trim()
+            });
+            handleCancelEdit();
+            fetchDomains();
+        } catch (err) {
+            alert(`Error al actualizar el dominio: ${err.message}`);
         }
     };
 
@@ -164,17 +200,65 @@ const DomainManagementPanel = () => {
                             <tbody className="divide-y divide-slate-100">
                                 {filteredDomains.length > 0 ? filteredDomains.map(domain => (
                                     <tr key={domain.id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="py-4 px-6 font-bold text-slate-800">{domain.name}</td>
-                                        <td className="py-4 px-6 text-slate-600">{domain.description || '—'}</td>
-                                        <td className="py-4 px-6 text-right">
-                                            <button
-                                                onClick={() => handleDeleteDomain(domain.id)}
-                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
-                                                title="Eliminar dominio (No se puede eliminar si hay peticiones asociadas)"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </td>
+                                        {editingId === domain.id ? (
+                                            <>
+                                                <td className="py-3 px-6">
+                                                    <input
+                                                        type="text"
+                                                        value={editName}
+                                                        onChange={(e) => setEditName(e.target.value)}
+                                                        className="w-full px-2 py-1 bg-white border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        autoFocus
+                                                    />
+                                                </td>
+                                                <td className="py-3 px-6">
+                                                    <input
+                                                        type="text"
+                                                        value={editDescription}
+                                                        onChange={(e) => setEditDescription(e.target.value)}
+                                                        placeholder="Descripción (opcional)"
+                                                        className="w-full px-2 py-1 bg-white border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </td>
+                                                <td className="py-3 px-6 text-right whitespace-nowrap">
+                                                    <button
+                                                        onClick={() => handleSaveEdit(domain.id)}
+                                                        className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-all"
+                                                        title="Guardar cambios"
+                                                    >
+                                                        <Check size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelEdit}
+                                                        className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all"
+                                                        title="Cancelar"
+                                                    >
+                                                        <X size={18} />
+                                                    </button>
+                                                </td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="py-4 px-6 font-bold text-slate-800">{domain.name}</td>
+                                                <td className="py-4 px-6 text-slate-600">{domain.description || '—'}</td>
+                                                <td className="py-4 px-6 text-right whitespace-nowrap">
+                                                    <button
+                                                        onClick={() => handleStartEdit(domain)}
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"
+                                                        title="Editar dominio"
+                                                    >
+                                                        <Pencil size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteDomain(domain.id)}
+                                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
+                                                        title="Eliminar dominio (No se puede eliminar si hay peticiones asociadas)"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </td>
+                                            </>
+                                        )}
                                     </tr>
                                 )) : (
                                     <tr>

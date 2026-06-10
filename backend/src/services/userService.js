@@ -95,6 +95,14 @@ const createUser = async (userData) => {
     throw error;
   }
 
+  // Regla de negocio (UML): los expertos no pueden existir sin al menos un dominio.
+  if ((userData.role === 'CONNECTOR' || userData.role === 'GIVER') &&
+      (!userData.domainIds || userData.domainIds.length === 0)) {
+    const error = new Error('Los roles CONNECTOR y GIVER deben estar asociados al menos a un dominio.');
+    error.statusCode = 400; // Bad Request
+    throw error;
+  }
+
   const hashedPassword = await hashPassword(userData.password);
 
   const prismaData = {
@@ -162,10 +170,11 @@ const loginUser = async (credentials) => {
 const getGivers = async () => {
     const givers = await prisma.user.findMany({
         where: { role: 'GIVER' },
-        select: { 
-            id: true, 
-            fullName: true, 
-            email: true 
+        select: {
+            id: true,
+            fullName: true,
+            email: true,
+            specialties: { select: { id: true, name: true } } // Dominios del giver, para filtrar por especialidad
         }
     });
     return givers;
@@ -185,7 +194,8 @@ const getAllUsers = async () => {
             preferredLanguage: true,
             isActive: true,
             availabilityNotes: true,
-            createdAt: true
+            createdAt: true,
+            specialties: { select: { id: true, name: true } }
         },
         orderBy: {
             createdAt: 'desc'
@@ -209,9 +219,29 @@ const updateUser = async (userId, dataToUpdate) => {
         throw error;
     }
 
+    const data = {};
+
+    if (typeof dataToUpdate.isActive === 'boolean') {
+        data.isActive = dataToUpdate.isActive;
+    }
+
+    // Edición de dominios (especialidades). Reemplaza el conjunto completo.
+    if (dataToUpdate.domainIds !== undefined) {
+        // Los expertos (CONNECTOR/GIVER) no pueden quedarse sin ningún dominio.
+        if ((user.role === 'CONNECTOR' || user.role === 'GIVER') && dataToUpdate.domainIds.length === 0) {
+            const error = new Error('Los roles CONNECTOR y GIVER deben mantener al menos un dominio.');
+            error.statusCode = 400;
+            throw error;
+        }
+        data.specialties = {
+            set: dataToUpdate.domainIds.map(id => ({ id }))
+        };
+    }
+
     const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data: dataToUpdate
+        data,
+        include: { specialties: { select: { id: true, name: true } } }
     });
     return updatedUser;
 };

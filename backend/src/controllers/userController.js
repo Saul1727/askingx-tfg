@@ -152,10 +152,14 @@ const getAllUsersController = async (req, res, next) => {
 const updateUserController = async (req, res, next) => {
     try {
         const { id } = req.params;
-        // For now, only allow updating the 'isActive' field for deactivation
+        // Permite cambiar el estado (isActive) y/o los dominios (domainIds) del usuario.
         const updateSchema = z.object({
-            isActive: z.boolean()
-        });
+            isActive: z.boolean().optional(),
+            domainIds: z.array(z.string().uuid("Debe ser un ID válido")).optional()
+        }).refine(
+            (d) => d.isActive !== undefined || d.domainIds !== undefined,
+            { message: "No se ha proporcionado ningún campo para actualizar." }
+        );
         const validatedData = updateSchema.parse(req.body);
 
         const updatedUser = await userService.updateUser(id, validatedData);

@@ -14,8 +14,9 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
-// Middleware para parsear el body de las peticiones a JSON
-app.use(express.json());
+// Middleware para parsear el body de las peticiones a JSON.
+// Límite ampliado para admitir imágenes embebidas (data URL) en las Historias de Impacto.
+app.use(express.json({ limit: '6mb' }));
 
 // Ruta de comprobación de salud (Healthcheck)
 app.get('/api/health', (req, res) => {

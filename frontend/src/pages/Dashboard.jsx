@@ -223,7 +223,7 @@ const AdminDashboard = () => {
 
 // --- GIVER DASHBOARD ---
 const GiverDashboard = () => {
-  const { t } = useLanguage();
+  const { t, translateDomain } = useLanguage();
   const [asks, setAsks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -275,7 +275,7 @@ const GiverAskList = ({ title, asks, emptyText }) => (
               <p className="text-sm font-medium text-slate-800 truncate">{ask.title}</p>
               <p className="text-xs text-slate-400 truncate">{ask.asker?.organizationName || ask.asker?.contactPerson || ''}</p>
             </div>
-            <span className="text-xs font-semibold text-slate-400 uppercase shrink-0">{ask.domain?.name || ''}</span>
+            <span className="text-xs font-semibold text-slate-400 uppercase shrink-0">{translateDomain(ask.domain?.name) || ''}</span>
           </li>
         ))}
       </ul>

@@ -41,8 +41,17 @@ export const LanguageProvider = ({ children }) => {
     return fallback !== undefined ? fallback : key;
   }, [lang]);
 
+  // Traduce el nombre de un dominio temático al idioma activo.
+  // Solo conoce los dominios incluidos en el mapa `domains` (los del seed);
+  // cualquier dominio creado a mano que no esté en el mapa se devuelve tal cual.
+  const translateDomain = useCallback((name) => {
+    if (!name) return name;
+    const map = translations[lang]?.domains;
+    return (map && map[name]) || name;
+  }, [lang]);
+
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <LanguageContext.Provider value={{ lang, setLang, t, translateDomain }}>
       {children}
     </LanguageContext.Provider>
   );

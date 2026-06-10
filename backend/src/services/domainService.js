@@ -35,6 +35,31 @@ const createDomain = async (domainData) => {
 };
 
 /**
+ * Updates an existing domain's name and/or description.
+ * @param {string} domainId - The ID of the domain to update.
+ * @param {object} data - Fields to update (name, description).
+ * @returns {Promise<object>} The updated domain object.
+ * @throws {Error} If the domain does not exist.
+ */
+const updateDomain = async (domainId, data) => {
+    const existing = await prisma.domain.findUnique({ where: { id: domainId } });
+    if (!existing) {
+        const error = new Error('El dominio especificado no existe.');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const updated = await prisma.domain.update({
+        where: { id: domainId },
+        data: {
+            name: data.name ?? existing.name,
+            description: data.description !== undefined ? (data.description || null) : existing.description,
+        }
+    });
+    return updated;
+};
+
+/**
  * Deletes a domain after checking for dependencies.
  * @param {string} domainId - The ID of the domain to delete.
  * @returns {Promise<{message: string}>} A success message.
@@ -62,5 +87,6 @@ const deleteDomain = async (domainId) => {
 module.exports = {
   getAllActiveDomains,
   createDomain,
+  updateDomain,
   deleteDomain
 };

@@ -229,6 +229,21 @@ export const createDomain = async (domainData) => {
     return data.data;
 };
 
+export const updateDomain = async (domainId, domainData) => {
+    const response = await fetch(`${API_BASE_URL}/domains/${domainId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader()
+        },
+        body: JSON.stringify(domainData),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Error al actualizar el dominio');
+    return data.data;
+};
+
 export const deleteDomain = async (domainId) => {
     const response = await fetch(`${API_BASE_URL}/domains/${domainId}`, {
         method: 'DELETE',

@@ -13,7 +13,7 @@ import { getUser } from '../../services/authService';
  * -----------------------------------------------------------------------------
  */
 const GiverViewAskModal = ({ isOpen, onClose, ask }) => {
-  const { t } = useLanguage();
+  const { t, translateDomain } = useLanguage();
   if (!isOpen || !ask) return null;
 
   const formattedDate = ask.dueDate
@@ -106,7 +106,7 @@ const GiverViewAskModal = ({ isOpen, onClose, ask }) => {
 
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('viewAsk.domain')}</h3>
-              <p className="text-sm font-medium text-slate-800">{ask.domain?.name || 'General'}</p>
+              <p className="text-sm font-medium text-slate-800">{translateDomain(ask.domain?.name) || 'General'}</p>
             </div>
           </div>
 

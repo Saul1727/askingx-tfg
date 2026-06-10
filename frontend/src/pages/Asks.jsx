@@ -8,7 +8,7 @@ import { getAllAsks, updateAskStatus } from '../services/askService';
 import { useLanguage } from '../context/LanguageContext';
 
 const Asks = () => {
-  const { t } = useLanguage();
+  const { t, translateDomain } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [askToEdit, setAskToEdit] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -152,7 +152,7 @@ const Asks = () => {
                     title={ask.title} 
                     asker={askerName} 
                     type={ask.type} 
-                    domain={ask.domain?.name || 'Varios'} 
+                    domain={translateDomain(ask.domain?.name) || 'Varios'}
                     date={formattedDate} 
                     status={ask.status} 
                     onEdit={() => handleEdit(ask)}

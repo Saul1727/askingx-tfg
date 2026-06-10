@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Sparkles, Loader2, Save, Send, RefreshCw, Globe, Lock } from 'lucide-react';
+import { X, Sparkles, Loader2, Save, Send, RefreshCw, Globe, Lock, ImagePlus, Trash2 } from 'lucide-react';
 import { getStoryByAsk, generateStory, updateStory } from '../../services/storyService';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -17,6 +17,9 @@ import { useLanguage } from '../../context/LanguageContext';
  * Centralizar aquí toda la lógica mantiene los componentes que lo abren muy simples.
  * -----------------------------------------------------------------------------
  */
+const DEFAULT_LOGO = '/favicon.svg';
+const MAX_IMAGE_MB = 4;
+
 const StoryModal = ({ isOpen, onClose, ask, onSaved }) => {
   const { t } = useLanguage();
   const [story, setStory] = useState(null);   // historia cargada/generada (o null)
@@ -25,6 +28,7 @@ const StoryModal = ({ isOpen, onClose, ask, onSaved }) => {
   const [isGenerating, setIsGenerating] = useState(false); // llamada a la IA
   const [isSaving, setIsSaving] = useState(false);       // guardar/publicar
   const [error, setError] = useState('');
+  const [imageUrl, setImageUrl] = useState(''); // data URL de la imagen; '' = sin imagen (logo por defecto)
 
   // Al abrir el modal, intentamos cargar la historia existente de la petición.
   useEffect(() => {
@@ -32,12 +36,14 @@ const StoryModal = ({ isOpen, onClose, ask, onSaved }) => {
       setError('');
       setStory(null);
       setContent('');
+      setImageUrl('');
       setIsLoading(true);
       getStoryByAsk(ask.id)
         .then((existente) => {
           if (existente) {
             setStory(existente);
             setContent(existente.generatedContent);
+            setImageUrl(existente.imageUrl || '');
           }
         })
         .catch((err) => setError(err.message))
@@ -55,6 +61,7 @@ const StoryModal = ({ isOpen, onClose, ask, onSaved }) => {
       const nueva = await generateStory(ask.id);
       setStory(nueva);
       setContent(nueva.generatedContent);
+      setImageUrl(nueva.imageUrl || '');
       if (onSaved) onSaved();
     } catch (err) {
       setError(err.message);
@@ -68,7 +75,7 @@ const StoryModal = ({ isOpen, onClose, ask, onSaved }) => {
     setIsSaving(true);
     setError('');
     try {
-      const actualizada = await updateStory(story.id, { generatedContent: content });
+      const actualizada = await updateStory(story.id, { generatedContent: content, imageUrl });
       setStory(actualizada);
       if (onSaved) onSaved();
     } catch (err) {
@@ -87,6 +94,7 @@ const StoryModal = ({ isOpen, onClose, ask, onSaved }) => {
       const actualizada = await updateStory(story.id, {
         generatedContent: content,
         isPublished: !story.isPublished,
+        imageUrl,
       });
       setStory(actualizada);
       if (onSaved) onSaved();
@@ -96,6 +104,20 @@ const StoryModal = ({ isOpen, onClose, ask, onSaved }) => {
       setIsSaving(false);
     }
   };
+
+  // Lee la imagen seleccionada y la guarda como data URL en el estado.
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setError('El archivo debe ser una imagen.'); return; }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) { setError(`La imagen no puede superar ${MAX_IMAGE_MB} MB.`); return; }
+    const reader = new FileReader();
+    reader.onload = () => { setImageUrl(reader.result); setError(''); };
+    reader.onerror = () => setError('No se pudo leer la imagen.');
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => setImageUrl('');
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 font-sans">
@@ -167,6 +189,32 @@ const StoryModal = ({ isOpen, onClose, ask, onSaved }) => {
               />
 
               <p className="text-[11px] text-slate-400 italic">{t('storyModal.editHint')}</p>
+
+              {/* Imagen de la publicación: si no se sube ninguna, se muestra el logo de AskingX */}
+              <div className="pt-3 border-t border-slate-100">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Imagen de la publicación</span>
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="w-24 h-24 rounded-lg border border-slate-200 bg-white flex items-center justify-center overflow-hidden shrink-0">
+                    {imageUrl ? (
+                      <img src={imageUrl} alt="Imagen de la historia" className="w-full h-full object-contain" />
+                    ) : (
+                      <img src={DEFAULT_LOGO} alt="Logo AskingX" className="w-12 h-12 opacity-70" />
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="cursor-pointer bg-slate-100 text-slate-700 text-sm font-bold py-2 px-3 rounded-lg hover:bg-slate-200 transition-colors inline-flex items-center gap-2 w-fit">
+                      <ImagePlus size={16} /> {imageUrl ? 'Cambiar imagen' : 'Subir imagen'}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                    </label>
+                    {imageUrl && (
+                      <button type="button" onClick={handleRemoveImage} className="text-red-600 text-sm font-medium inline-flex items-center gap-1.5 hover:underline w-fit">
+                        <Trash2 size={14} /> Quitar imagen
+                      </button>
+                    )}
+                    <p className="text-[11px] text-slate-400">Si no subes ninguna, se usará el logo de AskingX (máx. {MAX_IMAGE_MB} MB).</p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

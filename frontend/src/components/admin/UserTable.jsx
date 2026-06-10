@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { Trash2, Eye, UserCheck } from 'lucide-react';
+import { Trash2, Eye, UserCheck, Tags } from 'lucide-react';
 import { updateUser } from '../../services/userService';
 import { useLanguage } from '../../context/LanguageContext';
 import ChangePasswordModal from './ChangePasswordModal';
+import EditDomainsModal from './EditDomainsModal';
 
 const UserTable = ({ users, isLoading, onUserUpdate }) => {
   const { t } = useLanguage();
   const [selectedUser, setSelectedUser] = useState(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [reactivationMode, setReactivationMode] = useState(false);
+  const [domainsUser, setDomainsUser] = useState(null);
+  const [isDomainsModalOpen, setIsDomainsModalOpen] = useState(false);
 
   if (isLoading) {
     return <div className="text-center py-8">{t('common.loading')}</div>;
@@ -22,6 +25,11 @@ const UserTable = ({ users, isLoading, onUserUpdate }) => {
     setSelectedUser(user);
     setReactivationMode(isReactivation);
     setIsPasswordModalOpen(true);
+  };
+
+  const handleOpenDomainsModal = (user) => {
+    setDomainsUser(user);
+    setIsDomainsModalOpen(true);
   };
 
   const handleDeactivate = async (userId) => {
@@ -66,13 +74,22 @@ const UserTable = ({ users, isLoading, onUserUpdate }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{user.preferredLanguage}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{getStatusPill(user.isActive)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button 
+                  <button
                     onClick={() => handleOpenPasswordModal(user)}
                     className="text-slate-600 hover:text-blue-600 transition-colors"
                     title={t('admin.changePassword')}
                   >
                     <Eye size={18} />
                   </button>
+                  {(user.role === 'CONNECTOR' || user.role === 'GIVER') && (
+                    <button
+                      onClick={() => handleOpenDomainsModal(user)}
+                      className="ml-4 text-slate-600 hover:text-blue-600 transition-colors"
+                      title="Editar dominios"
+                    >
+                      <Tags size={18} />
+                    </button>
+                  )}
                   {user.isActive ? (
                     <button
                       onClick={() => handleDeactivate(user.id)}
@@ -103,6 +120,13 @@ const UserTable = ({ users, isLoading, onUserUpdate }) => {
         user={selectedUser}
         isReactivation={reactivationMode}
         onSuccess={onUserUpdate}
+      />
+
+      <EditDomainsModal
+        isOpen={isDomainsModalOpen}
+        onClose={() => setIsDomainsModalOpen(false)}
+        user={domainsUser}
+        onUpdated={onUserUpdate}
       />
     </>
   );

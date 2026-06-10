@@ -3,7 +3,7 @@ import { X, Calendar, MapPin, Wrench, Package, Clock, CheckCircle2 } from 'lucid
 import { useLanguage } from '../../context/LanguageContext';
 
 const ViewAskModal = ({ isOpen, onClose, ask }) => {
-  const { t } = useLanguage();
+  const { t, translateDomain } = useLanguage();
   if (!isOpen || !ask) return null;
 
   // Formatear la fecha
@@ -91,7 +91,7 @@ const ViewAskModal = ({ isOpen, onClose, ask }) => {
 
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('viewAsk.domain')}</h3>
-              <p className="text-sm font-medium text-slate-800">{ask.domain?.name || 'General'}</p>
+              <p className="text-sm font-medium text-slate-800">{translateDomain(ask.domain?.name) || 'General'}</p>
             </div>
           </div>
 

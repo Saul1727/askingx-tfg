@@ -107,6 +107,15 @@ const Stories = () => {
                     onClick={() => canManage ? openModalFor(story.ask) : null}
                     className={`text-left bg-white border border-slate-200 rounded-xl p-5 flex flex-col gap-3 transition-all ${canManage ? 'hover:shadow-md hover:border-slate-300 cursor-pointer' : 'cursor-default'}`}
                   >
+                    {/* Banner de la publicación: imagen subida o, en su defecto, el logo de AskingX */}
+                    <div className="-mx-5 -mt-5 mb-1 h-48 bg-white border-b border-slate-100 flex items-center justify-center overflow-hidden rounded-t-xl">
+                      {story.imageUrl ? (
+                        <img src={story.imageUrl} alt="" className="w-full h-full object-contain" />
+                      ) : (
+                        <img src="/favicon.svg" alt="" className="w-14 h-14 opacity-40" />
+                      )}
+                    </div>
+
                     <div className="flex items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400">
                         <FileText size={12} /> {story.ask?.type}

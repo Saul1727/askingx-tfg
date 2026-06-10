@@ -154,7 +154,7 @@ const updateAskStatus = async (askId, newStatus, user, cancellationReason) => {
         
         const validTransitions = {
             'CREATED': ['OPEN', 'CANCELLED'],
-            'OPEN': ['MATCHED', 'CANCELLED', 'CREATED'], // CREATED in case they want to revert to draft
+            'OPEN': ['MATCHED', 'CANCELLED', 'CREATED'], // CREATED para revertir a borrador si es necesario
             'MATCHED': ['FULFILLED', 'OPEN', 'CANCELLED'], // OPEN if givers are unassigned
             'FULFILLED': [], // Estado final
             'CANCELLED': [], // Estado final
@@ -192,7 +192,10 @@ const matchAsk = async (askId, connectorId, giverIds) => {
     // Verificamos que la petición existe
     const ask = await prisma.ask.findUnique({
         where: { id: askId },
-        include: { asker: true } // Incluimos al asker para obtener su email
+        include: {
+            asker: true, // para obtener su email
+            givers: { select: { id: true } } // givers que YA estaban asignados antes de esta operación
+        }
     });
 
     if (!ask) {
@@ -219,6 +222,25 @@ const matchAsk = async (askId, connectorId, giverIds) => {
         throw error;
     }
 
+    // Regla de negocio: un Giver solo puede asignarse a peticiones de su mismo dominio.
+    // Validamos en el servidor que todos los donantes tengan el dominio de la Ask entre sus especialidades.
+    if (giverIds.length > 0) {
+        const validGivers = await prisma.user.findMany({
+            where: {
+                id: { in: giverIds },
+                role: 'GIVER',
+                specialties: { some: { id: ask.domainId } }
+            },
+            select: { id: true }
+        });
+
+        if (validGivers.length !== giverIds.length) {
+            const error = new Error('Todos los donantes asignados deben tener el dominio de la petición entre sus especialidades.');
+            error.statusCode = 400; // Bad Request
+            throw error;
+        }
+    }
+
     // Hacemos el Match actualizando la Ask
     // Si eliminan a todos los givers (array vacío), la petición vuelve a estar OPEN
     const newStatus = giverIds.length > 0 ? 'MATCHED' : 'OPEN';
@@ -236,9 +258,14 @@ const matchAsk = async (askId, connectorId, giverIds) => {
         }
     });
 
-    // === ENVÍO DE CORREOS (Si se han asignado Givers) ===
-    if (newStatus === 'MATCHED' && updatedAsk.givers.length > 0) {
-        // 1. Email a la ONG / Solicitante
+    // Solo notificamos por los Givers recién asignados en esta operación
+    // (así no se reenvía el correo a los que ya estaban en la petición).
+    const previousGiverIds = ask.givers.map(g => g.id);
+    const newlyAssignedGivers = updatedAsk.givers.filter(g => !previousGiverIds.includes(g.id));
+
+    // === ENVÍO DE CORREOS (solo si se ha añadido algún Giver nuevo) ===
+    if (newStatus === 'MATCHED' && newlyAssignedGivers.length > 0) {
+        // 1. Email a la entidad solicitante (Asker) que se beneficia de la ayuda
         if (ask.asker && ask.asker.email) {
             const orgName = ask.asker.organizationName || 'Particular';
             const subject = `¡Voluntarios asignados a tu petición! - AskingX`;
@@ -247,8 +274,8 @@ const matchAsk = async (askId, connectorId, giverIds) => {
             sendEmail(ask.asker.email, subject, text).catch(console.error);
         }
 
-        // 2. Email a los Givers (Voluntarios) asignados
-        for (const giver of updatedAsk.givers) {
+        // 2. Email únicamente a los Givers recién asignados
+        for (const giver of newlyAssignedGivers) {
             if (giver.email) {
                 const subject = `¡Nueva misión asignada! - AskingX`;
                 const text = `Hola ${giver.fullName},\n\nSe te ha asignado una nueva petición de ayuda: "${ask.title}".\nPor favor, revisa tu panel para más detalles y ponte en contacto con la organización lo antes posible.\n\n¡Gracias por tu labor!`;

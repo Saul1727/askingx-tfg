@@ -13,6 +13,8 @@ const storyService = require('../services/storyService');
 const updateStorySchema = z.object({
   generatedContent: z.string().min(10, 'El contenido es demasiado corto').optional(),
   isPublished: z.boolean().optional(),
+  // Imagen de la publicación como data URL (o cadena vacía para quitarla). Límite ~6 MB.
+  imageUrl: z.string().max(8_000_000, 'La imagen es demasiado grande').optional(),
 });
 
 // POST /api/stories/generate/:askId -> genera o regenera la historia
