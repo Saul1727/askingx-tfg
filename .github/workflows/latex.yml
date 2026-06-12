@@ -1,0 +1,32 @@
+name: Compilar memoria TFG (LaTeX)
+
+# Compila la memoria en la nube (TeX Live completo) y deja el PDF como artefacto descargable.
+# Se ejecuta al subir cambios de la memoria o manualmente desde la pestaña "Actions".
+
+on:
+  push:
+    paths:
+      - 'tfgetsinf/**'
+      - '.github/workflows/latex.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Compilar la memoria
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: plantillatfg.tex
+          working_directory: tfgetsinf/tfgetsinf
+          # latexmk gestiona automáticamente las pasadas de pdflatex + bibtex
+
+      - name: Publicar el PDF como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: memoria-tfg-pdf
+          path: tfgetsinf/tfgetsinf/plantillatfg.pdf
+          if-no-files-found: error
